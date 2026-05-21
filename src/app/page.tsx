@@ -1,297 +1,257 @@
 'use client';
 
-import Link from 'next/link';
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
+import Link from 'next/link';
+import { createClient } from '@supabase/supabase-js';
 
-export default function HomePage() {
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+interface RiderProfile {
+  name: string;
+  distance: string;
+  hours: string;
+  quote: string;
+}
+
+const riderProfiles: RiderProfile[] = [
+  {
+    name: 'Fauzi Hussin',
+    distance: '32,000 km',
+    hours: '620 hrs',
+    quote: 'The MCAS visual and audio alerts help me to anticipate hazards and react safely when cars swerve or vehicles brake suddenly.',
+  },
+  {
+    name: 'Hazazi Saidpudin',
+    distance: '800 km',
+    hours: '20 hrs',
+    quote: 'When starting to feel drowsy on a long trip, I was startled by the audio alert. It saved me from a collision with a drifting pickup truck.',
+  },
+  {
+    name: 'Izhar Abd Ghafar',
+    distance: '2,600 km',
+    hours: '70 hrs',
+    quote: 'My experience with MCAS has given me clear structural exposure to where and when hazards typically occur. I find myself riding much more cautiously now.',
+  },
+  {
+    name: 'Syafiq Azahari',
+    distance: '950 km',
+    hours: '40 hrs',
+    quote: 'As a food delivery rider covering 100km daily in mixed filtering traffic, MCAS detects and warns me of potential collision hazards early on.',
+  },
+];
+
+export default function Home() {
   const [email, setEmail] = useState('');
-  const [subscriptionStatus, setSubscriptionStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubscribe = async (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    if (!email.trim()) {
-      setErrorMessage('Please enter a valid email address');
-      setSubscriptionStatus('error');
-      return;
-    }
-
-    setSubscriptionStatus('loading');
-    setErrorMessage('');
+    setLoading(true);
+    setError(null);
 
     try {
-      const { error } = await supabase
+      const { error: insertError } = await supabase
         .from('leads_subscribers')
-        .insert({ email });
+        .insert([{ email }]);
 
-      if (error) {
-        throw error;
+      if (insertError) {
+        setError(insertError.message);
+      } else {
+        setSubmitted(true);
+        setEmail('');
+        setTimeout(() => setSubmitted(false), 3000);
       }
-
-      setSubscriptionStatus('success');
-      setEmail('');
-      
-      // Auto-reset success message after 5 seconds
-      setTimeout(() => {
-        setSubscriptionStatus('idle');
-      }, 5000);
     } catch (err) {
-      setSubscriptionStatus('error');
-      setErrorMessage('Failed to subscribe. Please try again.');
-      console.error('Subscription error:', err);
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-md border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-              MCAS
-            </div>
-            <div className="flex gap-6">
-              <Link 
-                href="/auth/login" 
-                className="text-slate-300 hover:text-slate-100 transition-colors"
-              >
-                Sign In
-              </Link>
-              <Link 
-                href="/participant" 
-                className="text-slate-300 hover:text-slate-100 transition-colors"
-              >
-                Research
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+    <main className="w-full bg-white">
+      {/* Hero Header Container */}
+      <section className="relative w-full px-4 py-24 sm:px-6 lg:px-8 lg:py-32 bg-gradient-to-b from-slate-900 to-slate-800">
         <div className="max-w-6xl mx-auto">
-          <div className="space-y-8 text-center">
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight">
-              <span className="block text-slate-100">Revolutionizing Safety</span>
-              <span className="block bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                for Motorcyclists
-              </span>
+          <div className="text-center space-y-6">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight">
+              REVOLUTIONIZING SAFETY FOR MOTORCYCLISTS
             </h1>
-            
-            <p className="max-w-3xl mx-auto text-xl text-slate-300 leading-relaxed">
-              Advanced collision avoidance systems, LIDAR-enabled edge perception, and intelligent safety telemetry tailored for riders.
+            <p className="text-lg sm:text-xl text-slate-200 max-w-3xl mx-auto">
+              Experience a significant shift in the status quo with groundbreaking motorcycle safety technology.
             </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <Link
-                href="/auth/login"
-                className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all shadow-lg shadow-blue-500/25"
+                href="http://localhost:3000/auth/login"
+                className="inline-flex items-center justify-center px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200"
               >
-                Get Started
+                Launch Research Dashboard
               </Link>
               <Link
-                href="/participant"
-                className="inline-flex items-center justify-center px-8 py-4 bg-slate-800 text-slate-100 font-semibold rounded-lg border border-slate-700 hover:border-slate-600 hover:bg-slate-700 transition-all"
+                href="/timeline"
+                className="inline-flex items-center justify-center px-8 py-3 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-colors duration-200"
               >
-                Explore Research Modules
+                View Historical Milestones
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Vision & Deep-Tech Specs Grid */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-900/50">
+      {/* Vision & Sustainable Mobility Grid */}
+      <section className="w-full px-4 py-20 sm:px-6 lg:px-8 bg-slate-50">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-4">Our Core Capabilities</h2>
-            <p className="text-xl text-slate-400">Engineered for the future of two-wheeled safety</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Card 1: Perception-Enabled Edge Modeling */}
-            <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 p-8 border border-slate-700 hover:border-slate-600 transition-all duration-300">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div className="relative z-10">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-lg flex items-center justify-center mb-6">
-                  <svg className="w-6 h-6 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                  </svg>
-                </div>
-                <h3 className="text-2xl font-bold mb-3">Perception-Enabled Edge Modeling</h3>
-                <p className="text-slate-300 leading-relaxed">
-                  High-fidelity situational analysis leveraging compact LIDAR frameworks to track potential safety critical events (SCEs).
-                </p>
-              </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Left Card */}
+            <div className="bg-white p-8 rounded-lg shadow-md border-l-4 border-blue-600">
+              <h3 className="text-2xl font-bold text-slate-900 mb-4">
+                Stay Ahead of the Curve
+              </h3>
+              <p className="text-slate-700 leading-relaxed">
+                Our vision is to be the most innovative and user-focused innovator of two-wheeler safety solutions, empowering individuals and communities to build a more sustainable mobility.
+              </p>
             </div>
 
-            {/* Card 2: Sustainable Smart Mobility */}
-            <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 p-8 border border-slate-700 hover:border-slate-600 transition-all duration-300">
-              <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div className="relative z-10">
-                <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-400 rounded-lg flex items-center justify-center mb-6">
-                  <svg className="w-6 h-6 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <h3 className="text-2xl font-bold mb-3">Sustainable Smart Mobility</h3>
-                <p className="text-slate-300 leading-relaxed">
-                  Protecting vulnerable road users while fostering eco-friendly integration into future smart city transit networks.
-                </p>
-              </div>
-            </div>
-
-            {/* Card 3: Data-Driven Research */}
-            <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 p-8 border border-slate-700 hover:border-slate-600 transition-all duration-300">
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div className="relative z-10">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 rounded-lg flex items-center justify-center mb-6">
-                  <svg className="w-6 h-6 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <h3 className="text-2xl font-bold mb-3">Data-Driven Research</h3>
-                <p className="text-slate-300 leading-relaxed">
-                  Empowering institutions with raw rider analytics, reaction time logging, and fatigue metrics.
-                </p>
-              </div>
-            </div>
-
-            {/* Card 4: Adaptive Hazard Detection */}
-            <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 p-8 border border-slate-700 hover:border-slate-600 transition-all duration-300">
-              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div className="relative z-10">
-                <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-red-400 rounded-lg flex items-center justify-center mb-6">
-                  <svg className="w-6 h-6 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4v2m0 0v2m0-6v-2m0 0V7m0 6h2m-4 0h2m4 0h2m-4 0h-2m4 0v2m-6-2v2m0-4V7a2 2 0 012-2h2a2 2 0 012 2v2m0 4v2m0 0v2m0-6v-2" />
-                  </svg>
-                </div>
-                <h3 className="text-2xl font-bold mb-3">Adaptive Hazard Detection</h3>
-                <p className="text-slate-300 leading-relaxed">
-                  Real-time alert vectors engineered to keep motorcyclists ahead of the curve.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Research Metrics Teaser */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-800 to-slate-900 p-12 border border-slate-700">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-b from-blue-500/10 to-transparent rounded-full blur-3xl -z-0" />
-            <div className="relative z-10">
-              <div className="flex items-start gap-4 mb-6">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-400 to-cyan-400 flex items-center justify-center flex-shrink-0 mt-1">
-                  <svg className="w-5 h-5 text-slate-950" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <h3 className="text-2xl font-bold">Research Validation</h3>
-              </div>
-              <p className="text-lg text-slate-200 leading-relaxed">
-                Observed a significant drop in Safety Critical Events (SCEs) during our initial 3-month field telemetry assessments.
+            {/* Right Card */}
+            <div className="bg-white p-8 rounded-lg shadow-md border-l-4 border-green-600">
+              <h3 className="text-2xl font-bold text-slate-900 mb-4">
+                Sustainable Mobility For All
+              </h3>
+              <p className="text-slate-700 leading-relaxed">
+                Safety is the foundation of sustainability. In countries with high motorcycle ridership, prioritizing the safety of this vulnerable road user group undoubtedly has a significant impact on societal well-being.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Newsletter / Lead Capture Form */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-900/50 to-slate-950">
-        <div className="max-w-2xl mx-auto">
+      {/* Core Technology Pillars */}
+      <section className="w-full px-4 py-20 sm:px-6 lg:px-8 bg-white">
+        <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-4">Join the Future of Two-Wheeled Safety</h2>
-            <p className="text-xl text-slate-400">
-              Stay updated on our latest research papers, field testing phases, and hardware announcements.
-            </p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+              Core Technology Pillars
+            </h2>
           </div>
-
-          <form onSubmit={handleSubscribe} className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email address"
-                className="flex-1 px-6 py-4 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-slate-600 focus:ring-2 focus:ring-blue-500/20 transition-all"
-                disabled={subscriptionStatus === 'loading'}
-              />
-              <button
-                type="submit"
-                disabled={subscriptionStatus === 'loading'}
-                className="px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-              >
-                {subscriptionStatus === 'loading' ? 'Subscribing...' : 'Subscribe'}
-              </button>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Pillar 1 */}
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-8 rounded-lg shadow-md">
+              <h4 className="text-xl font-bold text-slate-900 mb-4">
+                The Seeing Motorcycle
+              </h4>
+              <p className="text-slate-700">
+                Utilizing a groundbreaking LIDAR sensor framework and integrated GPS technology to reimagine two-wheel riding parameters.
+              </p>
             </div>
 
-            {/* Success Message */}
-            {subscriptionStatus === 'success' && (
-              <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
-                <p className="text-green-300 font-medium">Thank you for subscribing!</p>
-              </div>
-            )}
+            {/* Pillar 2 */}
+            <div className="bg-gradient-to-br from-green-50 to-green-100 p-8 rounded-lg shadow-md">
+              <h4 className="text-xl font-bold text-slate-900 mb-4">
+                Real-Time Perception Infrastructure
+              </h4>
+              <p className="text-slate-700">
+                Uses real-time data tracking to generate predictive hazard vectors, establishing vehicle-to-environment communication to warn riders of conditions they cannot see.
+              </p>
+            </div>
 
-            {/* Error Message */}
-            {subscriptionStatus === 'error' && errorMessage && (
-              <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
-                <p className="text-red-300 font-medium">{errorMessage}</p>
-              </div>
-            )}
-          </form>
-
-          <p className="text-center text-slate-500 text-sm mt-6">
-            We respect your privacy. Unsubscribe at any time.
-          </p>
+            {/* Pillar 3 */}
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-8 rounded-lg shadow-md">
+              <h4 className="text-xl font-bold text-slate-900 mb-4">
+                Rider-Centered Design
+              </h4>
+              <p className="text-slate-700">
+                Adopting localized design-thinking loops to minimize user friction, engineered explicitly to retro-fit onto the millions of active motorcycles already on the road.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-800 py-12 px-4 sm:px-6 lg:px-8">
+      {/* Interactive Telemetry Matrix */}
+      <section className="w-full px-4 py-20 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-900 to-slate-800">
         <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <h4 className="font-semibold mb-4 text-slate-100">Product</h4>
-              <ul className="space-y-2 text-slate-400 text-sm">
-                <li><Link href="/participant" className="hover:text-slate-200 transition-colors">Research</Link></li>
-                <li><Link href="#features" className="hover:text-slate-200 transition-colors">Features</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4 text-slate-100">Company</h4>
-              <ul className="space-y-2 text-slate-400 text-sm">
-                <li><Link href="#about" className="hover:text-slate-200 transition-colors">About</Link></li>
-                <li><Link href="#contact" className="hover:text-slate-200 transition-colors">Contact</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4 text-slate-100">Legal</h4>
-              <ul className="space-y-2 text-slate-400 text-sm">
-                <li><Link href="#privacy" className="hover:text-slate-200 transition-colors">Privacy</Link></li>
-                <li><Link href="#terms" className="hover:text-slate-200 transition-colors">Terms</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4 text-slate-100">Social</h4>
-              <ul className="space-y-2 text-slate-400 text-sm">
-                <li><a href="#" className="hover:text-slate-200 transition-colors">Twitter</a></li>
-                <li><a href="#" className="hover:text-slate-200 transition-colors">LinkedIn</a></li>
-              </ul>
-            </div>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+              MCAS In Numbers
+            </h2>
+            <p className="text-slate-300 text-lg">
+              Real-world rider telemetry showcasing the impact of MCAS safety technology
+            </p>
           </div>
-
-          <div className="border-t border-slate-800 pt-8 flex flex-col sm:flex-row justify-between items-center">
-            <p className="text-slate-500 text-sm">© 2025 MCAS. All rights reserved.</p>
-            <p className="text-slate-500 text-sm mt-4 sm:mt-0">Motorcyclist Collision Avoidance System</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {riderProfiles.map((profile, index) => (
+              <div
+                key={index}
+                className="bg-slate-700 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300"
+              >
+                <h4 className="text-xl font-bold text-white mb-2">
+                  {profile.name}
+                </h4>
+                <div className="space-y-1 mb-4 text-sm text-slate-300">
+                  <p>Distance: <span className="font-semibold">{profile.distance}</span></p>
+                  <p>Active Time: <span className="font-semibold">{profile.hours}</span></p>
+                </div>
+                <blockquote className="text-slate-200 italic border-l-4 border-blue-400 pl-4">
+                  "{profile.quote}"
+                </blockquote>
+              </div>
+            ))}
           </div>
         </div>
-      </footer>
+      </section>
+
+      {/* Footer Lead Capture Form */}
+      <section className="w-full px-4 py-20 sm:px-6 lg:px-8 bg-slate-50">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-lg shadow-lg p-8 sm:p-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+              Be Part of Our Journey
+            </h2>
+            <p className="text-lg text-slate-700 mb-8">
+              Our future plan is to make MCAS available and affordable for all motorcyclists. Submit your email to join our network.
+            </p>
+
+            <form onSubmit={handleEmailSubmit} className="space-y-4">
+              <div>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email address"
+                  required
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold rounded-lg transition-colors duration-200"
+              >
+                {loading ? 'Submitting...' : 'Join Our Network'}
+              </button>
+
+              {submitted && (
+                <div className="p-4 bg-green-100 text-green-800 rounded-lg text-center">
+                  Thank you for subscribing! We'll be in touch soon.
+                </div>
+              )}
+
+              {error && (
+                <div className="p-4 bg-red-100 text-red-800 rounded-lg text-center">
+                  {error}
+                </div>
+              )}
+            </form>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
