@@ -78,7 +78,7 @@ export default function SinglePostPage() {
             })}
           </span>
           <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight uppercase leading-tight">
-            {post.post_title || post.title}
+            {post.title}
           </h1>
           <div className="h-1 w-16 bg-sky-500 mt-6 rounded-full" />
         </header>
