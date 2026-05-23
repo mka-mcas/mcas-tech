@@ -1,0 +1,8 @@
+@import "katex/dist/katex.min.css";
+@import "tailwindcss";
+
+/* Custom background fallback for the research theme */
+body {
+  background-color: #090d16;
+  color: #f8fafc;
+}
