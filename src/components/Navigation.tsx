@@ -46,12 +46,12 @@ export default function Navigation() {
               LOGOUT
             </button>
           ) : (
-            <a 
-              href="http://localhost:3000/auth/login" 
+            <Link 
+              href="/auth/login" 
               className="bg-sky-500 hover:bg-sky-400 text-black font-semibold px-4 py-1.5 rounded-lg transition-all text-xs uppercase tracking-wider"
             >
               Portal
-            </a>
+            </Link>
           )}
         </div>
 
