@@ -101,8 +101,10 @@ export default function BlindnessGlitch() {
           <line x1="440" y1="180" x2="750" y2="450" stroke="#e4e4e7" strokeWidth="3" strokeDasharray="12 8" />
           
           {/* Stylized Visual Obstruction Element (Truck Blockade Drawing near junction) */}
-          <path d="M480 200 L530 200 L560 250 L500 250 Z" fill="#18181b" stroke="#27272a" />
-          <text x="502" y="230" fill="#52525b" fontSize="10" fontFamily="monospace" fontWeight="bold">ASSET BLOCK</text>
+          <path d="M480 200 L530 200 L560 250 L500 250 Z" fill="#1c1917" stroke="#78716c" strokeWidth="1.5" />
+          <text x="492" y="230" fill="#f43f5e" fontSize="8" fontFamily="sans-serif" fontWeight="black" letterSpacing="0.5">
+            🚨 BLINDSPOT LORI
+          </text>
         </svg>
 
         {/* --- Dynamic Blackout Overlay Filter for Novice Mode --- */}
