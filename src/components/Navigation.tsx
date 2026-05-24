@@ -29,7 +29,7 @@ export default function Navigation() {
           
           {/* 📜 Brand New Private Reader Section Added Safely Here: */}
           <Link href="/reader" className="text-slate-400 hover:text-white transition-colors">
-            Kitab Study
+            Life-long learning
           </Link>
           
           {/* 🚀 Brand New Open Resources Section Added Safely Here: */}
