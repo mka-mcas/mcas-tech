@@ -10,22 +10,27 @@ export default function Navigation() {
     <nav className="bg-black/60 backdrop-blur-md border-b border-slate-900/80 fixed top-0 left-0 right-0 z-50 px-6 py-4">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         
-        {/* Brand Logo */}
+        {/* Brand Logo (Updated to .ORG!) */}
         <Link href="/" className="font-mono font-black tracking-widest text-white text-lg">
-          MCAS<span className="text-sky-500">.TECH</span>
+          MCAS<span className="text-sky-500">.ORG</span>
         </Link>
         
         {/* Central/Right Menu Links */}
         <div className="flex items-center gap-6 md:gap-8 text-sm font-medium">
           <Link href="/about" className="text-slate-400 hover:text-white transition-colors">
-  About
-	  </Link>
-	  <Link href="/blog" className="text-slate-400 hover:text-white transition-colors">
-  Blog
-	  </Link>
-	  <Link href="/timeline" className="text-slate-400 hover:text-white transition-colors">
-  Timeline
-	  </Link>
+            About
+          </Link>
+          <Link href="/blog" className="text-slate-400 hover:text-white transition-colors">
+            Blog
+          </Link>
+          <Link href="/timeline" className="text-slate-400 hover:text-white transition-colors">
+            Timeline
+          </Link>
+          
+          {/* 🚀 Brand New Open Resources Section Added Safely Here: */}
+          <Link href="/resources/safe-riding-know-how" className="text-slate-400 hover:text-emerald-400 font-bold transition-colors">
+            Safe Riding Know-How
+          </Link>
           
           {/* Dynamic Dashboard Portal Access */}
           {user ? (
