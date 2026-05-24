@@ -1,5 +1,5 @@
 import React from 'react';
-
+import BlindnessGlitch from '@/components/BlindnessGlitch';
 export default function SafeRidingKnowHow() {
   return (
     <div className="min-h-screen bg-black text-zinc-100 px-6 py-12 max-w-5xl mx-auto">
@@ -24,6 +24,10 @@ export default function SafeRidingKnowHow() {
       </div>
 
       {/* Know-How Resource Modules Grid */}
+      {/* Place this directly above or below your Module cards to make the text instantly visual */}
+      <div className="my-12">
+       <BlindnessGlitch />
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
         {/* Module 1 */}
