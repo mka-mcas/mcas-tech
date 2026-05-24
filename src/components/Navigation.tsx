@@ -27,6 +27,11 @@ export default function Navigation() {
             Timeline
           </Link>
           
+          {/* 📜 Brand New Private Reader Section Added Safely Here: */}
+          <Link href="/reader" className="text-slate-400 hover:text-white transition-colors">
+            Kitab Study
+          </Link>
+          
           {/* 🚀 Brand New Open Resources Section Added Safely Here: */}
           <Link href="/resources/safe-riding-know-how" className="text-slate-400 hover:text-emerald-400 font-bold transition-colors">
             Safe Riding Know-How
