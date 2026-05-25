@@ -381,7 +381,7 @@ function BarViz({ data }) {
               className="h-full rounded-xl flex items-center justify-end px-3"
               style={{
                 width: `${d.value}%`,
-                background: d.color,
+                background: d.color || '#94A3B8',
                 minWidth: 48,
               }}
             >
@@ -408,7 +408,15 @@ function HourViz({ data }) {
 
     <ResponsiveContainer width="100%" height={320}>
 
-      <BarChart data={data}>
+      <BarChart
+        data={data || []}
+        margin={{
+          top: 10,
+          right: 10,
+          left: -20,
+          bottom: 50,
+       }}
+    >
 
         <XAxis
           dataKey="name"
@@ -618,7 +626,7 @@ export default function RiskInfographic({
 
                 <div
                   key={label}
-                  className="grid grid-cols-[90px_1fr_40px] gap-3 items-center"
+                  className="grid grid-cols-[110px_1fr_45px] gap-3 items-center"
                 >
 
                   <div className={`text-[10px] leading-tight ${muted}`}>
@@ -717,17 +725,23 @@ export default function RiskInfographic({
 
           <div className="p-6">
 
-            {currentLevel.type === 'pie' && (
+            {(
+            currentLevel.type === 'pie' ||
+            currentLevel.type === 'doughnut'
+            ) && (
               <PieViz data={currentLevel.data} />
             )}
 
-            {currentLevel.type === 'bar' && (
-              <BarViz data={currentLevel.data} />
-            )}
+           {(
+           currentLevel.type === 'bar' ||
+           currentLevel.type === 'hbar'
+           ) && (
+             <BarViz data={currentLevel.data} />
+           )}
 
-            {currentLevel.type === 'hour' && (
-              <HourViz data={currentLevel.data} />
-            )}
+           {currentLevel.type === 'hour' && (
+             <HourViz data={currentLevel.data} />
+           )}
 
             {/* INSIGHT */}
 
