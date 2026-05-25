@@ -4,40 +4,50 @@ import RiskInfographic from '@/components/RiskInfographic';
 
 export default function SafeRidingKnowHow() {
   return (
-    <div className="min-h-screen bg-black text-zinc-100 px-6 py-12 max-w-5xl mx-auto">
-      {/* Header Section */}
-      <div className="border-b border-zinc-800 pb-8 mb-8">
-        <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">MCAS Knowledge Hub</span>
-        <h1 className="text-4xl font-black text-white mt-2 tracking-tight">SAFE RIDING KNOW-HOW</h1>
-        <p className="text-zinc-400 mt-2 text-lg max-w-3xl">
-          Empirical, evidence-based riding directives designed to bypass "street customs" and master cognitive road management.
-        </p>
-      </div>
-
-      {/* 🛡️ Legal Copyright & Citation Notice */}
-      <div className="bg-zinc-950 border-l-4 border-emerald-500 border p-5 rounded-r-xl mb-12 shadow-md">
-        <div className="flex items-center space-x-2 text-emerald-400 font-bold text-sm uppercase tracking-wider">
-          <span>🛡️</span>
-          <span>Copyright & Open-Sharing Notice</span>
+    <div className="min-h-screen bg-black text-zinc-100 py-12 w-full">
+      
+      {/* ─── SECTION A: INNER PAGE CONTENT HOOD ─── */}
+      <div className="max-w-5xl mx-auto px-6">
+        
+        {/* Header Section */}
+        <div className="border-b border-zinc-800 pb-8 mb-8">
+          <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">MCAS Knowledge Hub</span>
+          <h1 className="text-4xl font-black text-white mt-2 tracking-tight">SAFE RIDING KNOW-HOW</h1>
+          <p className="text-zinc-400 mt-2 text-lg max-w-3xl">
+            Empirical, evidence-based riding directives designed to bypass "street customs" and master cognitive road management.
+          </p>
         </div>
-        <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
-          © {new Date().getFullYear()} MCAS Technology Platform. You are completely free—and highly encouraged—to copy, download, redistribute, and teach the materials found in this section to other riders, motor clubs, and riding schools. However, to maintain scientific integrity, you **must credit this platform by citing MCAS (mcas-tech.org)** whenever these resources are shared or published.
-        </p>
+
+        {/* 🛡️ Legal Copyright & Citation Notice */}
+        <div className="bg-zinc-950 border-l-4 border-emerald-500 border p-5 rounded-r-xl mb-12 shadow-md">
+          <div className="flex items-center space-x-2 text-emerald-400 font-bold text-sm uppercase tracking-wider">
+            <span>🛡️</span>
+            <span>Copyright & Open-Sharing Notice</span>
+          </div>
+          <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
+            © {new Date().getFullYear()} MCAS Technology Platform. You are completely free—and highly encouraged—to copy, download, redistribute, and teach the materials found in this section to other riders, motor clubs, and riding schools. However, to maintain scientific integrity, you **must credit this platform by citing MCAS (mcas-tech.org)** whenever these resources are shared or published.
+          </p>
+        </div>
+
+        {/* Cognitive Perception Simulator Module */}
+        <div className="my-12">
+          <BlindnessGlitch />
+        </div>
+        
       </div>
 
-      {/* Know-How Resource Modules Grid */}
-      {/* Place this directly above or below your Module cards to make the text instantly visual */}
-      <div className="my-12">
-       <BlindnessGlitch />
+      {/* ─── SECTION B: EXPANSIVE FULL-PAGE BREAKOUT DAYLIGHT TERMINAL ─── */}
+      <div className="w-full bg-zinc-100 py-16 my-16 border-y border-zinc-200 text-zinc-900">
+        <div className="max-w-7xl mx-auto px-6">
+          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-zinc-900 mb-6 uppercase font-mono text-center sm:text-left">
+            Systemic Risk Assessment Terminal
+          </h2>
+          <RiskInfographic />
+        </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Interactive Instrumented Casualty Exposure Dashboard Module */}
-      <div className="my-12">
-      <h2 className="text-xl font-bold tracking-tight text-white mb-4 uppercase font-mono">
-    Systemic Risk Assessment Terminal
-      </h2>
-       <RiskInfographic />
-      </div>
+
+      {/* ─── SECTION C: CORE MODULE CARDS GRID ─── */}
+      <div className="max-w-5xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-6">
         
         {/* Module 1 */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-all shadow-lg flex flex-col justify-between">

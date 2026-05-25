@@ -1,12 +1,10 @@
-'use client';
-
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   PieChart, Pie, Cell, BarChart, Bar,
   XAxis, YAxis, Tooltip, ResponsiveContainer
 } from "recharts";
 
-/* ─── DATA MATRIX STRUCTURE WITH ACADEMIC CITATIONS ────────────────── */
+/* ─── DATA ────────────────────────────────────────────────────────── */
 
 const CATEGORIES = {
   where: {
@@ -14,49 +12,49 @@ const CATEGORIES = {
     icon: "📍",
     label: "Where crashes happen",
     sub: "Location & road type",
-    accentHex: "#D97706",
-    tailwindText: "text-amber-800",
-    tailwindBorder: "border-amber-200",
-    tailwindBg: "bg-amber-50/60",
+    accentHex: "#FBBF24",
+    tailwindText: "text-amber-400",
+    tailwindBorder: "border-amber-500/20",
+    tailwindBg: "bg-amber-950/30",
     headline: "61% of fatal crashes occur in rural areas",
     levels: [
       {
-        title: "By Area Type",
+        title: "By area type",
         insight:
-          "Rural roads feel safer but they are the deadliest (61%) due to higher travel speeds, lower traffic control enforcement, slower emergency response windows, and lower helmet compliance safety records.",
+          "Rural roads feel safer but they're the deadliest — less enforcement, slower rescue response, and lower helmet compliance.",
         type: "pie",
         data: [
           { name: "Rural", value: 61, color: "#EF4444" },
           { name: "Small town", value: 19, color: "#F97316" },
           { name: "Town", value: 12, color: "#F59E0B" },
-          { name: "City", value: 8, color: "#10B981" },
+          { name: "City", value: 8, color: "#22C55E" },
         ],
       },
       {
-        title: "By Road Classification",
+        title: "By road type",
         insight:
-          "Primary and arterial highway structures alone account for nearly half (49.7%) of all motorcycle fatalities. These routes are fast, long, and lack comprehensive physical lane segregation grids.",
+          "Primary and arterial roads account for nearly 50% of all fatalities — long, fast, partially access-controlled routes with inherently dangerous features.",
         type: "hbar",
         data: [
-          { name: "Primary / Arterial", value: 49.7, color: "#EF4444" },
+          { name: "Primary / arterial", value: 49.7, color: "#EF4444" },
           { name: "Local street", value: 18.6, color: "#F97316" },
           { name: "Secondary road", value: 16.5, color: "#F59E0B" },
           { name: "Minor road", value: 12.3, color: "#EAB308" },
-          { name: "Expressway", value: 3.0, color: "#10B981" },
+          { name: "Expressway", value: 3.0, color: "#22C55E" },
         ],
       },
       {
-        title: "By Road Geometry Structure",
+        title: "By road geometry",
         insight:
-          "Straight road corridors kill 3× more riders than sharp curves or bends. Wide-open stretches encourage psychological speeding overconfidence—clear sightlines do not equate to a protective forcefield.",
+          "Straight roads kill 3× more than curves. Open stretches encourage speeding — don't be fooled by clear sight lines or empty roads.",
         type: "hbar",
         data: [
-          { name: "Straight road", value: 66, color: "#EF4444" },
+          { name: "Straight", value: 66, color: "#EF4444" },
           { name: "T-junction", value: 14.3, color: "#F97316" },
-          { name: "Bend / Curve", value: 13.5, color: "#F59E0B" },
+          { name: "Bend / curve", value: 13.5, color: "#F59E0B" },
           { name: "Cross junction", value: 5.0, color: "#EAB308" },
-          { name: "Roundabout", value: 0.5, color: "#10B981" },
-          { name: "Interchange", value: 0.4, color: "#10B981" },
+          { name: "Roundabout", value: 0.5, color: "#22C55E" },
+          { name: "Interchange", value: 0.4, color: "#22C55E" },
         ],
       },
     ],
@@ -67,55 +65,55 @@ const CATEGORIES = {
     icon: "🕐",
     label: "When crashes happen",
     sub: "Time, day & weather",
-    accentHex: "#4F46E5",
-    tailwindText: "text-indigo-800",
-    tailwindBorder: "border-indigo-200",
-    tailwindBg: "bg-indigo-50/60",
+    accentHex: "#818CF8",
+    tailwindText: "text-indigo-400",
+    tailwindBorder: "border-indigo-500/20",
+    tailwindBg: "bg-indigo-950/30",
     headline: "4–10 PM on weekends is peak danger time",
     levels: [
       {
-        title: "Light & Atmospheric Conditions",
+        title: "Light & weather conditions",
         insight:
-          "An overwhelming 93% of fatal crashes occur during completely clear weather, and 55.6% happen in plain daylight. Environmental conditions are not the hazard—rider behavior and fatigue vectors are.",
+          "93% of crashes happen in clear weather — dangerous conditions aren't the main killer, rider behaviour is. Most fatalities also occur during the day.",
         type: "dual",
-        labels: ["Light Profiles", "Atmospheric Weather"],
+        labels: ["Light conditions", "Weather"],
         data: [
           { name: "Daytime", value: 55.6, color: "#F59E0B" },
-          { name: "Night (lit)", value: 18.9, color: "#6366F1" },
+          { name: "Night (lit)", value: 18.9, color: "#818CF8" },
           { name: "Night (dark)", value: 15.8, color: "#4338CA" },
-          { name: "Dawn / Dusk", value: 9.7, color: "#F97316" },
+          { name: "Dawn / dusk", value: 9.7, color: "#F97316" },
         ],
         data2: [
-          { name: "Clear sky", value: 93.0, color: "#10B981" },
-          { name: "Rain / Wet", value: 5.4, color: "#6366F1" },
-          { name: "Foggy haze", value: 0.9, color: "#9CA3AF" },
-          { name: "Other mix", value: 0.7, color: "#4B5563" },
+          { name: "Clear", value: 93.0, color: "#22C55E" },
+          { name: "Rain", value: 5.4, color: "#818CF8" },
+          { name: "Foggy", value: 0.9, color: "#6B7280" },
+          { name: "Other", value: 0.7, color: "#374151" },
         ],
       },
       {
-        title: "Hour Distribution Density",
+        title: "Hour of day",
         insight:
-          "The evening period from 4 PM to 10 PM accounts for 35.3% of cumulative rider fatalities. The rush-hour transition and evening commute represent the most high-threat interval of any standard run.",
+          "4 PM – 10 PM accounts for 35% of all motorcycle fatalities. The evening commute home is the most dangerous ride of the day.",
         type: "hour",
         data: [
-          { name: "12–2 AM", value: 8.3 },
-          { name: "2–4 AM", value: 4.5 },
-          { name: "4–6 AM", value: 3.9 },
-          { name: "6–8 AM", value: 8.8 },
-          { name: "8–10 AM", value: 7.7 },
-          { name: "10 AM–12", value: 6.7 },
-          { name: "12–2 PM", value: 8.2 },
-          { name: "2–4 PM", value: 8.3 },
-          { name: "4–6 PM", value: 10.2 },
-          { name: "6–8 PM", value: 12.4 },
-          { name: "8–10 PM", value: 12.7 },
-          { name: "10 PM–12", value: 8.5 },
+          { name: "12–2am", value: 8.3 },
+          { name: "2–4am", value: 4.5 },
+          { name: "4–6am", value: 3.9 },
+          { name: "6–8am", value: 8.8 },
+          { name: "8–10am", value: 7.7 },
+          { name: "10am–12", value: 6.7 },
+          { name: "12–2pm", value: 8.2 },
+          { name: "2–4pm", value: 8.3 },
+          { name: "4–6pm", value: 10.2 },
+          { name: "6–8pm", value: 12.4 },
+          { name: "8–10pm", value: 12.7 },
+          { name: "10pm–12", value: 8.5 },
         ],
       },
       {
-        title: "Day of the Week Weighting",
+        title: "Day of week",
         insight:
-          "Sunday represents the deadliest single day frame for motorcycle operations. Leisure weekend trips over longer distances correlate with micro-lapses in concentration profiles.",
+          "Sunday is the single deadliest day. Weekend riding — leisure trips, longer distances, less rest — significantly raises risk.",
         type: "hbar",
         data: [
           { name: "Sunday", value: 15.8, color: "#EF4444" },
@@ -124,7 +122,7 @@ const CATEGORIES = {
           { name: "Tuesday", value: 14.3, color: "#F59E0B" },
           { name: "Wednesday", value: 13.4, color: "#EAB308" },
           { name: "Thursday", value: 13.3, color: "#EAB308" },
-          { name: "Friday", value: 13.2, color: "#A3E635" },
+          { name: "Friday", value: 13.2, color: "#84CC16" },
         ],
       },
     ],
@@ -135,39 +133,39 @@ const CATEGORIES = {
     icon: "💥",
     label: "How crashes happen",
     sub: "Collision types & vehicles",
-    accentHex: "#DC2626",
-    tailwindText: "text-red-800",
-    tailwindBorder: "border-red-200",
-    tailwindBg: "bg-red-50/60",
-    headline: "Motorcyclists themselves trigger 50% of their fatal crashes",
+    accentHex: "#EF4444",
+    tailwindText: "text-red-400",
+    tailwindBorder: "border-red-500/20",
+    tailwindBg: "bg-red-950/30",
+    headline: "Motorcyclists themselves cause 50% of their fatal crashes",
     levels: [
       {
-        title: "External Vehicle Affiliation",
+        title: "Other vehicle involved",
         insight:
-          "Single-vehicle out-of-control crashes (25%) combined with motorcycle-vs-motorcycle impacts (25%) mean that exactly half of all rider fatalities involve no third-party passenger cars or heavy commercial trucks.",
+          "Single crashes + MC-vs-MC together equal 50% of all fatalities. Rider behaviour — not other vehicles — is the leading cause of death.",
         type: "pie",
         data: [
           { name: "Passenger car", value: 28, color: "#F97316" },
-          { name: "Bike vs Bike", value: 25, color: "#EF4444" },
-          { name: "Single machine", value: 25, color: "#DC2626" },
-          { name: "Truck / Lorry", value: 14, color: "#F59E0B" },
+          { name: "MC vs MC", value: 25, color: "#EF4444" },
+          { name: "Single accident", value: 25, color: "#DC2626" },
+          { name: "Truck / lorry", value: 14, color: "#F59E0B" },
           { name: "Van / SUV", value: 5, color: "#EAB308" },
-          { name: "Bus transit", value: 2, color: "#10B981" },
-          { name: "Other profile", value: 9CA3AF, color: "#6B7280" },
+          { name: "Bus", value: 2, color: "#22C55E" },
+          { name: "Other", value: 1, color: "#6B7280" },
         ],
       },
       {
-        title: "Kinematic Impact Profile",
+        title: "Type of collision",
         insight:
-          "Angular and side-impact structural failures dominate at 27.5%. This tracks vehicles violating a rider's right-of-way at cross junctions, leaving zero threshold zone to take defensive actions.",
+          "Angular and side-impact crashes dominate. A vehicle crosses your path with no time to react — slow down hard at every intersection.",
         type: "hbar",
         data: [
-          { name: "Angular / Side", value: 27.5, color: "#EF4444" },
-          { name: "Head-on line", value: 21.4, color: "#DC2626" },
+          { name: "Angular / side", value: 27.5, color: "#EF4444" },
+          { name: "Head-on", value: 21.4, color: "#DC2626" },
           { name: "Out of control", value: 19.9, color: "#F97316" },
-          { name: "Rear-end bump", value: 14.8, color: "#F59E0B" },
-          { name: "Lateral sideswipe", value: 8.9, color: "#EAB308" },
-          { name: "Other formats", value: 7.5, color: "#6B7280" },
+          { name: "Rear-end", value: 14.8, color: "#F59E0B" },
+          { name: "Sideswipe", value: 8.9, color: "#EAB308" },
+          { name: "Other types", value: 7.5, color: "#6B7280" },
         ],
       },
     ],
@@ -178,54 +176,54 @@ const CATEGORIES = {
     icon: "👤",
     label: "Who is most at risk",
     sub: "Demographics of fatalities",
-    accentHex: "#059669",
-    tailwindText: "text-emerald-800",
-    tailwindBorder: "border-emerald-200",
-    tailwindBg: "bg-emerald-50/60",
+    accentHex: "#34D399",
+    tailwindText: "text-emerald-400",
+    tailwindBorder: "border-emerald-500/20",
+    tailwindBg: "bg-emerald-950/30",
     headline: "Young men aged 16–20 are the highest risk group",
     levels: [
       {
-        title: "Gender & Saddle Allocation",
+        title: "Gender & role",
         insight:
-          "92.1% of cumulative traffic fatalities are male profile assets, and 88.5% are operating directly in the driver saddle. Being a young male rider represents the ultimate concentration risk factor on public infrastructure.",
+          "94% of those killed are male, and 89% are the rider (not a passenger). Being young, male, and in the saddle carries the highest risk.",
         type: "dual",
-        labels: ["By Gender", "By Saddle Role"],
+        labels: ["By gender", "By role"],
         data: [
-          { name: "Male", value: 92.1, color: "#6366F1" },
-          { name: "Female", value: 7.9, color: "#EC4899" },
+          { name: "Male", value: 94, color: "#818CF8" },
+          { name: "Female", value: 6, color: "#F472B6" },
         ],
         data2: [
-          { name: "Rider Operator", value: 88.5, color: "#F59E0B" },
-          { name: "Pillion Passenger", value: 11.5, color: "#9CA3AF" },
+          { name: "Rider", value: 89, color: "#F59E0B" },
+          { name: "Passenger", value: 11, color: "#6B7280" },
         ],
       },
       {
-        title: "Age Distribution Blocks",
+        title: "Age group",
         insight:
-          "Riders aged 16–20 account for the largest single mortality share at 22.5%. This stems from structural inexperience, lack of formal track safety training, and relying on self-taught exploratory habits.",
+          "16–20 year-olds make up 22.5% of all fatalities — inexperience, impulsiveness, and lack of formal training are the key risk factors.",
         type: "hbar",
         data: [
-          { name: "16–20 years", value: 22.5, color: "#EF4444" },
-          { name: "21–25 years", value: 17.3, color: "#F97316" },
-          { name: "26–30 years", value: 9.4, color: "#F59E0B" },
-          { name: "41–50 years", value: 22C55E, color: "#EAB308" },
-          { name: "51–60 years", value: 9.1, color: "#A3E635" },
-          { name: "60+ elderly", value: 9.1, color: "#10B981" },
-          { name: "31–35 years", value: 6.4, color: "#10B981" },
-          { name: "36–40 years", value: 4.8, color: "#0D9488" },
-          { name: "11–15 youth", value: 4.7, color: "#0891B2" },
+          { name: "16–20", value: 22.5, color: "#EF4444" },
+          { name: "21–25", value: 17.3, color: "#F97316" },
+          { name: "26–30", value: 9.4, color: "#F59E0B" },
+          { name: "41–50", value: 9.9, color: "#EAB308" },
+          { name: "51–60", value: 9.1, color: "#84CC16" },
+          { name: "60+", value: 9.1, color: "#22C55E" },
+          { name: "31–35", value: 6.4, color: "#22C55E" },
+          { name: "36–40", value: 4.8, color: "#14B8A6" },
+          { name: "11–15", value: 4.7, color: "#06B6D4" },
         ],
       },
       {
-        title: "Machine Ownership Matrix",
+        title: "Motorcycle ownership",
         insight:
-          "9 out of 10 fatal impacts happen on an asset registered under personal/private ownership metadata. The bike you ride every day carries the highest risk.",
+          "9 in 10 fatal crashes involve a privately owned motorcycle. The bike you ride every day carries the highest risk.",
         type: "pie",
         data: [
-          { name: "Private / Personal", value: 90, color: "#F59E0B" },
-          { name: "Commercial transit", value: 6, color: "#9CA3AF" },
-          { name: "Corporate Services", value: 3, color: "#4B5563" },
-          { name: "Government fleet", value: 1, color: "#374151" },
+          { name: "Private / personal", value: 90, color: "#F59E0B" },
+          { name: "Commercial / goods", value: 6, color: "#6B7280" },
+          { name: "Services", value: 3, color: "#4B5563" },
+          { name: "Government", value: 1, color: "#374151" },
         ],
       },
     ],
@@ -236,33 +234,33 @@ const CATEGORIES = {
     icon: "🛡️",
     label: "Safety compliance gaps",
     sub: "Helmet & licence data",
-    accentHex: "#DB2777",
-    tailwindText: "text-pink-800",
-    tailwindBorder: "border-pink-200",
-    tailwindBg: "bg-pink-50/60",
+    accentHex: "#F472B6",
+    tailwindText: "text-pink-400",
+    tailwindBorder: "border-pink-500/20",
+    tailwindBg: "bg-pink-950/30",
     headline: "35% of riders killed had no valid licence",
     levels: [
       {
-        title: "Helmet Mechanical Engagement",
+        title: "Helmet usage at time of crash",
         insight:
-          "20% of operators killed wore no helmet array at the moment of kinetic failure, while 4% neglected to fasten their retention strap. Unsecured or missing retention shells remove all structural defense.",
+          "1 in 5 riders killed wore no helmet — and 63% of all fatal injuries are to the head. Always wear a properly fastened helmet.",
         type: "pie",
         data: [
-          { name: "Properly Fastened", value: 76, color: "#10B981" },
-          { name: "Zero Helmet Array", value: 20, color: "#EF4444" },
-          { name: "Unfastened Strap", value: 4, color: "#F97316" },
+          { name: "Properly worn", value: 76, color: "#22C55E" },
+          { name: "Not wearing", value: 20, color: "#EF4444" },
+          { name: "Worn but not strapped", value: 4, color: "#F97316" },
         ],
       },
       {
-        title: "Licence Validation Status",
+        title: "Licence status at time of crash",
         insight:
-          "A valid license represents technical compliance metrics. Crucially, over a third (35%) of all terminal crash profiles involve operators with zero regulatory credentials, bypassing verified evaluation tracks.",
+          "A licence isn't just paperwork — it represents training. Over a third of those killed had no licence at all.",
         type: "hbar",
         data: [
-          { name: "No Valid Licence", value: 35, color: "#EF4444" },
-          { name: "Full Licence (>5 yrs)", value: 34, color: "#10B981" },
-          { name: "Full Licence (<5 yrs)", value: 29, color: "#F59E0B" },
-          { name: "L-Plate Apprentice", value: 2, color: "#F97316" },
+          { name: "No licence", value: 35, color: "#EF4444" },
+          { name: "Full licence (>5 yrs)", value: 34, color: "#22C55E" },
+          { name: "Full licence (<5 yrs)", value: 29, color: "#F59E0B" },
+          { name: "L-plate (learner)", value: 2, color: "#F97316" },
         ],
       },
     ],
@@ -273,77 +271,78 @@ const CATEGORIES = {
     icon: "🤕",
     label: "Types of fatal injury",
     sub: "Body areas affected",
-    accentHex: "#EA580C",
-    tailwindText: "text-orange-800",
-    tailwindBorder: "border-orange-200",
-    tailwindBg: "bg-orange-50/60",
+    accentHex: "#FB923C",
+    tailwindText: "text-orange-400",
+    tailwindBorder: "border-orange-500/20",
+    tailwindBg: "bg-orange-950/30",
     headline: "63% of fatal injuries are to the head",
     levels: [
       {
-        title: "Terminal Trauma Allocation",
+        title: "Injury location on the body",
         insight:
-          "Head trauma remains the primary driver of mortality indices at 63%. Because brain tissue exhibits zero tolerance for terminal deceleration forces, protective shell validation remains non-negotiable for every single ride.",
+          "Your helmet protects the body part most likely to kill you. It is your single most important piece of equipment — every single ride, no exceptions.",
         type: "pie",
         data: [
-          { name: "Cranial Head Trauma", value: 63, color: "#EF4444" },
-          { name: "Multiple Zone Failure", value: 20, color: "#F97316" },
-          { name: "Thoracic Chest Trauma", value: 9, color: "#F59E0B" },
-          { name: "Cervical Neck Fracture", value: 4, color: "#EAB308" },
-          { name: "Lower Extremities", value: 3, color: "#10B981" },
-          { name: "Pelvic Hip Fracture", value: 1, color: "#16A34A" },
+          { name: "Head", value: 63, color: "#EF4444" },
+          { name: "Multiple areas", value: 20, color: "#F97316" },
+          { name: "Chest", value: 9, color: "#F59E0B" },
+          { name: "Neck", value: 4, color: "#EAB308" },
+          { name: "Legs", value: 3, color: "#22C55E" },
+          { name: "Hips", value: 1, color: "#16A34A" },
         ],
       },
     ],
   },
 };
 
-/* ─── MINI VISUAL SUB-COMPONENTS ──────────────────────────────────── */
+/* ─── CHART COMPONENTS ────────────────────────────────────────────── */
 
 const RADIAN = Math.PI / 180;
+
 const PieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, value }) => {
-  if (percent < 0.04) return null;
+  if (percent < 0.06) return null;
   const r = innerRadius + (outerRadius - innerRadius) * 0.55;
   const x = cx + r * Math.cos(-midAngle * RADIAN);
   const y = cy + r * Math.sin(-midAngle * RADIAN);
   return (
-    <text x={x} y={y} fill="#fff" textAnchor="middle" dominantBaseline="central" className="text-[11px] font-black">
+    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central"
+      style={{ fontSize: 11, fontWeight: 700 }}>
       {value}%
     </text>
   );
 };
 
-const CustomChartTooltip = ({ active, payload }) => {
+const ChartTip = ({ active, payload }) => {
   if (!active || !payload?.length) return null;
-  const data = payload[0];
+  const d = payload[0];
   return (
-    <div className="bg-white border border-zinc-200 rounded-xl p-3 shadow-xl text-xs font-mono text-zinc-800">
-      <p className="text-zinc-500 font-bold mb-1">{data.name || data.payload?.name}</p>
-      <p className="font-black text-sm text-zinc-900">
-        {data.value}% Distribution
+    <div className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm shadow-xl">
+      <p className="text-white font-semibold mb-0.5">{d.name || d.payload?.name}</p>
+      <p className="font-bold" style={{ color: d.fill || d.color || "#F59E0B" }}>
+        {d.value}%
       </p>
     </div>
   );
 };
 
-function PieChartModule({ data, size = 180 }) {
+function PieViz({ data, size = 180 }) {
   return (
-    <div className="flex gap-6 items-center flex-wrap justify-center sm:justify-start">
-      <div className="flex-shrink-0 mx-auto sm:mx-0">
+    <div className="flex gap-6 items-center flex-wrap">
+      <div className="flex-shrink-0">
         <PieChart width={size} height={size}>
-          <Pie data={data} cx={size / 2} cy={size / 2} outerRadius={size / 2 - 6} labelLine={false} label={PieLabel} dataKey="value">
-            {data.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+          <Pie data={data} cx={size / 2} cy={size / 2} outerRadius={size / 2 - 8}
+            labelLine={false} label={PieLabel} dataKey="value">
+            {data.map((e, i) => <Cell key={i} fill={e.color} />)}
           </Pie>
-          <Tooltip content={<CustomChartTooltip />} />
+          <Tooltip content={<ChartTip />} />
         </PieChart>
       </div>
-      <div className="flex flex-col gap-1.5 flex-1 min-w-[240px]">
-        {data.map((item, idx) => (
-          <div key={idx} className="flex items-center justify-between text-xs font-mono border-b border-zinc-200 pb-1.5 last:border-0">
-            <div className="flex items-center gap-2.5 truncate max-w-[180px]">
-              <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: item.color }} />
-              <span className="text-zinc-600 truncate">{item.name}</span>
-            </div>
-            <span className="text-zinc-900 font-black tabular-nums">{item.value}%</span>
+      <div className="flex flex-col gap-2.5 flex-1 min-w-32">
+        {data.map((d, i) => (
+          <div key={i} className="flex items-center gap-3">
+            <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: d.color }} />
+            <span className="text-gray-400 text-sm leading-tight">{d.name}</span>
+            <span className="ml-auto text-white font-bold text-sm tabular-nums">{d.value}%</span>
           </div>
         ))}
       </div>
@@ -351,26 +350,27 @@ function PieChartModule({ data, size = 180 }) {
   );
 }
 
-function HorizontalBarModule({ data }) {
-  const maxValue = Math.max(...data.map(item => item.value));
+function HBarViz({ data }) {
+  const max = Math.max(...data.map(d => d.value));
   return (
-    <div className="flex flex-col gap-3 font-mono">
-      {data.map((item, idx) => (
-        <div key={idx} className="flex items-center gap-4 text-xs">
-          <div className="text-zinc-600 text-right font-bold truncate w-[130px] sm:w-[160px]" title={item.name}>
-            {item.name}
+    <div className="flex flex-col gap-2.5">
+      {data.map((d, i) => (
+        <div key={i} className="flex items-center gap-3">
+          <div className="text-gray-400 text-sm text-right flex-shrink-0" style={{ width: 148 }}>
+            {d.name}
           </div>
-          <div className="flex-1 h-7 bg-zinc-100 rounded-lg border border-zinc-200 overflow-hidden relative">
+          <div className="flex-1 h-7 bg-gray-800 rounded overflow-hidden">
             <div
-              className="h-full rounded-md flex items-center justify-end pr-3 transition-all duration-700 ease-out"
+              className="h-full rounded flex items-center justify-end pr-2"
               style={{
-                width: `${(item.value / maxValue) * 100}%`,
-                background: item.color,
-                minWidth: '42px'
+                width: `${(d.value / max) * 100}%`,
+                background: d.color,
+                minWidth: 32,
+                transition: "width 0.6s cubic-bezier(.4,0,.2,1)",
               }}
             >
-              <span className="text-[10px] font-black text-white">
-                {item.value}%
+              <span className="text-xs font-bold" style={{ color: "#000", textShadow: "none" }}>
+                {d.value}%
               </span>
             </div>
           </div>
@@ -380,266 +380,268 @@ function HorizontalBarModule({ data }) {
   );
 }
 
-function DailyHourModule({ data }) {
+function HourViz({ data }) {
   return (
-    <div className="w-full">
+    <div>
       <ResponsiveContainer width="100%" height={260}>
-        <BarChart data={data} margin={{ top: 12, right: 10, left: -25, bottom: 20 }}>
-          <XAxis dataKey="name" tick={{ fill: "#52525b", fontSize: 10, fontFamily: 'monospace' }} interval={0} stroke="#e4e4e7" />
-          <YAxis tick={{ fill: "#71717a", fontSize: 10, fontFamily: 'monospace' }} tickFormatter={v => `${v}%`} stroke="#e4e4e7" />
-          <Tooltip content={<CustomChartTooltip />} />
-          <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-            {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.value >= 11 ? "#EF4444" : entry.value >= 8 ? "#F59E0B" : "#e4e4e7"} />
+        <BarChart data={data} margin={{ top: 8, right: 8, left: -24, bottom: 44 }}>
+          <XAxis
+            dataKey="name"
+            tick={{ fill: "#6B7280", fontSize: 10 }}
+            angle={-40}
+            textAnchor="end"
+            interval={0}
+          />
+          <YAxis tick={{ fill: "#4B5563", fontSize: 11 }} tickFormatter={v => `${v}%`} />
+          <Tooltip content={<ChartTip />} />
+          <Bar dataKey="value" radius={[3, 3, 0, 0]}>
+            {data.map((e, i) => (
+              <Cell
+                key={i}
+                fill={e.value >= 10 ? "#EF4444" : e.value >= 8 ? "#F59E0B" : "#374151"}
+              />
             ))}
           </Bar>
         </BarChart>
       </ResponsiveContainer>
-      <div className="flex flex-wrap justify-center gap-6 mt-4 text-[10px] font-mono tracking-wider uppercase text-zinc-500 border-t border-zinc-200 pt-4">
-        <span className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-sm bg-[#EF4444]" /> Critical Threat Vector (• Peak Risk ≥11%)
-        </span>
-        <span className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-sm bg-[#F59E0B]" /> Elevated Hazard (8%–11%)
-        </span>
-        <span className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-sm bg-[#e4e4e7]" /> Baseline Vector (&lt;8%)
-        </span>
+      <div className="flex justify-center gap-5 mt-1 text-xs text-gray-500">
+        {[
+          { color: "#EF4444", label: "High risk ≥10%" },
+          { color: "#F59E0B", label: "Moderate 8–10%" },
+          { color: "#374151", label: "Lower <8%" },
+        ].map(item => (
+          <span key={item.label} className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-sm inline-block flex-shrink-0" style={{ background: item.color }} />
+            {item.label}
+          </span>
+        ))}
       </div>
     </div>
   );
 }
 
-function DualPieModule({ labels, data, data2 }) {
+function DualViz({ labels, data, data2 }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-      <div className="bg-zinc-50 border border-zinc-200 p-4 rounded-xl">
-        <p className="text-[10px] font-mono font-bold tracking-widest text-zinc-400 uppercase mb-4 text-center">
-          📊 Segregation Link Alpha: {labels[0]}
-        </p>
-        <PieChartModule data={data} size={150} />
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+      <div>
+        <p className="text-xs text-gray-500 uppercase tracking-widest mb-4 text-center">{labels[0]}</p>
+        <PieViz data={data} size={160} />
       </div>
-      <div className="bg-zinc-50 border border-zinc-200 p-4 rounded-xl">
-        <p className="text-[10px] font-mono font-bold tracking-widest text-zinc-400 uppercase mb-4 text-center">
-          📊 Segregation Link Beta: {labels[1]}
-        </p>
-        <PieChartModule data={data2} size={150} />
+      <div>
+        <p className="text-xs text-gray-500 uppercase tracking-widest mb-4 text-center">{labels[1]}</p>
+        <PieViz data={data2} size={160} />
       </div>
     </div>
   );
 }
 
-/* ─── CORE INTERACTIVE CONSOLE SYSTEM ─────────────────────────────── */
+/* ─── MAIN COMPONENT ──────────────────────────────────────────────── */
 
 export default function RiskInfographic() {
-  const [mounted, setMounted] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [level, setLevel] = useState(0);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return (
-      <div className="w-full bg-white text-zinc-500 min-h-[400px] flex items-center justify-center font-mono text-xs border border-zinc-200 rounded-3xl">
-        <div className="flex items-center gap-3">
-          <div className="w-4 h-4 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin" />
-          Initializing Instrumented Exposure Database...
-        </div>
-      </div>
-    );
-  }
+  const [animKey, setAnimKey] = useState(0); // triggers re-animation on level change
 
   const cat = selectedId ? CATEGORIES[selectedId] : null;
   const currentLevel = cat ? cat.levels[level] : null;
 
-  const selectCat = id => { setSelectedId(id); setLevel(0); };
-  const goToLevel = idx => { setLevel(idx); };
+  const selectCat = id => { setSelectedId(id); setLevel(0); setAnimKey(k => k + 1); };
+  const goToLevel = l => { setLevel(l); setAnimKey(k => k + 1); };
 
-  const stepBackwards = () => {
+  const goBack = () => {
     if (level > 0) goToLevel(level - 1);
     else { setSelectedId(null); setLevel(0); }
   };
 
-  /* ──────── INTERFACE STATE A: THE PRIMARY CORE SELECTOR DASHBOARD ──────── */
+  /* ── HOME SCREEN ── */
   if (!selectedId) {
     return (
-      <div className="bg-white text-zinc-800 p-6 font-sans border border-zinc-200 rounded-3xl shadow-xl w-full max-w-7xl mx-auto transition-all duration-300">
-        
-        {/* Analytical Heading Block */}
-        <div className="text-center mb-10 border-b border-zinc-200 pb-8">
-          <p className="text-[10px] font-mono tracking-widest text-zinc-400 font-bold uppercase mb-3">
-            Source Citation: Manan, M. M. A., &amp; Várhelyi, A. (2012). Motorcycle fatalities in Malaysia. IATSS Research, 36(1), 30-39.
+      <div className="bg-gray-950 text-white min-h-screen p-6 font-sans">
+        {/* Hero stats */}
+        <div className="text-center mb-12 pt-4">
+          <p className="text-xs tracking-widest text-gray-600 uppercase mb-5">
+            Malaysia road safety · source data 2000–2009
           </p>
-          <h2 className="text-3xl sm:text-5xl font-black tracking-tight uppercase leading-none text-zinc-900">
-            Motorcycle Fatalities <br className="sm:hidden" />
-            <span className="font-light text-zinc-400 lowercase text-xl sm:text-2xl font-mono block mt-2">
-              in macro-analytics perspective [cite: 2460]
-            </span>
-          </h2>
-          <p className="text-zinc-500 text-xs mt-3 max-w-2xl mx-auto leading-relaxed">
-            Parsing comprehensive traffic safety matrices from Royal Malaysia Police data sets[cite: 2475, 2540]. Click any metrics domain to unlock multi-layered trend breakdowns.
+          <h1 className="text-4xl sm:text-5xl font-black tracking-tight mb-3 leading-tight">
+            Motorcycle fatalities<br />
+            <span className="text-gray-500 font-light text-2xl sm:text-3xl">in Malaysia</span>
+          </h1>
+          <p className="text-gray-500 text-sm mb-10">
+            Tap any category to explore the data. Each click reveals a deeper layer.
           </p>
+
+          <div className="flex justify-center gap-8 sm:gap-14 flex-wrap mb-2">
+            {[
+              { val: "4,070", label: "fatalities in 2009 alone", color: "#EF4444" },
+              { val: "60%",   label: "of all Malaysian road deaths", color: "#FBBF24" },
+              { val: "#1",    label: "ASEAN fatality rate per capita", color: "#818CF8" },
+              { val: "8/day", label: "average over 10 years",         color: "#34D399" },
+            ].map(s => (
+              <div key={s.label} className="text-center">
+                <div className="text-3xl sm:text-4xl font-black" style={{ color: s.color }}>
+                  {s.val}
+                </div>
+                <div className="text-xs text-gray-600 mt-1 max-w-24">{s.label}</div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* ── Macro Telemetry Vital Signs Banner ── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full mx-auto mb-10 bg-zinc-50 p-5 rounded-2xl border border-zinc-200">
-          {[
-            { value: "4,070", label: "fatalities in peak baseline year [cite: 2491]", color: "text-rose-600" },
-            { value: "60%",   label: "of all macro Malaysian road deaths [cite: 2474, 2520]", color: "text-amber-600" },
-            { value: "#1 Risk", label: "ASEAN fatality rate per capita [cite: 2474, 2602]", color: "text-indigo-600" },
-            { value: "8 / Day", label: "mean mortal velocity frequency [cite: 2737]", color: "text-emerald-600" },
-          ].map((stat, i) => (
-            <div key={i} className="text-center border-r border-zinc-200 last:border-0 px-2">
-              <div className={`text-2xl sm:text-3xl font-black tracking-tight ${stat.color}`}>
-                {stat.value}
-              </div>
-              <div className="text-[10px] font-mono text-zinc-500 mt-1 uppercase tracking-tight leading-snug">
-                {stat.label}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* ── Interactive Category Multi-Grid Array ── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 w-full mx-auto">
-          {Object.values(CATEGORIES).map(item => (
+        {/* Category grid */}
+        <div
+          className="grid gap-4 max-w-4xl mx-auto"
+          style={{ gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))" }}
+        >
+          {Object.values(CATEGORIES).map(c => (
             <button
-              key={item.id}
-              onClick={() => selectCat(item.id)}
-              className={`${item.tailwindBg} border ${item.tailwindBorder} rounded-2xl p-6 text-left transition-all duration-200 hover:-translate-y-1 hover:bg-white group outline-none hover:shadow-md`}
+              key={c.id}
+              onClick={() => selectCat(c.id)}
+              className={`${c.tailwindBg} border ${c.tailwindBorder} rounded-2xl p-6 text-left cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:border-opacity-60 focus:outline-none focus:ring-2`}
+              style={{ focusRingColor: c.accentHex }}
             >
-              <div className="text-3xl mb-4 bg-white w-12 h-12 rounded-xl flex items-center justify-center border border-zinc-200 group-hover:border-zinc-300 transition-all">
-                {item.icon}
+              <div className="text-3xl mb-4">{c.icon}</div>
+              <div className={`text-xs tracking-widest uppercase mb-2 ${c.tailwindText}`}>{c.sub}</div>
+              <div className="text-white font-bold text-lg mb-3 leading-snug">{c.label}</div>
+              <div className="text-gray-400 text-sm leading-relaxed border-t border-gray-800 pt-3">
+                {c.headline}
               </div>
-              <span className={`text-[10px] font-mono tracking-widest uppercase block mb-1 ${item.tailwindText}`}>
-                {item.sub}
-              </span>
-              <h4 className="text-zinc-900 font-black text-lg mb-2 tracking-tight uppercase">
-                {item.label}
-              </h4>
-              <p className="text-zinc-500 text-xs leading-relaxed border-t border-zinc-200 pt-3 font-medium min-h-[50px]">
-                {item.headline}
-              </p>
-              <div className={`mt-4 text-[10px] font-mono font-bold tracking-widest uppercase flex items-center gap-1.5 ${item.tailwindText}`}>
-                Expose {item.levels.length} Analysis Layers 
-                <span className="transition-transform group-hover:translate-x-1">→</span>
+              <div className={`mt-4 text-xs tracking-widest ${c.tailwindText} flex items-center gap-1`}>
+                {c.levels.length} drill levels
+                <span className="ml-1">→</span>
               </div>
             </button>
           ))}
         </div>
+
+        <p className="text-center mt-12 text-xs text-gray-800">
+          Source: Manan &amp; Várhelyi (2012), IATSS Research · Malaysian Royal Police Department
+        </p>
       </div>
     );
   }
 
-  /* ──────── INTERFACE STATE B: SPECIFIC DIAGNOSTIC DRILL LAYER VIEW ──────── */
+  /* ── DETAIL / DRILL VIEW ── */
   return (
-    <div className="bg-white text-zinc-800 p-6 font-sans border border-zinc-200 rounded-3xl shadow-xl w-full max-w-7xl mx-auto">
+    <div className="bg-gray-950 text-white min-h-screen p-6 font-sans">
+      <div className="max-w-3xl mx-auto">
 
-        {/* Clean Relative Context Navigation Path Row */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-6 border-b border-zinc-200 pb-4">
+        {/* Breadcrumb nav */}
+        <div className="flex items-center gap-3 mb-8">
           <button
-            onClick={stepBackwards}
-            className="bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 text-zinc-700 font-mono font-bold text-xs px-4 py-2 rounded-xl transition-all"
+            onClick={goBack}
+            className="bg-gray-900 border border-gray-800 rounded-lg px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 transition-colors"
           >
-            ← System Back
+            ← Back
           </button>
-          <div className="text-[11px] font-mono text-zinc-400 truncate">
-            <button onClick={() => { setSelectedId(null); }} className="hover:text-zinc-600">
-              Console
+          <div className="text-sm text-gray-600 truncate">
+            <button
+              onClick={() => { setSelectedId(null); setLevel(0); }}
+              className="text-gray-500 hover:text-gray-300 transition-colors"
+            >
+              Home
             </button>
-            <span className="mx-2 text-zinc-300">/</span>
-            <span style={{ color: cat.accentHex }} className="font-bold">
-              {cat.icon} {cat.label}
-            </span>
-            <span className="mx-2 text-zinc-300">/</span>
-            <span className="text-zinc-500">{currentLevel.title}</span>
+            <span className="mx-2">/</span>
+            <span style={{ color: cat.accentHex }}>{cat.icon} {cat.label}</span>
+            {level > 0 && (
+              <>
+                <span className="mx-2 text-gray-700">/</span>
+                <span className="text-gray-400">{currentLevel.title}</span>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Dynamic Progress Micro-Bar System */}
-        <div className="flex gap-2 mb-8">
+        {/* Level progress bar */}
+        <div className="flex gap-1.5 mb-8">
           {cat.levels.map((l, i) => (
             <button
               key={i}
               onClick={() => goToLevel(i)}
-              title={`Switch layer node to: ${l.title}`}
-              className="flex-1 h-1 rounded-full transition-all duration-300"
-              style={{ background: i <= level ? cat.accentHex : "#e4e4e7" }}
+              title={l.title}
+              className="flex-1 h-1 rounded-full transition-all duration-300 hover:opacity-80"
+              style={{ background: i <= level ? cat.accentHex : "#1F2937" }}
             />
           ))}
         </div>
 
-        {/* Main Header Matrix Readout Box */}
-        <div className="mb-6 space-y-3">
-          <p className="text-[10px] font-mono tracking-widest uppercase font-bold" style={{ color: cat.accentHex }}>
-            {cat.icon} Vector Sub-Layer // Index {level + 1} of {cat.levels.length}
+        {/* Level label & title */}
+        <div className="mb-6" key={animKey}>
+          <p className="text-xs tracking-widest uppercase mb-2" style={{ color: cat.accentHex }}>
+            {cat.icon} {cat.label} · level {level + 1} of {cat.levels.length}
           </p>
-          <h3 className="text-2xl sm:text-4xl font-black tracking-tight text-zinc-900 uppercase leading-none">
+          <h2 className="text-3xl sm:text-4xl font-black mb-5 leading-tight">
             {currentLevel.title}
-          </h3>
-          <div 
-            className="rounded-2xl p-5 border text-xs sm:text-sm leading-relaxed"
+          </h2>
+          <div
+            className="rounded-xl p-4 border"
             style={{
-              background: `${cat.accentHex}05`,
-              borderColor: `${cat.accentHex}25`
+              background: `${cat.accentHex}10`,
+              borderColor: `${cat.accentHex}30`,
             }}
           >
-            <span className="font-mono font-bold block mb-1 uppercase text-xs tracking-wider" style={{ color: cat.accentHex }}>
-              ✦ Empirical Incident Analytics Profile:
+            <span className="font-semibold text-sm" style={{ color: cat.accentHex }}>
+              Key insight:{" "}
             </span>
-            <span className="text-zinc-700 font-medium">{currentLevel.insight}</span>
+            <span className="text-gray-300 text-sm leading-relaxed">{currentLevel.insight}</span>
           </div>
         </div>
 
-        {/* Main Graphical Presentation Block Section */}
-        <div className="bg-white border border-zinc-200 rounded-2xl p-6 mb-6 shadow-sm relative min-h-[220px] flex flex-col justify-center">
-          {currentLevel.type === "pie" && <PieChartModule data={currentLevel.data} />}
-          {currentLevel.type === "hbar" && <HorizontalBarModule data={currentLevel.data} />}
-          {currentLevel.type === "hour" && <DailyHourModule data={currentLevel.data} />}
+        {/* Chart area */}
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6">
+          {currentLevel.type === "pie" && <PieViz data={currentLevel.data} />}
+          {currentLevel.type === "hbar" && <HBarViz data={currentLevel.data} />}
+          {currentLevel.type === "hour" && <HourViz data={currentLevel.data} />}
           {currentLevel.type === "dual" && (
-            <DualPieModule labels={currentLevel.labels} data={currentLevel.data} data2={currentLevel.data2} />
+            <DualViz
+              labels={currentLevel.labels}
+              data={currentLevel.data}
+              data2={currentLevel.data2}
+            />
           )}
         </div>
 
-        {/* Matrix Quick-Jump Tab Triggers */}
+        {/* Quick-jump to other levels */}
         {cat.levels.length > 1 && (
-          <div className="flex gap-2 mb-6 flex-wrap">
+          <div className="flex gap-2 mb-4">
             {cat.levels.map((l, i) => (
               <button
                 key={i}
                 onClick={() => goToLevel(i)}
-                className="flex-1 min-w-[120px] py-2 px-3 rounded-xl border text-[10px] font-mono font-bold uppercase tracking-wider transition-all"
+                className="flex-1 py-2 rounded-lg border text-xs transition-colors"
                 style={
                   i === level
-                    ? { background: cat.accentHex, borderColor: cat.accentHex, color: "#fff" }
-                    : { background: "#fafafa", borderColor: "#e4e4e7", color: "#71717a" }
+                    ? { background: cat.accentHex, borderColor: cat.accentHex, color: "#000", fontWeight: 700 }
+                    : { background: "transparent", borderColor: "#1F2937", color: "#6B7280" }
                 }
               >
-                Layer {i + 1}
+                {i + 1}. {l.title.length > 18 ? l.title.slice(0, 18) + "…" : l.title}
               </button>
             ))}
           </div>
         )}
 
-        {/* Primary Functional Call to Action (CTA) Control Line */}
+        {/* Primary CTA */}
         {level < cat.levels.length - 1 ? (
           <button
             onClick={() => goToLevel(level + 1)}
-            className="w-full rounded-2xl py-4 text-xs font-mono font-bold uppercase tracking-widest transition-opacity hover:opacity-90 shadow-md text-white"
-            style={{ background: cat.accentHex }}
+            className="w-full rounded-xl py-4 text-base font-black tracking-wider uppercase transition-opacity hover:opacity-90 focus:outline-none"
+            style={{ background: cat.accentHex, color: "#000" }}
           >
-            Drill Deeper → Next Layer: {cat.levels[level + 1].title}
+            Drill deeper → {cat.levels[level + 1].title}
           </button>
         ) : (
           <button
-            onClick={() => { setSelectedId(null); }}
-            className="w-full bg-zinc-50 hover:bg-zinc-100 text-zinc-500 border border-zinc-200 rounded-2xl py-4 text-xs font-mono font-bold uppercase tracking-widest transition-colors outline-none"
+            onClick={() => { setSelectedId(null); setLevel(0); }}
+            className="w-full bg-gray-900 border border-gray-800 rounded-xl py-4 text-gray-500 text-sm hover:bg-gray-800 transition-colors"
           >
-            ← Terminate Drill Map // Return to Console Home
+            ← Back to all categories
           </button>
         )}
+
+        <p className="text-center mt-8 text-xs text-gray-800">
+          Source: Manan &amp; Várhelyi (2012), IATSS Research · Malaysian Royal Police 2000–2009
+        </p>
+      </div>
     </div>
   );
 }
