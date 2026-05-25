@@ -15,6 +15,7 @@ import {
 } from 'recharts';
 
 const DATA = {
+
   where: {
     label: 'WHERE',
     icon: '📍',
@@ -29,6 +30,7 @@ const DATA = {
     ],
 
     levels: [
+
       {
         title: 'Where do crashes happen?',
         sub: 'Area type distribution',
@@ -46,6 +48,23 @@ const DATA = {
       },
 
       {
+        title: 'Road hierarchy',
+        sub: 'Road type contribution',
+        type: 'bar',
+
+        data: [
+          { name: 'Primary / arterial', value: 49.7, color: '#EF4444' },
+          { name: 'Local street', value: 18.6, color: '#F97316' },
+          { name: 'Secondary road', value: 16.5, color: '#F59E0B' },
+          { name: 'Minor roads', value: 12.3, color: '#EAB308' },
+          { name: 'Expressway', value: 3, color: '#94A3B8' },
+        ],
+
+        insight:
+          'Primary and arterial roads account for almost half of all motorcycle fatalities.',
+      },
+
+      {
         title: 'Road geometry',
         sub: 'Crash location geometry',
         type: 'bar',
@@ -60,6 +79,7 @@ const DATA = {
         insight:
           'Straight roads kill far more riders than curves because they encourage speed adaptation.',
       },
+
     ],
   },
 
@@ -77,10 +97,10 @@ const DATA = {
     ],
 
     levels: [
+
       {
         title: 'Hour of day',
         sub: 'Fatality distribution',
-
         type: 'hour',
 
         data: [
@@ -101,6 +121,139 @@ const DATA = {
         insight:
           'The most dangerous riding period is between 4 pm and 10 pm.',
       },
+
+      {
+        title: 'Day of week',
+        sub: 'Weekly crash pattern',
+        type: 'bar',
+
+        data: [
+          { name: 'Sunday', value: 15.8, color: '#EF4444' },
+          { name: 'Monday', value: 15.3, color: '#F97316' },
+          { name: 'Saturday', value: 14.7, color: '#F59E0B' },
+          { name: 'Tuesday', value: 14.3, color: '#EAB308' },
+          { name: 'Wednesday', value: 13.4, color: '#94A3B8' },
+          { name: 'Thursday', value: 13.3, color: '#94A3B8' },
+          { name: 'Friday', value: 13.2, color: '#94A3B8' },
+        ],
+
+        insight:
+          'Weekend and transition days produce the highest fatality rates.',
+      },
+
+    ],
+  },
+
+  who: {
+    label: 'WHO',
+    icon: '👤',
+    color: '#378ADD',
+    big: '94%',
+    bigDesc: 'of fatalities are male',
+
+    mini: [
+      ['Male riders', 94, '#378ADD'],
+      ['Age 16–20', 22.5, '#EF4444'],
+      ['Riders', 89, '#378ADD'],
+    ],
+
+    levels: [
+
+      {
+        title: 'Gender distribution',
+        sub: 'Male vs female',
+        type: 'pie',
+
+        data: [
+          { name: 'Male', value: 94, color: '#378ADD' },
+          { name: 'Female', value: 6, color: '#EC4899' },
+        ],
+
+        insight:
+          'Male riders dominate motorcycle fatality statistics across Malaysia.',
+      },
+
+      {
+        title: 'Age group risk',
+        sub: 'Fatality by age group',
+        type: 'bar',
+
+        data: [
+          { name: '16–20', value: 22.5, color: '#EF4444' },
+          { name: '21–25', value: 17.3, color: '#F97316' },
+          { name: '26–30', value: 9.4, color: '#F59E0B' },
+          { name: '41–50', value: 9.9, color: '#EAB308' },
+          { name: '51–60', value: 9.1, color: '#94A3B8' },
+        ],
+
+        insight:
+          'Young riders under 25 represent the highest-risk demographic.',
+      },
+
+      {
+        title: 'Rider or passenger',
+        sub: 'Motorcycle occupancy',
+        type: 'pie',
+
+        data: [
+          { name: 'Rider', value: 89, color: '#EF4444' },
+          { name: 'Passenger', value: 11, color: '#F59E0B' },
+        ],
+
+        insight:
+          'Most fatalities are riders themselves rather than passengers.',
+      },
+
+    ],
+  },
+
+  how: {
+    label: 'HOW',
+    icon: '💥',
+    color: '#E24B4A',
+    big: '50%',
+    bigDesc: 'caused by motorcyclists themselves',
+
+    mini: [
+      ['MC-at-fault', 50, '#EF4444'],
+      ['Passenger car', 28, '#F59E0B'],
+      ['Angular collision', 27.5, '#DC2626'],
+    ],
+
+    levels: [
+
+      {
+        title: 'Collision opponent',
+        sub: 'Who they collided with',
+        type: 'pie',
+
+        data: [
+          { name: 'Passenger car', value: 28, color: '#EF4444' },
+          { name: 'MC vs MC', value: 25, color: '#F59E0B' },
+          { name: 'Single crash', value: 25, color: '#FBBF24' },
+          { name: 'Truck', value: 14, color: '#94A3B8' },
+        ],
+
+        insight:
+          'Motorcyclists themselves contribute substantially to fatal crash causation.',
+      },
+
+      {
+        title: 'Collision type',
+        sub: 'Crash configuration',
+        type: 'bar',
+
+        data: [
+          { name: 'Angular / side', value: 27.5, color: '#EF4444' },
+          { name: 'Head-on', value: 21.4, color: '#F97316' },
+          { name: 'Out of control', value: 19.9, color: '#F59E0B' },
+          { name: 'Rear-end', value: 14.8, color: '#EAB308' },
+        ],
+
+        insight:
+          'Angular and head-on crashes are among the deadliest motorcycle collision types.',
+      },
+
     ],
   },
 
@@ -113,15 +266,15 @@ const DATA = {
 
     mini: [
       ['No licence', 35, '#EF4444'],
-      ['No / improper helmet', 24, '#F97316'],
+      ['No helmet', 24, '#F97316'],
       ['Head injuries', 63, '#F59E0B'],
     ],
 
     levels: [
+
       {
         title: 'Helmet use',
         sub: 'Helmet compliance',
-
         type: 'pie',
 
         data: [
@@ -131,72 +284,79 @@ const DATA = {
         ],
 
         insight:
-          'Helmet quality and correct strapping are critical for reducing fatal head injury.',
+          'Helmet quality and proper strapping remain critically important.',
       },
+
+      {
+        title: 'Licence status',
+        sub: 'Licence category',
+        type: 'pie',
+
+        data: [
+          { name: 'No licence', value: 35, color: '#EF4444' },
+          { name: 'Full >5 years', value: 34, color: '#22C55E' },
+          { name: 'Full <5 years', value: 29, color: '#F59E0B' },
+          { name: 'Learner', value: 2, color: '#94A3B8' },
+        ],
+
+        insight:
+          'A significant proportion of fatalities involve unlicensed or inexperienced riders.',
+      },
+
     ],
   },
+
+  injury: {
+    label: 'INJURY',
+    icon: '🤕',
+    color: '#D4537E',
+    big: '63%',
+    bigDesc: 'die from head injuries',
+
+    mini: [
+      ['Head injuries', 63, '#EF4444'],
+      ['Multiple body areas', 20, '#F59E0B'],
+      ['Chest injuries', 9, '#94A3B8'],
+    ],
+
+    levels: [
+
+      {
+        title: 'Fatal injury location',
+        sub: 'Body region distribution',
+        type: 'pie',
+
+        data: [
+          { name: 'Head', value: 63, color: '#EF4444' },
+          { name: 'Multiple areas', value: 20, color: '#F59E0B' },
+          { name: 'Chest', value: 9, color: '#FBBF24' },
+          { name: 'Neck', value: 4, color: '#94A3B8' },
+          { name: 'Legs', value: 3, color: '#CBD5E1' },
+        ],
+
+        insight:
+          'Head injuries remain the dominant fatal injury mechanism.',
+      },
+
+      {
+        title: 'Helmet vs head injury',
+        sub: 'Protection outcome',
+        type: 'bar',
+
+        data: [
+          { name: 'Helmeted + head injury', value: 47, color: '#F59E0B' },
+          { name: 'No helmet fatality', value: 20, color: '#EF4444' },
+          { name: 'Helmeted + survived head', value: 33, color: '#22C55E' },
+        ],
+
+        insight:
+          'Helmet standards and quality matter in addition to simple helmet use.',
+      },
+
+    ],
+  },
+
 };
-
-function PieViz({ data }) {
-
-  return (
-
-    <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8 items-center">
-
-      <div className="flex justify-center">
-
-        <PieChart width={220} height={220}>
-
-          <Pie
-            data={data}
-            dataKey="value"
-            cx="50%"
-            cy="50%"
-            outerRadius={90}
-          >
-
-            {data.map((d, i) => (
-              <Cell key={i} fill={d.color} />
-            ))}
-
-          </Pie>
-
-          <Tooltip />
-
-        </PieChart>
-
-      </div>
-
-      <div className="flex flex-col gap-3">
-
-        {data.map((d, i) => (
-
-          <div key={i} className="flex items-center gap-3">
-
-            <div
-              className="w-3 h-3 rounded-sm"
-              style={{
-                background: d.color,
-              }}
-            />
-
-            <div className="text-sm text-zinc-600">
-              {d.name}
-            </div>
-
-            <div className="ml-auto text-sm font-black">
-              {d.value}%
-            </div>
-
-          </div>
-
-        ))}
-
-      </div>
-
-    </div>
-  );
-}
 
 function BarViz({ data }) {
 
@@ -246,7 +406,7 @@ function HourViz({ data }) {
 
   return (
 
-    <ResponsiveContainer width="100%" height={280}>
+    <ResponsiveContainer width="100%" height={320}>
 
       <BarChart data={data}>
 
