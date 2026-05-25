@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase/client';
 import PressSection from '@/components/PressSection';
 
 export default function HomePage() {
+  const [darkMode, setDarkMode] = useState(true);
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -24,7 +25,16 @@ export default function HomePage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#070b12] text-white">
+    <main
+      className={`
+        min-h-screen transition-colors duration-300
+        ${
+          darkMode
+            ? 'bg-[#070b12] text-white'
+            : 'bg-stone-50 text-zinc-900'
+        }
+    `}
+    >
       
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden">
@@ -34,13 +44,36 @@ export default function HomePage() {
             MALAYSIAN INSTITUTE OF ROAD SAFETY RESEARCH
           </h1>
           
-          <h2 className="text-4xl md:text-6xl font-black text-white tracking-tight uppercase max-w-4xl mx-auto leading-tight mb-6">
+          <h2
+            className={`
+              text-4xl md:text-6xl font-black tracking-tight uppercase
+              max-w-4xl mx-auto leading-tight mb-6
+              ${
+                darkMode
+                  ? 'text-white'
+                  : 'text-zinc-900'
+              }
+           `}
+        >
             REVOLUTIONIZING SAFETY FOR MOTORCYCLISTS {/* [cite: 1] */}
           </h2>
           
           <p className="text-slate-400 text-base md:text-lg max-w-2xl mx-auto font-light leading-relaxed mb-12">
             Experience a significant shift in the status quo with a groundbreaking motorcycle safety technology {/* [cite: 2] */} featuring advanced collision avoidance, LIDAR-enabled edge perception, and telemetry arrays.
           </p>
+
+          <div className="flex justify-center mb-8">
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className="
+                px-4 py-2 rounded-xl border text-xs uppercase tracking-wider
+                bg-white text-black border-zinc-300
+                hover:bg-zinc-100 transition-all
+              "
+            >
+             {darkMode ? '☀️ Daylight Mode' : '🌙 Dark Mode'}
+            </button>
+          </div>
           
           {/* Symmetrical 3-Button Action Cluster */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-3xl mx-auto">
