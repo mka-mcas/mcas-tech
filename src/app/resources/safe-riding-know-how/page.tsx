@@ -1,111 +1,243 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import BlindnessGlitch from '@/components/BlindnessGlitch';
 import RiskInfographic from '@/components/RiskInfographic';
 
 export default function SafeRidingKnowHow() {
+
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+
+  const isDark = theme === 'dark';
+
+  const themeClasses = {
+    pageBg: isDark ? 'bg-black text-zinc-100' : 'bg-stone-50 text-zinc-900',
+    panel: isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200',
+    muted: isDark ? 'text-zinc-400' : 'text-zinc-600',
+    border: isDark ? 'border-zinc-800' : 'border-zinc-200',
+    cardHover: isDark ? 'hover:border-zinc-700' : 'hover:border-zinc-300',
+  };
+
+  const modules = [
+    {
+      id: '01',
+      category: 'Cognitive Mechanics',
+      title: 'The Three Levels of Situational Awareness',
+      description:
+        "Master Endsley's classic model adapted to high-speed road dynamics: perception, comprehension, and future threat projection.",
+    },
+    {
+      id: '02',
+      category: 'Tactical Execution',
+      title: 'Intersection Trajectory Appraisal',
+      description:
+        'Learn defensive scanning protocols and junction survival techniques using real-world mixed-traffic crash analysis.',
+    },
+    {
+      id: '03',
+      category: 'Kinematics',
+      title: 'Gyroscopic Steering Deflection',
+      description:
+        'Understand the real mechanics of counter-steering, stabilization forces, and high-speed vehicle control.',
+    },
+    {
+      id: '04',
+      category: 'Dynamic Assessment',
+      title: 'The Hazard Perception Toolkit',
+      description:
+        'Interactive cognitive reaction training and benchmark comparison for real-world riding risk awareness.',
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-black text-zinc-100 py-12 w-full">
-      
-      {/* ─── SECTION A: INNER PAGE CONTENT HOOD ─── */}
-      <div className="max-w-5xl mx-auto px-6">
-        
-        {/* Header Section */}
-        <div className="border-b border-zinc-800 pb-8 mb-8">
-          <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">MCAS Knowledge Hub</span>
-          <h1 className="text-4xl font-black text-white mt-2 tracking-tight">SAFE RIDING KNOW-HOW</h1>
-          <p className="text-zinc-400 mt-2 text-lg max-w-3xl">
-            Empirical, evidence-based riding directives designed to bypass "street customs" and master cognitive road management.
-          </p>
-        </div>
+    <div className={`min-h-screen transition-colors duration-300 ${themeClasses.pageBg}`}>
 
-        {/* 🛡️ Legal Copyright & Citation Notice */}
-        <div className="bg-zinc-950 border-l-4 border-emerald-500 border p-5 rounded-r-xl mb-12 shadow-md">
-          <div className="flex items-center space-x-2 text-emerald-400 font-bold text-sm uppercase tracking-wider">
+      {/* ───────────────── HEADER ───────────────── */}
+      <header className={`border-b ${themeClasses.border}`}>
+        <div className="max-w-7xl mx-auto px-6 py-10">
+
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+
+            <div>
+              <div className="text-xs font-bold uppercase tracking-[0.25em] text-emerald-400 mb-3">
+                MCAS Knowledge Hub
+              </div>
+
+              <h1 className="text-4xl sm:text-5xl font-black tracking-tight leading-tight">
+                SAFE RIDING KNOW-HOW
+              </h1>
+
+              <p className={`mt-4 text-lg max-w-3xl leading-relaxed ${themeClasses.muted}`}>
+                Evidence-based rider education designed to strengthen hazard perception,
+                cognitive awareness, and safe motorcycle decision-making.
+              </p>
+            </div>
+
+            {/* Theme Toggle */}
+            <button
+              onClick={() => setTheme(isDark ? 'light' : 'dark')}
+              className={`
+                px-5 py-3 rounded-xl border text-sm font-semibold transition-all
+                ${themeClasses.panel}
+              `}
+            >
+              {isDark ? '☀️ Daylight Mode' : '🌙 Dark Mode'}
+            </button>
+
+          </div>
+
+        </div>
+      </header>
+
+      {/* ───────────────── COPYRIGHT NOTICE ───────────────── */}
+      <section className="max-w-7xl mx-auto px-6 py-10">
+
+        <div className={`
+          rounded-2xl border-l-4 border-emerald-500 p-6
+          ${themeClasses.panel}
+        `}>
+          <div className="flex items-center gap-2 text-emerald-400 font-bold uppercase tracking-wider text-sm">
             <span>🛡️</span>
-            <span>Copyright & Open-Sharing Notice</span>
+            <span>Open Sharing & Citation Notice</span>
           </div>
-          <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
-            © {new Date().getFullYear()} MCAS Technology Platform. You are completely free—and highly encouraged—to copy, download, redistribute, and teach the materials found in this section to other riders, motor clubs, and riding schools. However, to maintain scientific integrity, you **must credit this platform by citing MCAS (mcas-tech.org)** whenever these resources are shared or published.
+
+          <p className={`mt-3 text-sm leading-relaxed ${themeClasses.muted}`}>
+            © {new Date().getFullYear()} MCAS Technology Platform. Educational use,
+            redistribution, and teaching are strongly encouraged. Please maintain
+            scientific integrity by crediting MCAS (mcas-tech.org) whenever these
+            materials are shared or referenced.
           </p>
         </div>
 
-        {/* Cognitive Perception Simulator Module */}
-        <div className="my-12">
-          <BlindnessGlitch />
-        </div>
-        
-      </div>
+      </section>
 
-      {/* ─── SECTION B: EXPANSIVE FULL-PAGE BREAKOUT DAYLIGHT TERMINAL ─── */}
-      <div className="w-full bg-zinc-100 py-16 my-16 border-y border-zinc-200 text-zinc-900">
-        <div className="max-w-7xl mx-auto px-6">
-          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-zinc-900 mb-6 uppercase font-mono text-center sm:text-left">
-            Systemic Risk Assessment Terminal
+      {/* ───────────────── COGNITIVE MODULE ───────────────── */}
+      <section className="max-w-7xl mx-auto px-6 py-8">
+
+        <div className="mb-6">
+          <div className="text-xs uppercase tracking-[0.25em] text-emerald-400 font-bold mb-3">
+            Cognitive Perception Simulator
+          </div>
+
+          <h2 className="text-3xl font-black mb-4">
+            Attention & Visual Awareness Calibration
           </h2>
-          <RiskInfographic />
-        </div>
-      </div>
 
-      {/* ─── SECTION C: CORE MODULE CARDS GRID ─── */}
-      <div className="max-w-5xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        {/* Module 1 */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-all shadow-lg flex flex-col justify-between">
-          <div>
-            <div className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">Module 01 // Cognitive Mechanics</div>
-            <h3 className="text-xl font-bold text-white mb-3">The Three Levels of Situational Awareness</h3>
-            <p className="text-zinc-400 text-sm leading-relaxed mb-4">
-              Master Endsley's classic model adapted to high-speed road dynamics: Level 1 (Perception of critical elements), Level 2 (Comprehension of current reality), and Level 3 (Projection of future threat vectors).
+          <p className={`max-w-3xl leading-relaxed ${themeClasses.muted}`}>
+            Interactive cognitive exercises designed to expose inattentional blindness,
+            delayed threat recognition, and visual filtering limitations during riding.
+          </p>
+        </div>
+
+        <BlindnessGlitch />
+
+      </section>
+
+      {/* ───────────────── RISK TERMINAL ───────────────── */}
+      <section className={`
+        py-20 my-16 border-y transition-colors duration-300
+        ${isDark
+          ? 'bg-zinc-950 border-zinc-800'
+          : 'bg-white border-zinc-200'}
+      `}>
+
+        <div className="max-w-screen-2xl mx-auto px-6">
+
+          <div className="max-w-5xl mx-auto mb-10">
+
+            <div className="text-xs uppercase tracking-[0.25em] text-emerald-400 font-bold mb-3">
+              Systemic Risk Assessment Terminal
+            </div>
+
+            <h2 className="text-4xl sm:text-5xl font-black tracking-tight mb-5">
+              Motorcycle Fatalities in Malaysia
+            </h2>
+
+            <p className={`text-lg leading-relaxed max-w-4xl ${themeClasses.muted}`}>
+              Interactive macro-level crash analytics exploring where, when, how,
+              and why fatal motorcycle crashes occur across Malaysian road systems.
             </p>
+
           </div>
-          <button className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-semibold py-2 px-4 rounded-lg text-xs transition">
-            Unlock Module Components →
-          </button>
+
+          {/* FULL WIDTH INFOGRAPHIC */}
+          <RiskInfographic theme={theme} />
+
         </div>
 
-        {/* Module 2 */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-all shadow-lg flex flex-col justify-between">
-          <div>
-            <div className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">Module 02 // Tactical Execution</div>
-            <h3 className="text-xl font-bold text-white mb-3">Intersection Trajectory Appraisal</h3>
-            <p className="text-zinc-400 text-sm leading-relaxed mb-4">
-              Analysis of real-world on-road data reveals that riders frequently speed up through unsignalized junctions without executing full stops or defensive head-checks. Learn the exact scanning protocols to survive mixed-traffic blind spots.
-            </p>
+      </section>
+
+      {/* ───────────────── LEARNING MODULES ───────────────── */}
+      <section className="max-w-7xl mx-auto px-6 pb-24">
+
+        <div className="mb-10">
+          <div className="text-xs uppercase tracking-[0.25em] text-emerald-400 font-bold mb-3">
+            Rider Development Modules
           </div>
-          <button className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-semibold py-2 px-4 rounded-lg text-xs transition">
-            Unlock Module Components →
-          </button>
+
+          <h2 className="text-4xl font-black mb-4">
+            Core Cognitive & Tactical Training
+          </h2>
+
+          <p className={`max-w-3xl leading-relaxed ${themeClasses.muted}`}>
+            Structured learning modules integrating hazard perception,
+            rider psychology, tactical scanning, and vehicle control principles.
+          </p>
         </div>
 
-        {/* Module 3 */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-all shadow-lg flex flex-col justify-between">
-          <div>
-            <div className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">Module 03 // Kinematics</div>
-            <h3 className="text-xl font-bold text-white mb-3">Gyroscopic Steering Deflection</h3>
-            <p className="text-zinc-400 text-sm leading-relaxed mb-4">
-              Ditching the body-lean myth. Discover how vehicle mass, wheelbase dimensions, and high-speed caster angles generate intense stabilization patterns that can only be shattered by deliberate, calculated counter-steering torque.
-            </p>
-          </div>
-          <button className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-semibold py-2 px-4 rounded-lg text-xs transition">
-            Unlock Module Components →
-          </button>
+        {/* SINGLE COLUMN STACK */}
+        <div className="space-y-6">
+
+          {modules.map((module) => (
+
+            <div
+              key={module.id}
+              className={`
+                rounded-2xl border p-8 transition-all duration-300
+                ${themeClasses.panel}
+                ${themeClasses.cardHover}
+              `}
+            >
+
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8">
+
+                <div className="flex-1">
+
+                  <div className="text-xs font-bold uppercase tracking-[0.25em] text-emerald-400 mb-3">
+                    Module {module.id} // {module.category}
+                  </div>
+
+                  <h3 className="text-2xl font-black mb-4">
+                    {module.title}
+                  </h3>
+
+                  <p className={`${themeClasses.muted} leading-relaxed max-w-3xl`}>
+                    {module.description}
+                  </p>
+
+                </div>
+
+                <div className="lg:w-64 flex-shrink-0">
+
+                  <button className="
+                    w-full rounded-xl bg-emerald-500 hover:bg-emerald-400
+                    text-black font-bold py-4 px-5 transition-all
+                  ">
+                    Open Learning Module →
+                  </button>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          ))}
+
         </div>
 
-        {/* Module 4 */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-all shadow-lg flex flex-col justify-between">
-          <div>
-            <div className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">Module 04 // Dynamic Assessment</div>
-            <h3 className="text-xl font-bold text-white mb-3">The Hazard Perception Toolkit</h3>
-            <p className="text-zinc-400 text-sm leading-relaxed mb-4">
-              Interactive test portals evaluating real-time decision latencies. Compare your situational scores against national rider benchmarks to see if your brain is falling behind real-world crash threats.
-            </p>
-          </div>
-          <button className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-semibold py-2 px-4 rounded-lg text-xs transition">
-            Unlock Module Components →
-          </button>
-        </div>
+      </section>
 
-      </div>
     </div>
   );
 }
