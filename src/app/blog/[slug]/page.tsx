@@ -13,7 +13,12 @@ interface BlogPost {
   content: string;
   cover_image: string;
   published_at: string;
+  author?: string;
 }
+
+<span>
+  By {post.author || "MKA Ibrahim"}
+</span>
 
 export default function SinglePostPage() {
   const params = useParams();
