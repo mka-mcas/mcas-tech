@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState } from "react";
+import { useState } from 'react';
+
 import {
   PieChart,
   Pie,
@@ -11,313 +12,224 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-} from "recharts";
+} from 'recharts';
 
-/* ──────────────────────────────────────────────────────────
-   DATA
-────────────────────────────────────────────────────────── */
-
-const CATEGORIES = {
+const DATA = {
   where: {
-    id: "where",
-    icon: "📍",
-    label: "Where crashes happen",
-    sub: "Location & road type",
-    accentHex: "#FBBF24",
-    headline: "61% of fatal crashes occur in rural areas",
+    label: 'WHERE',
+    icon: '📍',
+    color: '#EF9F27',
+    big: '61%',
+    bigDesc: 'of crashes in rural areas',
+
+    mini: [
+      ['Rural roads', 61, '#EF4444'],
+      ['Primary roads', 49.7, '#F59E0B'],
+      ['Straight sections', 66, '#DC2626'],
+    ],
+
     levels: [
       {
-        title: "By area type",
-        insight:
-          "Rural roads feel safer but they're the deadliest — less enforcement, slower rescue response, and lower helmet compliance.",
-        type: "pie",
+        title: 'Where do crashes happen?',
+        sub: 'Area type distribution',
+        type: 'pie',
+
         data: [
-          { name: "Rural", value: 61, color: "#EF4444" },
-          { name: "Small town", value: 19, color: "#F97316" },
-          { name: "Town", value: 12, color: "#F59E0B" },
-          { name: "City", value: 8, color: "#22C55E" },
+          { name: 'Rural', value: 61, color: '#EF4444' },
+          { name: 'Small town', value: 19, color: '#F59E0B' },
+          { name: 'Town', value: 12, color: '#FBBF24' },
+          { name: 'City', value: 8, color: '#22C55E' },
         ],
+
+        insight:
+          'Rural roads account for the majority of motorcycle fatalities despite lower traffic volume.',
       },
 
       {
-        title: "By road type",
-        insight:
-          "Primary and arterial roads account for nearly 50% of all fatalities.",
-        type: "hbar",
+        title: 'Road geometry',
+        sub: 'Crash location geometry',
+        type: 'bar',
+
         data: [
-          { name: "Primary / arterial", value: 49.7, color: "#EF4444" },
-          { name: "Local street", value: 18.6, color: "#F97316" },
-          { name: "Secondary road", value: 16.5, color: "#F59E0B" },
-          { name: "Minor road", value: 12.3, color: "#EAB308" },
-          { name: "Expressway", value: 3.0, color: "#22C55E" },
+          { name: 'Straight', value: 66, color: '#EF4444' },
+          { name: 'T-junction', value: 14.3, color: '#F97316' },
+          { name: 'Curve', value: 13.5, color: '#F59E0B' },
+          { name: 'Cross junction', value: 5, color: '#EAB308' },
         ],
+
+        insight:
+          'Straight roads kill far more riders than curves because they encourage speed adaptation.',
       },
     ],
   },
 
   when: {
-    id: "when",
-    icon: "🕐",
-    label: "When crashes happen",
-    sub: "Time, day & weather",
-    accentHex: "#818CF8",
-    headline: "4–10 PM on weekends is peak danger time",
+    label: 'WHEN',
+    icon: '🕐',
+    color: '#7F77DD',
+    big: '35%',
+    bigDesc: 'of crashes occur 4–10 pm',
+
+    mini: [
+      ['Evening peak', 35, '#7F77DD'],
+      ['Weekend days', 31, '#8B5CF6'],
+      ['Clear weather', 93, '#22C55E'],
+    ],
+
     levels: [
       {
-        title: "Hour of day",
-        insight:
-          "4 PM – 10 PM accounts for 35% of all motorcycle fatalities.",
-        type: "hour",
+        title: 'Hour of day',
+        sub: 'Fatality distribution',
+
+        type: 'hour',
+
         data: [
-          { name: "12–2am", value: 8.3 },
-          { name: "2–4am", value: 4.5 },
-          { name: "4–6am", value: 3.9 },
-          { name: "6–8am", value: 8.8 },
-          { name: "8–10am", value: 7.7 },
-          { name: "10am–12", value: 6.7 },
-          { name: "12–2pm", value: 8.2 },
-          { name: "2–4pm", value: 8.3 },
-          { name: "4–6pm", value: 10.2 },
-          { name: "6–8pm", value: 12.4 },
-          { name: "8–10pm", value: 12.7 },
-          { name: "10pm–12", value: 8.5 },
+          { name: '12–2am', value: 8.3 },
+          { name: '2–4am', value: 4.5 },
+          { name: '4–6am', value: 3.9 },
+          { name: '6–8am', value: 8.8 },
+          { name: '8–10am', value: 7.7 },
+          { name: '10–12pm', value: 6.7 },
+          { name: '12–2pm', value: 8.2 },
+          { name: '2–4pm', value: 8.3 },
+          { name: '4–6pm', value: 10.2 },
+          { name: '6–8pm', value: 12.4 },
+          { name: '8–10pm', value: 12.7 },
+          { name: '10–12am', value: 8.5 },
         ],
+
+        insight:
+          'The most dangerous riding period is between 4 pm and 10 pm.',
       },
     ],
   },
 
-  safety: {
-    id: "safety",
-    icon: "🛡️",
-    label: "Safety compliance gaps",
-    sub: "Helmet & licence data",
-    accentHex: "#F472B6",
-    headline: "35% of riders killed had no valid licence",
+  gear: {
+    label: 'GEAR & LICENCE',
+    icon: '🛡️',
+    color: '#1D9E75',
+    big: '35%',
+    bigDesc: 'had no valid licence',
+
+    mini: [
+      ['No licence', 35, '#EF4444'],
+      ['No / improper helmet', 24, '#F97316'],
+      ['Head injuries', 63, '#F59E0B'],
+    ],
+
     levels: [
       {
-        title: "Helmet usage",
-        insight:
-          "1 in 5 riders killed wore no helmet.",
-        type: "pie",
+        title: 'Helmet use',
+        sub: 'Helmet compliance',
+
+        type: 'pie',
+
         data: [
-          { name: "Properly worn", value: 76, color: "#22C55E" },
-          { name: "Not wearing", value: 20, color: "#EF4444" },
-          { name: "Unstrapped", value: 4, color: "#F97316" },
+          { name: 'Correctly worn', value: 76, color: '#22C55E' },
+          { name: 'Not wearing', value: 20, color: '#EF4444' },
+          { name: 'Not strapped', value: 4, color: '#F97316' },
         ],
+
+        insight:
+          'Helmet quality and correct strapping are critical for reducing fatal head injury.',
       },
     ],
   },
 };
 
-/* ──────────────────────────────────────────────────────────
-   HELPERS
-────────────────────────────────────────────────────────── */
-
-const RADIAN = Math.PI / 180;
-
-function useTheme(theme) {
-  return useMemo(() => {
-    const isDark = theme === "dark";
-
-    return {
-      isDark,
-
-      bg: isDark ? "bg-zinc-950" : "bg-stone-50",
-
-      panel: isDark
-        ? "bg-zinc-900 border-zinc-800"
-        : "bg-white border-zinc-200 shadow-sm",
-
-      text: isDark ? "text-white" : "text-zinc-900",
-
-      muted: isDark ? "text-zinc-400" : "text-zinc-600",
-
-      soft: isDark ? "text-zinc-500" : "text-zinc-500",
-
-      border: isDark ? "border-zinc-800" : "border-zinc-200",
-
-      buttonInactive: isDark
-        ? "bg-zinc-900 border-zinc-800 text-zinc-400"
-        : "bg-white border-zinc-300 text-zinc-700",
-
-      chartBg: isDark ? "#18181B" : "#FFFFFF",
-
-      tooltipBg: isDark ? "#18181B" : "#FFFFFF",
-
-      tooltipBorder: isDark ? "#3F3F46" : "#D4D4D8",
-    };
-  }, [theme]);
-}
-
-/* ──────────────────────────────────────────────────────────
-   CHART LABEL
-────────────────────────────────────────────────────────── */
-
-const PieLabel = ({
-  cx,
-  cy,
-  midAngle,
-  innerRadius,
-  outerRadius,
-  percent,
-  value,
-}) => {
-  if (percent < 0.06) return null;
-
-  const r = innerRadius + (outerRadius - innerRadius) * 0.55;
-
-  const x = cx + r * Math.cos(-midAngle * RADIAN);
-  const y = cy + r * Math.sin(-midAngle * RADIAN);
+function PieViz({ data }) {
 
   return (
-    <text
-      x={x}
-      y={y}
-      fill="white"
-      textAnchor="middle"
-      dominantBaseline="central"
-      style={{
-        fontSize: 11,
-        fontWeight: 700,
-      }}
-    >
-      {value}%
-    </text>
-  );
-};
 
-/* ──────────────────────────────────────────────────────────
-   TOOLTIP
-────────────────────────────────────────────────────────── */
+    <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8 items-center">
 
-function ChartTip({ active, payload, theme }) {
-  const t = useTheme(theme);
+      <div className="flex justify-center">
 
-  if (!active || !payload?.length) return null;
+        <PieChart width={220} height={220}>
 
-  const d = payload[0];
-
-  return (
-    <div
-      className="rounded-xl px-3 py-2 border shadow-xl"
-      style={{
-        background: t.tooltipBg,
-        borderColor: t.tooltipBorder,
-      }}
-    >
-      <p className={`font-semibold text-sm ${t.text}`}>
-        {d.name || d.payload?.name}
-      </p>
-
-      <p
-        className="font-black text-sm"
-        style={{
-          color: d.fill || d.color || "#F59E0B",
-        }}
-      >
-        {d.value}%
-      </p>
-    </div>
-  );
-}
-
-/* ──────────────────────────────────────────────────────────
-   PIE CHART
-────────────────────────────────────────────────────────── */
-
-function PieViz({ data, theme, size = 220 }) {
-  const t = useTheme(theme);
-
-  return (
-    <div className="flex flex-col lg:flex-row gap-10 items-center">
-
-      <div className="flex-shrink-0">
-        <PieChart width={size} height={size}>
           <Pie
             data={data}
-            cx={size / 2}
-            cy={size / 2}
-            outerRadius={size / 2 - 8}
-            labelLine={false}
-            label={PieLabel}
             dataKey="value"
+            cx="50%"
+            cy="50%"
+            outerRadius={90}
           >
-            {data.map((e, i) => (
-              <Cell key={i} fill={e.color} />
+
+            {data.map((d, i) => (
+              <Cell key={i} fill={d.color} />
             ))}
+
           </Pie>
 
-          <Tooltip content={<ChartTip theme={theme} />} />
+          <Tooltip />
+
         </PieChart>
+
       </div>
 
-      <div className="flex flex-col gap-3 flex-1 w-full">
+      <div className="flex flex-col gap-3">
+
         {data.map((d, i) => (
+
           <div key={i} className="flex items-center gap-3">
 
             <div
-              className="w-3 h-3 rounded-sm flex-shrink-0"
+              className="w-3 h-3 rounded-sm"
               style={{
                 background: d.color,
               }}
             />
 
-            <span className={`text-sm ${t.muted}`}>
+            <div className="text-sm text-zinc-600">
               {d.name}
-            </span>
+            </div>
 
-            <span className={`ml-auto font-black text-sm ${t.text}`}>
+            <div className="ml-auto text-sm font-black">
               {d.value}%
-            </span>
+            </div>
 
           </div>
+
         ))}
+
       </div>
 
     </div>
   );
 }
 
-/* ──────────────────────────────────────────────────────────
-   HORIZONTAL BAR
-────────────────────────────────────────────────────────── */
-
-function HBarViz({ data, theme }) {
-  const t = useTheme(theme);
-
-  const max = Math.max(...data.map((d) => d.value));
+function BarViz({ data }) {
 
   return (
+
     <div className="flex flex-col gap-4">
 
       {data.map((d, i) => (
 
         <div
           key={i}
-          className="grid grid-cols-[140px_1fr] lg:grid-cols-[220px_1fr] gap-4 items-center"
+          className="grid grid-cols-[120px_1fr] gap-4 items-center"
         >
 
-          <div className={`text-sm ${t.muted}`}>
+          <div className="text-xs text-zinc-500">
             {d.name}
           </div>
 
-          <div
-            className={`h-8 rounded-xl overflow-hidden ${
-              t.isDark ? "bg-zinc-800" : "bg-zinc-100"
-            }`}
-          >
+          <div className="h-7 bg-zinc-100 rounded-xl overflow-hidden">
 
             <div
-              className="h-full flex items-center justify-end px-3 rounded-xl transition-all duration-700"
+              className="h-full rounded-xl flex items-center justify-end px-3"
               style={{
-                width: `${(d.value / max) * 100}%`,
+                width: `${d.value}%`,
                 background: d.color,
                 minWidth: 48,
               }}
             >
+
               <span className="text-xs font-black text-black">
                 {d.value}%
               </span>
+
             </div>
 
           </div>
@@ -330,447 +242,387 @@ function HBarViz({ data, theme }) {
   );
 }
 
-/* ──────────────────────────────────────────────────────────
-   HOUR CHART
-────────────────────────────────────────────────────────── */
-
-function HourViz({ data, theme }) {
-  const t = useTheme(theme);
+function HourViz({ data }) {
 
   return (
-    <div>
 
-      <ResponsiveContainer width="100%" height={320}>
+    <ResponsiveContainer width="100%" height={280}>
 
-        <BarChart
-          data={data}
-          margin={{
-            top: 8,
-            right: 8,
-            left: -24,
-            bottom: 44,
+      <BarChart data={data}>
+
+        <XAxis
+          dataKey="name"
+          tick={{
+            fontSize: 10,
+            fill: '#71717A',
           }}
-        >
+          angle={-35}
+          textAnchor="end"
+          interval={0}
+        />
 
-          <XAxis
-            dataKey="name"
-            tick={{
-              fill: t.isDark ? "#A1A1AA" : "#52525B",
-              fontSize: 11,
-            }}
-            angle={-35}
-            textAnchor="end"
-            interval={0}
-          />
+        <YAxis
+          tick={{
+            fontSize: 11,
+            fill: '#71717A',
+          }}
+        />
 
-          <YAxis
-            tick={{
-              fill: t.isDark ? "#71717A" : "#71717A",
-              fontSize: 11,
-            }}
-            tickFormatter={(v) => `${v}%`}
-          />
+        <Tooltip />
 
-          <Tooltip content={<ChartTip theme={theme} />} />
+        <Bar dataKey="value">
 
-          <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+          {data.map((d, i) => (
 
-            {data.map((e, i) => (
+            <Cell
+              key={i}
+              fill={
+                d.value >= 10
+                  ? '#EF4444'
+                  : d.value >= 8
+                  ? '#F59E0B'
+                  : '#94A3B8'
+              }
+            />
 
-              <Cell
-                key={i}
-                fill={
-                  e.value >= 10
-                    ? "#EF4444"
-                    : e.value >= 8
-                    ? "#F59E0B"
-                    : "#64748B"
-                }
-              />
+          ))}
 
-            ))}
+        </Bar>
 
-          </Bar>
+      </BarChart>
 
-        </BarChart>
-
-      </ResponsiveContainer>
-
-    </div>
+    </ResponsiveContainer>
   );
 }
 
-/* ──────────────────────────────────────────────────────────
-   MAIN COMPONENT
-────────────────────────────────────────────────────────── */
-
 export default function RiskInfographic({
-  theme = "dark",
+  theme = 'light',
 }) {
 
-  const t = useTheme(theme);
-
-  const [selectedId, setSelectedId] = useState(null);
+  const [selected, setSelected] = useState(null);
 
   const [level, setLevel] = useState(0);
 
-  const cat = selectedId
-    ? CATEGORIES[selectedId]
-    : null;
+  const isDark = theme === 'dark';
 
-  const currentLevel = cat
-    ? cat.levels[level]
-    : null;
+  const bg = isDark
+    ? 'bg-zinc-950'
+    : 'bg-white';
 
-  const selectCat = (id) => {
-    setSelectedId(id);
-    setLevel(0);
-  };
+  const border = isDark
+    ? 'border-zinc-800'
+    : 'border-zinc-200';
 
-  const goToLevel = (l) => {
-    setLevel(l);
-  };
+  const muted = isDark
+    ? 'text-zinc-400'
+    : 'text-zinc-600';
 
-  const goBack = () => {
-    if (level > 0) {
-      goToLevel(level - 1);
-    } else {
-      setSelectedId(null);
-      setLevel(0);
-    }
-  };
+  const text = isDark
+    ? 'text-white'
+    : 'text-zinc-900';
 
-  /* ───────────────── HOME SCREEN ───────────────── */
+  const card = isDark
+    ? 'bg-zinc-900 border-zinc-800'
+    : 'bg-white border-zinc-200';
 
-  if (!selectedId) {
+  const current =
+    selected
+      ? DATA[selected]
+      : null;
 
-    return (
+  const currentLevel =
+    current
+      ? current.levels[level]
+      : null;
 
-      <div className={`${t.bg} ${t.text} p-6 lg:p-10 rounded-3xl`}>
+  return (
 
-        {/* HERO */}
+    <div className={`${bg} ${text}`}>
 
-        <div className="text-center mb-16">
+      {/* HEADER */}
 
-          <p className={`text-xs uppercase tracking-[0.3em] mb-5 ${t.soft}`}>
-            Malaysia road safety · source data 2000–2009
-          </p>
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
 
-          <h1 className="text-5xl sm:text-6xl font-black tracking-tight leading-none mb-5">
-            Motorcycle Fatalities
-          </h1>
+        <div>
 
-          <p className={`max-w-2xl mx-auto text-lg leading-relaxed ${t.muted}`}>
-            Interactive macro-analytics exploring fatal motorcycle crash
-            patterns across Malaysian road systems.
-          </p>
+          <div className={`text-xs uppercase tracking-[0.2em] ${muted}`}>
+            Motorcycle fatality risk — Malaysia
+          </div>
 
-        </div>
-
-        {/* STATS */}
-
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-16">
-
-          {[
-            {
-              val: "4,070",
-              label: "fatalities in 2009",
-              color: "#EF4444",
-            },
-
-            {
-              val: "60%",
-              label: "of Malaysian road deaths",
-              color: "#FBBF24",
-            },
-
-            {
-              val: "#1",
-              label: "ASEAN fatality rate",
-              color: "#818CF8",
-            },
-
-            {
-              val: "8/day",
-              label: "average over 10 years",
-              color: "#34D399",
-            },
-          ].map((s) => (
-
-            <div
-              key={s.label}
-              className={`rounded-2xl border p-6 text-center ${t.panel}`}
-            >
-
-              <div
-                className="text-4xl font-black mb-2"
-                style={{
-                  color: s.color,
-                }}
-              >
-                {s.val}
-              </div>
-
-              <div className={`text-sm leading-relaxed ${t.muted}`}>
-                {s.label}
-              </div>
-
-            </div>
-
-          ))}
-
-        </div>
-
-        {/* CATEGORY GRID */}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-
-          {Object.values(CATEGORIES).map((c) => (
-
-            <button
-              key={c.id}
-              onClick={() => selectCat(c.id)}
-              className={`
-                rounded-3xl border p-7 text-left transition-all duration-300
-                hover:-translate-y-1 hover:shadow-xl
-                ${t.panel}
-              `}
-            >
-
-              <div className="text-4xl mb-5">
-                {c.icon}
-              </div>
-
-              <div
-                className="text-xs uppercase tracking-[0.25em] font-bold mb-3"
-                style={{
-                  color: c.accentHex,
-                }}
-              >
-                {c.sub}
-              </div>
-
-              <div className="text-2xl font-black mb-4 leading-tight">
-                {c.label}
-              </div>
-
-              <div className={`${t.muted} leading-relaxed text-sm`}>
-                {c.headline}
-              </div>
-
-              <div
-                className="mt-6 text-xs font-bold uppercase tracking-[0.25em]"
-                style={{
-                  color: c.accentHex,
-                }}
-              >
-                {c.levels.length} drill levels →
-              </div>
-
-            </button>
-
-          ))}
+          <div className={`text-xs mt-1 ${muted}`}>
+            Source: PDRM · MIROS · WHO · Manan & Várhelyi (2012)
+          </div>
 
         </div>
 
       </div>
-    );
-  }
 
-  /* ───────────────── DETAIL SCREEN ───────────────── */
+      {/* KPI ROW */}
 
-  return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
 
-    <div className={`${t.bg} ${t.text} p-6 lg:p-10 rounded-3xl`}>
+        {[
+          {
+            val: '6,745',
+            label: 'road deaths in 2009',
+            color: '#EF4444',
+          },
 
-      <div className="max-w-6xl mx-auto">
+          {
+            val: '60%',
+            label: 'of fatalities involve motorcyclists',
+            color: '#F59E0B',
+          },
 
-        {/* NAV */}
+          {
+            val: '4,070',
+            label: 'motorcycle deaths in 2009',
+            color: '#7F77DD',
+          },
+        ].map((kpi) => (
 
-        <div className="flex items-center gap-4 mb-10">
+          <div
+            key={kpi.label}
+            className={`rounded-2xl border p-5 ${card}`}
+          >
+
+            <div
+              className="text-3xl font-black"
+              style={{
+                color: kpi.color,
+              }}
+            >
+              {kpi.val}
+            </div>
+
+            <div className={`text-xs mt-2 leading-relaxed ${muted}`}>
+              {kpi.label}
+            </div>
+
+          </div>
+
+        ))}
+
+      </div>
+
+      {/* CARDS */}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+
+        {Object.entries(DATA).map(([id, c]) => (
 
           <button
-            onClick={goBack}
-            className={`
-              rounded-xl px-5 py-3 border text-sm font-semibold transition-all
-              ${t.buttonInactive}
-            `}
-          >
-            ← Back
-          </button>
-
-          <div className={`text-sm truncate ${t.soft}`}>
-
-            <button
-              onClick={() => {
-                setSelectedId(null);
-                setLevel(0);
-              }}
-              className="hover:underline"
-            >
-              Home
-            </button>
-
-            <span className="mx-2">/</span>
-
-            <span
-              style={{
-                color: cat.accentHex,
-              }}
-            >
-              {cat.icon} {cat.label}
-            </span>
-
-          </div>
-
-        </div>
-
-        {/* TITLE */}
-
-        <div className="mb-10">
-
-          <div
-            className="text-xs uppercase tracking-[0.25em] font-bold mb-4"
-            style={{
-              color: cat.accentHex,
+            key={id}
+            onClick={() => {
+              setSelected(id);
+              setLevel(0);
             }}
-          >
-            Level {level + 1} of {cat.levels.length}
-          </div>
-
-          <h2 className="text-4xl sm:text-5xl font-black leading-tight mb-6">
-            {currentLevel.title}
-          </h2>
-
-          <div
-            className="rounded-2xl border p-6"
+            className={`
+              rounded-2xl border p-5 text-left transition-all
+              hover:-translate-y-0.5
+              ${card}
+            `}
             style={{
-              background: `${cat.accentHex}12`,
-              borderColor: `${cat.accentHex}30`,
+              borderColor:
+                selected === id
+                  ? c.color
+                  : undefined,
             }}
           >
 
             <div
-              className="text-sm font-bold uppercase tracking-[0.2em] mb-3"
+              className="text-xs uppercase tracking-[0.2em] font-bold mb-3"
               style={{
-                color: cat.accentHex,
+                color: c.color,
               }}
             >
-              Key Insight
+              {c.icon} {c.label}
             </div>
 
-            <div className={`${t.muted} leading-relaxed text-base`}>
+            <div
+              className="text-4xl font-black mb-2"
+              style={{
+                color: c.color,
+              }}
+            >
+              {c.big}
+            </div>
+
+            <div className={`text-xs mb-5 leading-relaxed ${muted}`}>
+              {c.bigDesc}
+            </div>
+
+            <div className="flex flex-col gap-3">
+
+              {c.mini.map(([label, value, color]) => (
+
+                <div
+                  key={label}
+                  className="grid grid-cols-[90px_1fr_40px] gap-3 items-center"
+                >
+
+                  <div className={`text-[10px] leading-tight ${muted}`}>
+                    {label}
+                  </div>
+
+                  <div className="h-1.5 rounded-full bg-zinc-200 overflow-hidden">
+
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${value}%`,
+                        background: color,
+                      }}
+                    />
+
+                  </div>
+
+                  <div
+                    className="text-[10px] font-bold text-right"
+                    style={{
+                      color,
+                    }}
+                  >
+                    {value}%
+                  </div>
+
+                </div>
+
+              ))}
+
+            </div>
+
+          </button>
+
+        ))}
+
+      </div>
+
+      {/* INLINE PANEL */}
+
+      {current && (
+
+        <div
+          className={`
+            rounded-3xl border mt-5 overflow-hidden
+            ${card}
+          `}
+          style={{
+            borderColor: current.color,
+          }}
+        >
+
+          {/* PANEL HEADER */}
+
+          <div className={`border-b p-5 ${border}`}>
+
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+
+              <div>
+
+                <div
+                  className="text-xs uppercase tracking-[0.2em] font-bold mb-2"
+                  style={{
+                    color: current.color,
+                  }}
+                >
+                  {current.icon} {current.label}
+                </div>
+
+                <h3 className="text-xl font-black mb-1">
+                  {currentLevel.title}
+                </h3>
+
+                <div className={`text-sm ${muted}`}>
+                  {currentLevel.sub}
+                </div>
+
+              </div>
+
+              <button
+                onClick={() => setSelected(null)}
+                className={`
+                  px-4 py-2 rounded-xl border text-sm
+                  ${card}
+                `}
+              >
+                Close
+              </button>
+
+            </div>
+
+          </div>
+
+          {/* PANEL CONTENT */}
+
+          <div className="p-6">
+
+            {currentLevel.type === 'pie' && (
+              <PieViz data={currentLevel.data} />
+            )}
+
+            {currentLevel.type === 'bar' && (
+              <BarViz data={currentLevel.data} />
+            )}
+
+            {currentLevel.type === 'hour' && (
+              <HourViz data={currentLevel.data} />
+            )}
+
+            {/* INSIGHT */}
+
+            <div
+              className="rounded-2xl p-5 mt-6 text-sm leading-relaxed"
+              style={{
+                background: `${current.color}12`,
+                borderLeft: `4px solid ${current.color}`,
+              }}
+            >
               {currentLevel.insight}
             </div>
 
           </div>
 
-        </div>
+          {/* PANEL NAV */}
 
-        {/* CHART */}
+          <div className={`border-t p-5 flex items-center justify-between ${border}`}>
 
-        <div
-          className={`rounded-3xl border p-6 lg:p-10 mb-8 ${t.panel}`}
-        >
+            <div className={`text-xs ${muted}`}>
+              Level {level + 1} of {current.levels.length}
+            </div>
 
-          {currentLevel.type === "pie" && (
-            <PieViz
-              data={currentLevel.data}
-              theme={theme}
-            />
-          )}
-
-          {currentLevel.type === "hbar" && (
-            <HBarViz
-              data={currentLevel.data}
-              theme={theme}
-            />
-          )}
-
-          {currentLevel.type === "hour" && (
-            <HourViz
-              data={currentLevel.data}
-              theme={theme}
-            />
-          )}
-
-        </div>
-
-        {/* LEVEL NAV */}
-
-        {cat.levels.length > 1 && (
-
-          <div className="flex flex-wrap gap-3 mb-8">
-
-            {cat.levels.map((l, i) => (
+            <div className="flex gap-3">
 
               <button
-                key={i}
-                onClick={() => goToLevel(i)}
-                className="px-5 py-3 rounded-xl border text-sm transition-all"
-                style={
-                  i === level
-                    ? {
-                        background: cat.accentHex,
-                        borderColor: cat.accentHex,
-                        color: "#000",
-                        fontWeight: 800,
-                      }
-                    : {}
-                }
+                disabled={level === 0}
+                onClick={() => setLevel(level - 1)}
+                className={`
+                  px-4 py-2 rounded-xl border text-sm disabled:opacity-40
+                  ${card}
+                `}
               >
-
-                {i + 1}. {l.title}
-
+                ← Back
               </button>
 
-            ))}
+              <button
+                disabled={level >= current.levels.length - 1}
+                onClick={() => setLevel(level + 1)}
+                className="px-4 py-2 rounded-xl text-sm font-bold text-white disabled:opacity-40"
+                style={{
+                  background: current.color,
+                }}
+              >
+                Drill deeper →
+              </button>
+
+            </div>
 
           </div>
 
-        )}
+        </div>
 
-        {/* CTA */}
-
-        {level < cat.levels.length - 1 ? (
-
-          <button
-            onClick={() => goToLevel(level + 1)}
-            className="w-full rounded-2xl py-5 text-base font-black uppercase tracking-[0.2em] transition-all hover:opacity-90"
-            style={{
-              background: cat.accentHex,
-              color: "#000",
-            }}
-          >
-            Drill Deeper →
-          </button>
-
-        ) : (
-
-          <button
-            onClick={() => {
-              setSelectedId(null);
-              setLevel(0);
-            }}
-            className={`
-              w-full rounded-2xl py-5 border text-sm font-semibold
-              ${t.buttonInactive}
-            `}
-          >
-            ← Back to Categories
-          </button>
-
-        )}
-
-        {/* FOOTNOTE */}
-
-        <p className={`text-center mt-10 text-xs ${t.soft}`}>
-          Source: Manan &amp; Várhelyi (2012), IATSS Research · Malaysian Royal Police
-        </p>
-
-      </div>
+      )}
 
     </div>
-
   );
 }
