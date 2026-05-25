@@ -15,7 +15,7 @@ interface BlogPost {
   content: string;
   cover_image: string;
   published_at: string;
-  author?: string;
+  author_name?: string; // Aligned perfectly with your new Supabase column
 }
 
 export default function SinglePostPage() {
@@ -139,7 +139,7 @@ export default function SinglePostPage() {
 
             <span className="text-sm font-bold text-amber-400 uppercase tracking-wide">
 
-              By {post.author || "MKA Ibrahim"}
+              By {post.author_name || "MKA Ibrahim"}
 
             </span>
 
