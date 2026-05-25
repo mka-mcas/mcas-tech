@@ -358,6 +358,49 @@ const DATA = {
 
 };
 
+/* ─── RESTORED PIE CHART RENDERING ASSETS ────────────────────────── */
+
+const RADIAN = Math.PI / 180;
+const PieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, value }) => {
+  if (percent < 0.04) return null;
+  const r = innerRadius + (outerRadius - innerRadius) * 0.55;
+  const x = cx + r * Math.cos(-midAngle * RADIAN);
+  const y = cy + r * Math.sin(-midAngle * RADIAN);
+  return (
+    <text x={x} y={y} fill="#fff" textAnchor="middle" dominantBaseline="central" className="text-[11px] font-black">
+      {value}%
+    </text>
+  );
+};
+
+function PieViz({ data, size = 180 }) {
+  return (
+    <div className="flex gap-6 items-center flex-wrap justify-center sm:justify-start">
+      <div className="flex-shrink-0">
+        <PieChart width={size} height={size}>
+          <Pie data={data} cx={size / 2} cy={size / 2} outerRadius={size / 2 - 6} labelLine={false} label={PieLabel} dataKey="value">
+            {data.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+          </Pie>
+          <Tooltip />
+        </PieChart>
+      </div>
+      <div className="flex flex-col gap-2 flex-1 min-w-[200px]">
+        {data.map((item, idx) => (
+          <div key={idx} className="flex items-center justify-between text-xs font-mono border-b border-zinc-100 dark:border-zinc-800/40 pb-1.5 last:border-0">
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: item.color }} />
+              <span className="text-zinc-500 dark:text-zinc-400 truncate max-w-[140px]">{item.name}</span>
+            </div>
+            <span className="font-black tabular-nums">{item.value}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────── */
+
 function BarViz({ data }) {
 
   return (
