@@ -16,8 +16,8 @@ interface BlogPost {
   author?: string;
 }
 
-<span>
-  By {post.author || "MKA Ibrahim"}
+<span className="text-red-500 text-3xl">
+  TEST AUTHOR
 </span>
 
 export default function SinglePostPage() {
