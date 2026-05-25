@@ -106,7 +106,7 @@ export default function SinglePostPage() {
             <img
               src={post.cover_image}
               alt=""
-              className="w-full h-auto max-h-[420px] object-cover rounded-xl"
+              className="w-full h-auto max-h-420 object-cover rounded-xl"
             />
           </div>
         )}
