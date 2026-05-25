@@ -1,5 +1,7 @@
 import React from 'react';
 import BlindnessGlitch from '@/components/BlindnessGlitch';
+import RiskInfographic from '@/components/RiskInfographic';
+
 export default function SafeRidingKnowHow() {
   return (
     <div className="min-h-screen bg-black text-zinc-100 px-6 py-12 max-w-5xl mx-auto">
@@ -29,6 +31,13 @@ export default function SafeRidingKnowHow() {
        <BlindnessGlitch />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Interactive Instrumented Casualty Exposure Dashboard Module */}
+      <div className="my-12">
+      <h2 className="text-xl font-bold tracking-tight text-white mb-4 uppercase font-mono">
+    Systemic Risk Assessment Terminal
+      </h2>
+       <RiskInfographic />
+      </div>
         
         {/* Module 1 */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-all shadow-lg flex flex-col justify-between">
