@@ -6,6 +6,27 @@ import PressSection from '@/components/PressSection';
 
 export default function HomePage() {
   const [darkMode, setDarkMode] = useState(true);
+  const theme = {
+    text: darkMode
+      ? 'text-white'
+      : 'text-zinc-900',
+
+    muted: darkMode
+      ? 'text-slate-400'
+      : 'text-zinc-600',
+
+    soft: darkMode
+      ? 'text-slate-500'
+      : 'text-zinc-500',
+
+    panel: darkMode
+      ? 'bg-slate-900 border-slate-800'
+      : 'bg-white border-zinc-200',
+
+    section: darkMode
+      ? 'bg-slate-950/40'
+      : 'bg-zinc-100/70',
+  };
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -223,7 +244,12 @@ export default function HomePage() {
       <section className="py-24 border-t border-slate-900 bg-black/40">
         <div className="max-w-md mx-auto px-6 text-center">
           
-          <h3 className="text-2xl font-black text-white uppercase mb-2">INDUSTRY PLAYERS.. {/* [cite: 29] */}</h3>
+          <h3
+            className={`
+              text-2xl font-black uppercase mb-2
+              ${theme.text}
+      `}
+        >INDUSTRY PLAYERS.. {/* [cite: 29] */}</h3>
           <h4 className="text-xs font-mono text-sky-500 uppercase tracking-widest mb-4">Be part of the journey.. {/* [cite: 30] */}</h4>
           
           <p className="text-slate-400 text-sm font-light leading-relaxed mb-8">
