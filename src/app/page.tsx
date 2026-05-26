@@ -57,7 +57,7 @@ export default function HomePage() {
     `}
     >
       
-      {/* Hero Section */}
+      {/* ───────────────── HERO SECTION ───────────────── */}
       <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
           
@@ -74,36 +74,25 @@ export default function HomePage() {
                   ? 'text-white'
                   : 'text-zinc-900'
               }
-           `}
-        >
-            REVOLUTIONIZING SAFETY FOR MOTORCYCLISTS {/* [cite: 1] */}
+            `}
+          >
+            Revolutionizing Safety For Motorcyclists
           </h2>
-          
-          <p className="text-slate-400 text-base md:text-lg max-w-2xl mx-auto font-light leading-relaxed mb-12">
-            Experience a significant shift in the status quo with a groundbreaking motorcycle safety technology {/* [cite: 2] */} featuring advanced collision avoidance, LIDAR-enabled edge perception, and telemetry arrays.
-          </p>
 
-          <div className="flex justify-center mb-8">
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className="
-                px-4 py-2 rounded-xl border text-xs uppercase tracking-wider
-                bg-white text-black border-zinc-300
-                hover:bg-zinc-100 transition-all
-              "
-            >
-             {darkMode ? '☀️ Daylight Mode' : '🌙 Dark Mode'}
-            </button>
-          </div>
+          <p className="text-zinc-400 max-w-2xl mx-auto mb-10 text-sm md:text-base leading-relaxed">
+            Experience a significant shift in the status quo with a groundbreaking motorcycle 
+            safety technology featuring advanced collision avoidance, LIDAR-enabled edge 
+            perception, and telemetry arrays.
+          </p>
           
           {/* Symmetrical 3-Button Action Cluster */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-3xl mx-auto">
-            <a 
-              href="http://localhost:3000/auth/login" 
-              className="w-full sm:w-auto bg-sky-500 hover:bg-sky-400 text-black font-semibold px-6 py-3 rounded-lg transition-all text-center text-xs uppercase tracking-wider"
+            <Link 
+              href="/dashboard" 
+              className="w-full sm:w-auto bg-sky-500 hover:bg-sky-400 text-black font-black px-6 py-3 rounded-lg transition-all text-center text-xs uppercase tracking-wider shadow-md shadow-sky-500/10"
             >
               Launch Research Dashboard
-            </a>
+            </Link>
             
             <Link 
               href="/about" 
@@ -158,21 +147,21 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             
             <div className="p-6 bg-slate-900/20 border border-slate-900 rounded-xl">
-              <h4 className="font-bold text-white mb-3 uppercase tracking-wide text-sm text-sky-400">THE SEEING MOTORCYCLE {/* [cite: 36] */}</h4>
+              <h4 className="font-bold mb-3 uppercase tracking-wide text-sm text-sky-400">THE SEEING MOTORCYCLE {/* [cite: 36] */}</h4>
               <p className="text-slate-400 text-sm font-light leading-relaxed">
                 Using groundbreaking LIDAR sensor and GPS technology, MCAS is a valuable asset for any rider. It’s two-wheelers riding reimagined. {/* [cite: 37] */}
               </p>
             </div>
             
             <div className="p-6 bg-slate-900/20 border border-slate-900 rounded-xl">
-              <h4 className="font-bold text-white mb-3 uppercase tracking-wide text-sm text-sky-400">REAL-TIME DATA PROCESSING {/* [cite: 8] */}</h4>
+              <h4 className="font-bold mb-3 uppercase tracking-wide text-sm text-sky-400">REAL-TIME DATA PROCESSING {/* [cite: 8] */}</h4>
               <p className="text-slate-400 text-sm font-light leading-relaxed">
                 This perception-enabled motorcycle safety technology uses real-time information to provide riders with accurate and up-to-date information about hazards on the road thus establishing a vehicle-to-environment communication to warn riders of hazards that they may not be able to see. {/* [cite: 9] */}
               </p>
             </div>
             
             <div className="p-6 bg-slate-900/20 border border-slate-900 rounded-xl">
-              <h4 className="font-bold text-white mb-3 uppercase tracking-wide text-sm text-sky-400">RIDER-CENTERED DESIGN {/* [cite: 38] */}</h4>
+              <h4 className="font-bold mb-3 uppercase tracking-wide text-sm text-sky-400">RIDER-CENTERED DESIGN {/* [cite: 38] */}</h4>
               <p className="text-slate-400 text-sm font-light leading-relaxed">
                 Adoption of design-thinking and rider-centered approach are absolute must to minimize user rejection and potentially retrofit MCAS on millions of active motorcycles already on the road. {/* [cite: 39] */}
               </p>
