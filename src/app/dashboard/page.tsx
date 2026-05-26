@@ -166,12 +166,16 @@ export default function FleetDashboard() {
         return acc;
       }, {});
       
-      const topRidersData = Object.entries(riderScores)
-        .map(([riderId, count]) => ({ 
-          name: riderId, 
-          score: count * 10 > 100 ? 95 : count * 10, // Normalized score syntax for leaderboard
-          status: count > 15 ? 'Optimal' : 'Stable'
-        }))
+      // Fixed: Explicit type casting and value mapping for compiler stability
+      const topRidersData = (Object.entries(riderScores) as [string, number][])
+        .map(([riderId, count]) => {
+          const numCount = Number(count);
+          return { 
+            name: riderId, 
+            score: numCount * 10 > 100 ? 95 : numCount * 10, 
+            status: numCount > 15 ? 'Optimal' : 'Stable'
+          };
+        })
         .sort((a, b) => b.score - a.score)
         .slice(0, 4);
 
