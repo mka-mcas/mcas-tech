@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import BlindnessGlitch from '@/components/BlindnessGlitch';
 import RiskInfographic from '@/components/RiskInfographic';
+import Link from 'next/link';
 
 export default function SafeRidingKnowHow() {
 
@@ -121,20 +122,46 @@ export default function SafeRidingKnowHow() {
 
       </section>
 
-      {/* ───────────────── INFOGRAPHIC ───────────────── */}
+      {/* ───────────────── RISK INTELLIGENCE ───────────────── */}
 
-      <section className={`
-        border-y py-10 transition-colors duration-300
-        ${border}
-      `}>
+<section className={`border-y py-12 ${border}`}>
 
-        <div className="max-w-6xl mx-auto px-6">
+  <div className="max-w-6xl mx-auto px-6">
 
-          <RiskInfographic theme={theme} />
+    <div className={`rounded-3xl border p-8 md:p-12 ${panel}`}>
 
-        </div>
+      <div className="text-xs uppercase tracking-[0.25em] font-bold text-emerald-500 mb-4">
+        Motorcycle Risk Intelligence Platform
+      </div>
 
-      </section>
+      <h2 className="text-3xl md:text-5xl font-black mb-6 leading-tight">
+        Explore Malaysia’s Interactive Motorcycle Fatality Intelligence System
+      </h2>
+
+      <p className={`max-w-3xl text-sm sm:text-base leading-relaxed mb-8 ${muted}`}>
+        Dive into behavioural risk analytics, temporal crash trends,
+        injury mechanisms, rider vulnerability patterns, and systemic
+        motorcycle safety intelligence using national-level crash datasets.
+      </p>
+
+      <Link
+        href="/risk-intelligence"
+        className="
+          inline-flex items-center gap-3
+          bg-emerald-500 hover:bg-emerald-400
+          text-black font-black uppercase tracking-wide
+          px-6 py-4 rounded-2xl
+          transition-all
+        "
+      >
+        Launch Risk Intelligence →
+      </Link>
+
+    </div>
+
+  </div>
+
+</section>
 
       {/* ───────────────── FOOTER ───────────────── */}
 
