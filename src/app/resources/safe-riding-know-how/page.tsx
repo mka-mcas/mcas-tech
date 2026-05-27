@@ -136,18 +136,18 @@ export default function SafeRidingKnowHow() {
                 injury mechanisms, rider vulnerability patterns, and systemic
                 motorcycle safety intelligence using national-level crash datasets.
               </p>
-              <Link
-                href="/safe-riding-know-how/"
-                className="
-                  inline-flex items-center gap-3
-                  bg-emerald-500 hover:bg-emerald-400
-                  text-black font-black uppercase tracking-wide
-                  px-6 py-4 rounded-2xl
-                  transition-all
-                "
-              >
-                Launch Risk Intelligence →
-              </Link>
+            <Link
+  href="/risk-intelligence" // Changed from "/safe-riding-know-how/" to your actual folder path
+  className="
+    inline-flex items-center gap-3
+    bg-emerald-500 hover:bg-emerald-400
+    text-black font-black uppercase tracking-wide
+    px-6 py-4 rounded-2xl
+    transition-all
+  "
+>
+  Launch Risk Intelligence →
+</Link>
             </div>
 
             {/* Rendered RiskInfographic inside the dedicated panel */}
