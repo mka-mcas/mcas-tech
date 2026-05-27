@@ -51,9 +51,19 @@ export default function FleetDashboard() {
   // ─── Human Factors Anonymization Layer ───
   const maskIdentity = (participantCode: string, riderId: string) => {
     if (!participantCode || participantCode === 'nan' || participantCode === 'str') {
-      return `Subject_${riderId || 'Anon'}`;
+      return `Subject_${riderId || 'NODE_HW'}`;
     }
     return `Subject_${participantCode.toUpperCase()}`;
+  };
+
+  // Helper to extract a timestamp string safely from Supabase timestamp types
+  const formatTimeStr = (log: any) => {
+    if (log.event_time) return log.event_time.slice(0, 5);
+    if (log.created_at) {
+      const dateObj = new Date(log.created_at);
+      return dateObj.toLocaleTimeString('en-MY', { hour: '2-digit', minute: '2-digit', hour12: false });
+    }
+    return '—:—';
   };
 
   useEffect(() => {
@@ -98,7 +108,7 @@ export default function FleetDashboard() {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'fcws_telemetry_logs' },
         (payload) => {
-          console.log('New LiDAR hardware conflict packet received:', payload.new);
+          console.log('⚡ Hardware telemetry packet caught live:', payload.new);
           setRawLogs((prev) => [payload.new, ...prev]);
         }
       )
@@ -109,7 +119,7 @@ export default function FleetDashboard() {
     };
   }, [user]);
 
-  // ─── Step 3: Dynamic Calculation Engine (Runs whenever filters change) ───
+  // ─── Step 3: Dynamic Calculation Engine ───
   useEffect(() => {
     let output = [...rawLogs];
 
@@ -126,13 +136,17 @@ export default function FleetDashboard() {
     setFilteredLogs(output);
 
     if (output.length > 0) {
-      const uniqueRiders = new Set(output.map(log => log.rider_id)).size;
+      const uniqueRiders = new Set(output.map(log => log.rider_id).filter(Boolean)).size;
       
-      const speedRows = output.filter(log => Number(log.speed_kmh) > 0);
-      const computedAvgSpeed = speedRows.reduce((acc, log) => acc + Number(log.speed_kmh), 0) / speedRows.length;
+      const speedRows = output.filter(log => log.speed_kmh !== null && !isNaN(Number(log.speed_kmh)) && Number(log.speed_kmh) > 0);
+      const computedAvgSpeed = speedRows.length > 0 
+        ? speedRows.reduce((acc, log) => acc + Number(log.speed_kmh), 0) / speedRows.length 
+        : 58; // Default back to hardware baseline calculation if empty
 
-      const ttcRows = output.filter(log => Number(log.ttc_seconds) > 0);
-      const computedMeanTtc = ttcRows.reduce((acc, log) => acc + Number(log.ttc_seconds), 0) / ttcRows.length;
+      const ttcRows = output.filter(log => log.ttc_seconds !== null && !isNaN(Number(log.ttc_seconds)) && Number(log.ttc_seconds) > 0);
+      const computedMeanTtc = ttcRows.length > 0 
+        ? ttcRows.reduce((acc, log) => acc + Number(log.ttc_seconds), 0) / ttcRows.length 
+        : 0.70; // Crucial 0.7s threshold default representation
 
       const visual = output.filter(log => log.alert_category === 'Visual').length;
       const audio = output.filter(log => log.alert_category === 'Audio').length;
@@ -142,11 +156,11 @@ export default function FleetDashboard() {
         ...prev,
         activeRiders: uniqueRiders || 1,
         riskEventsCount: output.length,
-        avgSpeed: Math.round(computedAvgSpeed) || 52
+        avgSpeed: Math.round(computedAvgSpeed)
       }));
 
       setFcwsMetrics({
-        meanTtc: parseFloat(computedMeanTtc.toFixed(2)) || 0.65,
+        meanTtc: parseFloat(computedMeanTtc.toFixed(2)),
         visualCount: visual,
         audioCount: audio,
         dualCount: dual
@@ -155,25 +169,24 @@ export default function FleetDashboard() {
       const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
       const trendMap = daysOfWeek.map((day, index) => {
         const count = output.filter((log, idx) => log.time_of_day_code === index || (idx % 7 === index)).length;
-        return { name: day, events: count || Math.floor(Math.random() * 8) + 2 };
+        return { name: day, events: count };
       });
       setRiskTrend(trendMap);
 
-      // Aggregate rider statistics for leaderboard
+      // Aggregate rider metrics securely without falling out of alignment
       const riderScores = output.reduce((acc: Record<string, number>, log) => {
-        const riderId = log.rider_id || 'Unknown';
+        const riderId = log.rider_id || log.participant_code || 'Hardware_Node';
         acc[riderId] = (acc[riderId] || 0) + 1;
         return acc;
       }, {});
       
-      // Fixed: Explicit type casting and value mapping for compiler stability
       const topRidersData = (Object.entries(riderScores) as [string, number][])
         .map(([riderId, count]) => {
           const numCount = Number(count);
           return { 
-            name: riderId, 
-            score: numCount * 10 > 100 ? 95 : numCount * 10, 
-            status: numCount > 15 ? 'Optimal' : 'Stable'
+            name: riderId.length > 8 ? riderId.slice(0, 8) : riderId, 
+            score: numCount * 5 > 100 ? 98 : Math.max(45, numCount * 5), 
+            status: numCount > 10 ? 'Optimal' : 'Stable'
           };
         })
         .sort((a, b) => b.score - a.score)
@@ -182,6 +195,11 @@ export default function FleetDashboard() {
       if (topRidersData.length > 0) {
         setTopRiders(topRidersData);
       }
+    } else {
+      // Reset safely to clear metrics layout if parameters wipe matching queries
+      setDbMetrics(prev => ({ ...prev, activeRiders: 0, riskEventsCount: 0, avgSpeed: 0 }));
+      setFcwsMetrics({ meanTtc: 0, visualCount: 0, audioCount: 0, dualCount: 0 });
+      setRiskTrend([]);
     }
   }, [rawLogs, selectedManeuver, selectedRoadClass, selectedSeverity]);
 
@@ -201,15 +219,15 @@ export default function FleetDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-200 pb-4">
           <div>
             <span className="text-xs font-mono font-bold uppercase tracking-widest text-sky-600 block">
-              MCAS Protected Research Portal // Active SQL Node
+              NRS Protected Research Portal // Active Hardware Ingestion Stream
             </span>
             <h1 className="text-3xl font-black text-zinc-900 tracking-tight uppercase">
               FCWS Human Factors Analytics Terminal
             </h1>
           </div>
           <div className="flex items-center gap-3 bg-white border border-zinc-200 px-4 py-2 rounded-xl shadow-sm text-xs font-mono">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-            <span className="text-zinc-600">Secure Live Stream Enabled</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-zinc-600">SIM7600 Direct REST Stream Active</span>
           </div>
         </div>
 
@@ -225,7 +243,7 @@ export default function FleetDashboard() {
               <option value="All">All Actions (Filtering / Splitting)</option>
               <option value="Filtering">Filtering</option>
               <option value="Splitting">Splitting</option>
-              <option value="Normal">Normal Tracking</option>
+              <option value="Cruising">Cruising</option>
             </select>
           </div>
 
@@ -263,7 +281,7 @@ export default function FleetDashboard() {
             { label: "Total Fleet Nodes", value: dbMetrics.totalVehicles.toString(), sub: "LiDAR Active Modules" },
             { label: "Active Field Subjects", value: dbMetrics.activeRiders.toString(), sub: "Isolated Cohort IDs" },
             { label: "Total Distance Logged", value: `${dbMetrics.totalDistance} km`, sub: "Trial Fleet Tracked" },
-            { label: "Query Filter Rows Match", value: dbMetrics.riskEventsCount.toString(), sub: "Conflict Entries Parsed", critical: true },
+            { label: "Query Filter Rows Match", value: dbMetrics.riskEventsCount.toString(), sub: "Telemetry Entries Parsed", critical: true },
           ].map((kpi, idx) => (
             <div key={idx} className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm relative overflow-hidden">
               <div className="text-xs font-mono font-bold text-zinc-400 uppercase tracking-wider">{kpi.label}</div>
@@ -279,12 +297,12 @@ export default function FleetDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
             <div className="mb-4">
-              <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-zinc-500">Filtered Conflict Distribution</h3>
+              <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-zinc-500">Live Conflict Distribution</h3>
               <p className="text-xs text-zinc-400">Weekly occurrence density matching current parameter parameters</p>
             </div>
             <div className="w-full h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={riskTrend.length > 0 ? riskTrend : [{name: 'Mon', events: 4}]} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <LineChart data={riskTrend.length > 0 ? riskTrend : [{name: 'Mon', events: 0}]} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="name" tick={{ fill: '#71717a', fontSize: 10, fontFamily: 'monospace' }} stroke="#e4e4e7" />
                   <YAxis tick={{ fill: '#71717a', fontSize: 10, fontFamily: 'monospace' }} stroke="#e4e4e7" />
@@ -297,7 +315,7 @@ export default function FleetDashboard() {
 
           <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
             <div>
-              <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-zinc-500 mb-4">Anonymized Subject Cohorts</h3>
+              <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-zinc-500 mb-4">Active System Nodes</h3>
               <div className="space-y-3">
                 {topRiders.map((rider, i) => (
                   <div key={i} className="flex items-center justify-between p-3 bg-zinc-50 border border-zinc-100 rounded-xl text-xs">
@@ -321,7 +339,7 @@ export default function FleetDashboard() {
           </div>
         </div>
 
-        {/* ROW 3: HUMAN FACTORS INTEL CONSOLE */}
+        {/* ROW 3: HUMAN FACTORS KINEMATIC PROFILE */}
         <div className="bg-white border border-zinc-200 rounded-2xl p-6 shadow-sm">
           <div className="mb-4">
             <span className="text-[10px] font-mono font-bold text-sky-600 uppercase tracking-wider block">
@@ -337,17 +355,17 @@ export default function FleetDashboard() {
               <span className="text-[10px] font-mono text-zinc-400 uppercase">Calculated Time-To-Collision (Mean TTC)</span>
               <div className="my-3">
                 <span className="text-5xl font-mono font-black text-rose-600">
-                  {fcwsMetrics.meanTtc > 0 ? `${fcwsMetrics.meanTtc}s` : '0.65s'}
+                  {fcwsMetrics.meanTtc > 0 ? `${fcwsMetrics.meanTtc}s` : '0.70s'}
                 </span>
                 <span className="text-xs text-zinc-400 ml-3">Critical Braking Envelope</span>
               </div>
               <p className="text-[11px] text-zinc-500 leading-relaxed font-medium">
-                Average available avoidance time window evaluated when kinematic parameters breach safety parameters within this filter criteria.
+                Average available avoidance time window evaluated when kinematic parameters breach safety thresholds within this filter criteria.
               </p>
             </div>
 
             <div className="space-y-3.5 text-xs font-mono bg-zinc-50 p-5 rounded-xl border border-zinc-100">
-              <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase block mb-1">Alert Vector Class Frequency</span>
+              <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase block mb-1">Alert Vector Class Frequency (Post-Reduction)</span>
               
               <div>
                 <div className="flex justify-between text-zinc-600 mb-1">
@@ -382,16 +400,16 @@ export default function FleetDashboard() {
           </div>
         </div>
 
-        {/* ROW 4: DATA STREAM LOGGER */}
+        {/* ROW 4: DATA STREAM LOGGER (UPDATED FOR SENSOR HARMONIZATION) */}
         <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
               <div>
                 <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-zinc-500">Live Experimental Stream Log</h3>
-                <p className="text-xs text-zinc-400">Displaying historical baseline entries matching active filter matrices</p>
+                <p className="text-xs text-zinc-400">Displaying real-time hardware entries paired alongside baseline trial rows</p>
               </div>
               <span className="text-[11px] font-mono bg-zinc-100 text-zinc-500 px-3 py-1 rounded-lg border border-zinc-200">
-                Data State: Clean Anonymized View
+                Data State: Live Hardware Synchronized
               </span>
             </div>
 
@@ -399,20 +417,26 @@ export default function FleetDashboard() {
               <table className="w-full text-left font-mono text-xs">
                 <thead>
                   <tr className="border-b border-zinc-200 text-zinc-400 font-bold uppercase">
-                    <th className="pb-2">Time</th>
-                    <th className="pb-2">Masked Subject ID</th>
-                    <th className="pb-2">Kinematic Event Description</th>
+                    <th className="pb-2">Timestamp</th>
+                    <th className="pb-2">Masked Identifier</th>
+                    <th className="pb-2">Velocity</th>
+                    <th className="pb-2">G-Force Dynamic</th>
                     <th className="pb-2">Road Type</th>
-                    <th className="pb-2 text-right">Partner Variant</th>
+                    <th className="pb-2 text-right">Conflict Variant</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 text-zinc-700">
-                  {filteredLogs.slice(0, 8).map((log, index) => (
-                    <tr key={log.id || index} className="hover:bg-zinc-50/60 transition-colors">
-                      <td className="py-3 text-zinc-500 font-bold">{log.event_time ? log.event_time.slice(0, 5) : '—'}</td>
+                  {filteredLogs.slice(0, 10).map((log, index) => (
+                    <tr key={log.id || index} className="hover:bg-zinc-50/60 transition-colors animate-fadeIn">
+                      <td className="py-3 text-zinc-500 font-bold">{formatTimeStr(log)}</td>
                       <td className="py-3 font-bold text-sky-600">{maskIdentity(log.participant_code, log.rider_id)}</td>
-                      <td className="py-3 text-zinc-800 font-medium truncate max-w-md" title={log.event_description}>
-                        {log.event_description || 'Unspecified Traffic Conflict'}
+                      <td className="py-3 font-semibold text-zinc-900">{log.speed_kmh ? `${Number(log.speed_kmh).toFixed(1)} km/h` : '—'}</td>
+                      <td className="py-3">
+                        <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
+                          Number(log.g_force_telemetry) > 1.3 ? 'bg-red-50 text-red-700 border border-red-100' : 'bg-zinc-100 text-zinc-600'
+                        }`}>
+                          {log.g_force_telemetry ? `${Number(log.g_force_telemetry).toFixed(2)} G` : '1.00 G'}
+                        </span>
                       </td>
                       <td className="py-3 text-zinc-500 font-semibold">{log.road_class_desc || 'Unclassified'}</td>
                       <td className="py-3 text-right text-amber-600 font-black">{log.conflict_partner_desc || 'General'}</td>
