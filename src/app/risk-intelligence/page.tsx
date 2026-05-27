@@ -1,10 +1,17 @@
 'use client';
 
+import { useAuth } from '@/lib/hooks/useAuth';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import { useState } from 'react';
 import Link from 'next/link';
 import RiskInfographic from '@/components/RiskInfographic';
 
 export default function RiskIntelligencePage() {
+
+  const router = useRouter();
+
+  const { user, loading } = useAuth();
 
   const [theme, setTheme] = useState<'dark' | 'light'>('light');
 
@@ -25,6 +32,31 @@ export default function RiskIntelligencePage() {
   const panel = isDark
     ? 'bg-zinc-900 border-zinc-800'
     : 'bg-white border-zinc-200';
+
+/* ───────────────── AUTH CHECK ───────────────── */
+
+  useEffect(() => {
+
+    if (!loading && !user) {
+      router.push('/login');
+    }
+
+  }, [loading, user, router]);
+
+  /* ───────────────── LOADING SCREEN ───────────────── */
+
+  if (loading || !user) {
+
+    return (
+
+      <div className="min-h-screen flex items-center justify-center bg-black text-zinc-400">
+
+        Verifying secure access...
+
+      </div>
+
+    );
+  }
 
   return (
 

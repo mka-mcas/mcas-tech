@@ -145,7 +145,7 @@ export default function SafeRidingKnowHow() {
       </p>
 
       <Link
-        href="/risk-intelligence"
+        href="/safe-riding-know-how/"
         className="
           inline-flex items-center gap-3
           bg-emerald-500 hover:bg-emerald-400
