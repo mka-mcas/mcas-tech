@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link'; // Fixed: Added missing import
 import BlindnessGlitch from '@/components/BlindnessGlitch';
-import RiskInfographic from '@/components/RiskInfographic';
+
 
 export default function SafeRidingKnowHow() {
   const [theme, setTheme] = useState<'dark' | 'light'>('light');
@@ -122,40 +122,62 @@ export default function SafeRidingKnowHow() {
           </section>
         )}
 
-        {activeTab === 'risk' && (
-          <section className="max-w-6xl mx-auto px-6 pb-10 animate-fadeIn">
-            <div className={`rounded-3xl border p-8 md:p-12 mb-8 ${panel}`}>
-              <div className="text-xs uppercase tracking-[0.25em] font-bold text-emerald-500 mb-4">
-                Motorcycle Risk Intelligence Platform
-              </div>
-              <h2 className="text-3xl md:text-5xl font-black mb-6 leading-tight">
-                Explore Malaysia’s Interactive Motorcycle Fatality Intelligence System
-              </h2>
-              <p className={`max-w-3xl text-sm sm:text-base leading-relaxed mb-8 ${muted}`}>
-                Dive into behavioural risk analytics, temporal crash trends,
-                injury mechanisms, rider vulnerability patterns, and systemic
-                motorcycle safety intelligence using national-level crash datasets.
-              </p>
-            <Link
-  href="/risk-intelligence" // Changed from "/safe-riding-know-how/" to your actual folder path
-  className="
-    inline-flex items-center gap-3
-    bg-emerald-500 hover:bg-emerald-400
-    text-black font-black uppercase tracking-wide
-    px-6 py-4 rounded-2xl
-    transition-all
-  "
->
-  Launch Risk Intelligence →
-</Link>
-            </div>
+ {activeTab === 'risk' && (
+  <section className="max-w-6xl mx-auto px-6 pb-10 animate-fadeIn">
 
-            {/* Rendered RiskInfographic inside the dedicated panel */}
-            <div className={`rounded-3xl border p-6 ${panel}`}>
-              <RiskInfographic />
-            </div>
-          </section>
-        )}
+    <div className={`rounded-3xl border p-8 md:p-12 mb-8 ${panel}`}>
+      
+      <div className="text-xs uppercase tracking-[0.25em] font-bold text-emerald-500 mb-4">
+        Motorcycle Risk Intelligence Platform
+      </div>
+
+      <h2 className="text-3xl md:text-5xl font-black mb-6 leading-tight">
+        Explore Malaysia’s Interactive Motorcycle Fatality Intelligence System
+      </h2>
+
+      <p className={`max-w-3xl text-sm sm:text-base leading-relaxed mb-8 ${muted}`}>
+        Dive into behavioural risk analytics, temporal crash trends,
+        injury mechanisms, rider vulnerability patterns, and systemic
+        motorcycle safety intelligence using national-level crash datasets.
+      </p>
+
+      <Link
+        href="/risk-intelligence"
+        className="
+          inline-flex items-center gap-3
+          bg-emerald-500 hover:bg-emerald-400
+          text-black font-black uppercase tracking-wide
+          px-6 py-4 rounded-2xl
+          transition-all
+        "
+      >
+        Launch Risk Intelligence →
+      </Link>
+
+    </div>
+
+    {/* PREMIUM RESTRICTED ACCESS BLOCK */}
+    <div className={`rounded-3xl border p-10 text-center ${panel}`}>
+
+      <div className="text-xs uppercase tracking-[0.25em] font-bold text-emerald-500 mb-4">
+        Restricted Intelligence Platform
+      </div>
+
+      <h3 className="text-2xl font-black mb-4">
+        Advanced Motorcycle Risk Analytics
+      </h3>
+
+      <p className={`max-w-2xl mx-auto text-sm leading-relaxed ${muted}`}>
+        Access behavioural crash analytics, rider vulnerability models,
+        temporal fatality trends, collision intelligence, and national
+        motorcycle safety datasets through the MCAS Intelligence Platform.
+      </p>
+
+    </div>
+
+  </section>
+)}
+    
       </main>
 
       {/* ───────────────── FOOTER ───────────────── */}
