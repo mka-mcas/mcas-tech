@@ -1,32 +1,23 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link'; // Fixed: Added missing import
+import Link from 'next/link';
 import BlindnessGlitch from '@/components/BlindnessGlitch';
-
+import { useAuth } from '@/lib/hooks/useAuth'; // Integrated codebase auth hook
 
 export default function SafeRidingKnowHow() {
   const [theme, setTheme] = useState<'dark' | 'light'>('light');
-  // New state to manage the active tab section
   const [activeTab, setActiveTab] = useState<'perception' | 'risk'>('perception');
+  
+  // Extract user authorization state to protect premium zones
+  const { user, loading } = useAuth();
 
   const isDark = theme === 'dark';
 
-  const pageBg = isDark
-    ? 'bg-black text-zinc-100'
-    : 'bg-stone-50 text-zinc-900';
-
-  const muted = isDark
-    ? 'text-zinc-400'
-    : 'text-zinc-600';
-
-  const border = isDark
-    ? 'border-zinc-800'
-    : 'border-zinc-200';
-
-  const panel = isDark
-    ? 'bg-zinc-900 border-zinc-800'
-    : 'bg-white border-zinc-200';
+  const pageBg = isDark ? 'bg-black text-zinc-100' : 'bg-stone-50 text-zinc-900';
+  const muted = isDark ? 'text-zinc-400' : 'text-zinc-600';
+  const border = isDark ? 'border-zinc-800' : 'border-zinc-200';
+  const panel = isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200';
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${pageBg}`}>
@@ -51,10 +42,7 @@ export default function SafeRidingKnowHow() {
             {/* THEME TOGGLE */}
             <button
               onClick={() => setTheme(isDark ? 'light' : 'dark')}
-              className={`
-                px-4 py-2 rounded-xl border text-sm font-semibold transition-all
-                ${panel}
-              `}
+              className={`px-4 py-2 rounded-xl border text-sm font-semibold transition-all ${panel}`}
             >
               {isDark ? '☀️ Daylight' : '🌙 Dark'}
             </button>
@@ -81,7 +69,7 @@ export default function SafeRidingKnowHow() {
         <div className={`flex border-b ${border} gap-2`}>
           <button
             onClick={() => setActiveTab('perception')}
-            className={`pb-4 px-4 text-xs sm:text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${
+            className={`pb-4 px-4 text-xs sm:text-sm font-bold uppercase tracking-wider transition-all border-b-2 cursor-pointer ${
               activeTab === 'perception'
                 ? 'border-emerald-500 text-emerald-500'
                 : 'border-transparent text-zinc-500 hover:text-zinc-400'
@@ -91,7 +79,7 @@ export default function SafeRidingKnowHow() {
           </button>
           <button
             onClick={() => setActiveTab('risk')}
-            className={`pb-4 px-4 text-xs sm:text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${
+            className={`pb-4 px-4 text-xs sm:text-sm font-bold uppercase tracking-wider transition-all border-b-2 cursor-pointer ${
               activeTab === 'risk'
                 ? 'border-emerald-500 text-emerald-500'
                 : 'border-transparent text-zinc-500 hover:text-zinc-400'
@@ -122,62 +110,61 @@ export default function SafeRidingKnowHow() {
           </section>
         )}
 
- {activeTab === 'risk' && (
-  <section className="max-w-6xl mx-auto px-6 pb-10 animate-fadeIn">
+        {activeTab === 'risk' && (
+          <section className="max-w-6xl mx-auto px-6 pb-10 animate-fadeIn">
 
-    <div className={`rounded-3xl border p-8 md:p-12 mb-8 ${panel}`}>
-      
-      <div className="text-xs uppercase tracking-[0.25em] font-bold text-emerald-500 mb-4">
-        Motorcycle Risk Intelligence Platform
-      </div>
+            {/* PUBLIC / ACCESS LANDING PORTAL CARD */}
+            <div className={`rounded-3xl border p-8 md:p-12 mb-8 ${panel}`}>
+              <div className="text-xs uppercase tracking-[0.25em] font-bold text-emerald-500 mb-4">
+                Motorcycle Risk Intelligence Platform
+              </div>
 
-      <h2 className="text-3xl md:text-5xl font-black mb-6 leading-tight">
-        Explore Malaysia’s Interactive Motorcycle Fatality Intelligence System
-      </h2>
+              <h2 className="text-3xl md:text-5xl font-black mb-6 leading-tight">
+                Explore Malaysia’s Interactive Motorcycle Fatality Intelligence System
+              </h2>
 
-      <p className={`max-w-3xl text-sm sm:text-base leading-relaxed mb-8 ${muted}`}>
-        Dive into behavioural risk analytics, temporal crash trends,
-        injury mechanisms, rider vulnerability patterns, and systemic
-        motorcycle safety intelligence using national-level crash datasets.
-      </p>
+              <p className={`max-w-3xl text-sm sm:text-base leading-relaxed mb-8 ${muted}`}>
+                Dive into behavioural risk analytics, temporal crash trends,
+                injury mechanisms, rider vulnerability patterns, and systemic
+                motorcycle safety intelligence using national-level crash datasets.
+              </p>
 
-      <Link
-        href="/risk-intelligence"
-        className="
-          inline-flex items-center gap-3
-          bg-emerald-500 hover:bg-emerald-400
-          text-black font-black uppercase tracking-wide
-          px-6 py-4 rounded-2xl
-          transition-all
-        "
-      >
-        Launch Risk Intelligence →
-      </Link>
+              <Link
+                href="/risk-intelligence"
+                className="inline-flex items-center gap-3 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-wide px-6 py-4 rounded-2xl transition-all"
+              >
+                Launch Risk Intelligence →
+              </Link>
+            </div>
 
-    </div>
+            {/* LOCKED PREMIUM BLOCK: Wrapped in logic state check */}
+            {!loading && user && (
+              <div className={`rounded-3xl border p-10 text-center animate-fadeIn ${panel}`}>
+                <div className="text-xs uppercase tracking-[0.25em] font-bold text-emerald-500 mb-4">
+                  Restricted Intelligence Platform
+                </div>
 
-    {/* PREMIUM RESTRICTED ACCESS BLOCK */}
-    <div className={`rounded-3xl border p-10 text-center ${panel}`}>
+                <h3 className="text-2xl font-black mb-4">
+                  Advanced Motorcycle Risk Analytics
+                </h3>
 
-      <div className="text-xs uppercase tracking-[0.25em] font-bold text-emerald-500 mb-4">
-        Restricted Intelligence Platform
-      </div>
+                <p className={`max-w-2xl mx-auto text-sm leading-relaxed ${muted}`}>
+                  Access behavioural crash analytics, rider vulnerability models,
+                  temporal fatality trends, collision intelligence, and national
+                  motorcycle safety datasets through the MCAS Intelligence Platform.
+                </p>
+              </div>
+            )}
 
-      <h3 className="text-2xl font-black mb-4">
-        Advanced Motorcycle Risk Analytics
-      </h3>
+            {/* OPTIONAL paywall/sign-in reminder for unauthorized users */}
+            {!loading && !user && (
+              <div className={`rounded-3xl border border-dashed p-8 text-center text-xs uppercase tracking-widest ${muted}`}>
+                🔒 Additional administrative metrics require an authenticated security profile.
+              </div>
+            )}
 
-      <p className={`max-w-2xl mx-auto text-sm leading-relaxed ${muted}`}>
-        Access behavioural crash analytics, rider vulnerability models,
-        temporal fatality trends, collision intelligence, and national
-        motorcycle safety datasets through the MCAS Intelligence Platform.
-      </p>
-
-    </div>
-
-  </section>
-)}
-    
+          </section>
+        )}
       </main>
 
       {/* ───────────────── FOOTER ───────────────── */}
