@@ -5,7 +5,8 @@ import { ArrowDownRight, ChevronRight, Info, Network, Route, Sigma, SlidersHoriz
 import { constructs, covariance, fit, paths, sequentialIndirect, type Construct, type SemPath } from "@/data/sem-data";
 
 type Tab = "model" | "structural" | "measurement" | "journey";
-type Detail = { kind: "path"; item: SemPath } | { kind: "construct"; item: Construct } | { kind: "covariance" } | { kind: "journey"; key: string } | null;
+type IndicatorDetail = { id: string; label: string; loading: number; p: number | string; construct: string };
+type Detail = { kind: "path"; item: SemPath } | { kind: "construct"; item: Construct } | { kind: "indicator"; item: IndicatorDetail } | { kind: "covariance" } | { kind: "journey"; key: string } | null;
 
 const pos: Record<string, {x:number;y:number}> = {
   motivation:{x:110,y:330}, prolong:{x:315,y:270}, kurang:{x:530,y:175},
@@ -156,7 +157,10 @@ function SEMCanvas({tab,std,detail,onDetail}:{tab:Tab;std:boolean;detail:Detail;
       <path d="M 1270 102 C 1375 20, 1430 80, 1385 135" fill="none" stroke="transparent" strokeWidth="14"/>
       <text x="1365" y="55" fill="#a78bfa" fontSize="10" textAnchor="middle">~~ .469</text>
     </g>
-    {Object.entries(obs).map(([id,n])=><g key={id}>
+    {Object.entries(obs).map(([id,n])=><g key={id} onClick={()=>{
+      const matches=constructs.flatMap(c=>c.indicators.map(i=>({...i,construct:c.label}))).filter(i=>i.id===id);
+      if(matches[0]) onDetail({kind:"indicator",item:matches[0]});
+    }} className="cursor-pointer">
       <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="3" fill="#101827" stroke={id==="Crash_hist"?"#c084fc":"#475569"} strokeWidth="1.5"/>
       <text x={n.x+n.w/2} y={n.y+21} fill="#cbd5e1" fontSize="9.5" textAnchor="middle">{displayLabelMap.get(id) ?? id}</text>
     </g>)}
@@ -178,9 +182,10 @@ function DetailPanel({detail,std,onClose}:{detail:Detail;std:boolean;onClose:()=
   return <aside className="min-h-[520px] rounded-2xl border border-slate-800 bg-[#0b111c] p-5">
     {!detail ? <div className="flex h-full min-h-[480px] flex-col items-center justify-center text-center"><Route className="text-slate-700" size={34}/><h3 className="mt-4 font-semibold text-slate-300">Explore the model</h3><p className="mt-2 max-w-xs text-sm leading-6 text-slate-500">Select a path, construct, or covariance. The panel will explain the statistic and its interpretation.</p></div> :
     <div>
-      <div className="mb-5 flex items-start justify-between gap-4"><div><div className="text-[10px] uppercase tracking-[.2em] text-sky-400">{detail.kind}</div><h3 className="mt-1 text-xl font-semibold">{detail.kind==="path"?`${detail.item.from} → ${detail.item.to}`:detail.kind==="construct"?detail.item.label:"Residual covariance"}</h3></div><button onClick={onClose} className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-800 hover:text-white"><X size={16}/></button></div>
+      <div className="mb-5 flex items-start justify-between gap-4"><div><div className="text-[10px] uppercase tracking-[.2em] text-sky-400">{detail.kind}</div><h3 className="mt-1 text-xl font-semibold">{detail.kind==="path"?`${detail.item.from} → ${detail.item.to}`:detail.kind==="construct"?detail.item.label:detail.kind==="indicator"?detail.item.label:"Residual covariance"}</h3></div><button onClick={onClose} className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-800 hover:text-white"><X size={16}/></button></div>
       {detail.kind==="path" && <PathDetail p={detail.item} std={std}/>}
       {detail.kind==="construct" && <ConstructDetail c={detail.item}/>}
+      {detail.kind==="indicator" && <IndicatorDetailPanel i={detail.item}/>}
       {detail.kind==="covariance" && <CovarianceDetail/>}
       {detail.kind==="journey" && <JourneyDetail keyName={detail.key}/>}
     </div>}
@@ -193,6 +198,21 @@ function PathDetail({p,std}:{p:SemPath;std:boolean}){
     <div className="grid grid-cols-2 gap-2">{[[std?"Std. β":"Estimate",std?fmt(p.beta):fmt(p.estimate)],["p",pLabel(p.p)],["SE",fmt(p.se)],["z",fmt(p.z)],["95% CI",`[${fmt(p.ci[0])}, ${fmt(p.ci[1])}]`]].map(([k,v])=><div key={String(k)} className="rounded-xl border border-slate-800 bg-slate-950/50 p-3"><div className="text-[10px] uppercase tracking-wider text-slate-500">{k}</div><div className="mt-1 font-mono text-sm text-white">{v}</div></div>)}</div>
     <div className={`mt-4 rounded-xl border p-4 ${significant?"border-sky-500/20 bg-sky-500/5":"border-slate-800 bg-slate-950/30"}`}><div className="text-xs font-semibold">{significant?"Evidence in the fitted model":"Not conventionally significant at p < .05"}</div><p className="mt-2 text-sm leading-6 text-slate-400">{p.interpretation}</p></div>
     <div className="mt-5 border-t border-slate-800 pt-4"><div className="text-xs font-semibold text-slate-300">Technical</div><p className="mt-2 text-xs leading-5 text-slate-500">Standardized structural coefficients use <span className="font-mono text-slate-300">Std.all</span>. The displayed confidence interval is for the unstandardized estimate from the locked lavaan output; it should not be read as a CI for Std. β.</p></div>
+  </div>
+}
+
+function IndicatorDetailPanel({i}:{i:IndicatorDetail}){
+  return <div>
+    <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+      <div className="text-[10px] uppercase tracking-wider text-slate-500">Observed indicator</div>
+      <div className="mt-1 text-2xl font-semibold">{i.label}</div>
+      <div className="mt-1 font-mono text-[10px] text-slate-600">{i.id}</div>
+    </div>
+    <div className="mt-4 grid grid-cols-2 gap-2">
+      <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3"><div className="text-[10px] uppercase tracking-wider text-slate-500">Std. loading</div><div className="mt-1 font-mono text-sm text-sky-300">{i.loading.toFixed(3)}</div></div>
+      <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3"><div className="text-[10px] uppercase tracking-wider text-slate-500">p</div><div className="mt-1 font-mono text-sm text-white">{i.p}</div></div>
+    </div>
+    <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950/30 p-4 text-xs leading-5 text-slate-500">Measured indicator of <span className="text-slate-300">{i.construct}</span>. The internal variable code is retained for traceability to the source SEM output.</div>
   </div>
 }
 
