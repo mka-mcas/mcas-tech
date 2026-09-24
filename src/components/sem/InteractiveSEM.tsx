@@ -127,7 +127,7 @@ function SEMCanvas({tab,std,detail,onDetail}:{tab:Tab;std:boolean;detail:Detail;
       <marker id="arrow-pos" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#38bdf8"/></marker>
       <marker id="arrow-neg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#fb7185"/></marker>
       <marker id="arrow-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker>
-      <marker id="arrow-load" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/></marker>
+      <marker id="arrow-load" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/></marker>\n      <marker id="cov-start" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 10 0 L 0 5 L 10 10" fill="none" stroke="#a78bfa" strokeWidth="1.5"/></marker>\n      <marker id="cov-end" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 0 L 10 5 L 0 10" fill="none" stroke="#a78bfa" strokeWidth="1.5"/></marker>
     </defs>
     <rect width="1450" height="610" fill="#0b111c"/>
     {showStructural && paths.map(p=>{
@@ -151,7 +151,7 @@ function SEMCanvas({tab,std,detail,onDetail}:{tab:Tab;std:boolean;detail:Detail;
       </g>
     })}
     <g onClick={()=>onDetail({kind:"covariance"})} className="cursor-pointer">
-      <path d="M 1270 102 C 1375 20, 1430 80, 1385 135" fill="none" stroke="#a78bfa" strokeWidth="2.2" strokeDasharray="6 5"/>
+      <path d="M 1270 102 C 1375 20, 1430 80, 1385 135" fill="none" stroke="#a78bfa" strokeWidth="2.2" strokeDasharray="6 5" markerStart="url(#cov-start)" markerEnd="url(#cov-end)"/>
       <path d="M 1270 102 C 1375 20, 1430 80, 1385 135" fill="none" stroke="transparent" strokeWidth="14"/>
       <text x="1365" y="55" fill="#a78bfa" fontSize="10" textAnchor="middle">~~ .469</text>
     </g>
