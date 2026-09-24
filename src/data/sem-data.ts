@@ -6,7 +6,7 @@ export type SemPath = {
   estimate: number;
   se: number;
   z: number;
-  p: number | string;
+  p: number;
   ci: [number, number];
   interpretation: string;
 };
@@ -124,13 +124,13 @@ export const paths: SemPath[] = [
   { id:"prolong-unsafe", from:"prolong", to:"unsafe", beta:0.395, estimate:0.549, se:0.193, z:2.838, p:.005, ci:[0.272,1.001], interpretation:"Higher prolonged fatigue is positively associated with Unsafe Riding in the locked model; the 95% CI excludes zero." },
   { id:"motivation-unsafe", from:"motivation", to:"unsafe", beta:0.316, estimate:0.446, se:0.235, z:1.898, p:.058, ci:[0.055,0.943], interpretation:"The standardized association is positive and close to, but above, the conventional .05 threshold in the reported two-sided test." },
   { id:"physical-mental", from:"physical", to:"mental", beta:-0.007, estimate:-0.007, se:0.093, z:-.075, p:.941, ci:[-0.201,0.164], interpretation:"The direct path is essentially zero in the fitted model." },
-  { id:"kurang-mental", from:"kurang", to:"mental", beta:0.858, estimate:1.416, se:0.199, z:7.103, p:"<.001", ci:[1.105,1.882], interpretation:"Low Energy has a strong positive standardized association with Mental Fatigue, with the CI clearly above zero." },
+  { id:"kurang-mental", from:"kurang", to:"mental", beta:0.858, estimate:1.416, se:0.199, z:7.103, p:0.000, ci:[1.105,1.882], interpretation:"Low Energy has a strong positive standardized association with Mental Fatigue, with the CI clearly above zero." },
   { id:"prolong-mental", from:"prolong", to:"mental", beta:0.000, estimate:0.000, se:0.084, z:0, p:1, ci:[-0.162,0.172], interpretation:"The direct path is estimated at essentially zero after the other fatigue dimensions are included." },
   { id:"motivation-mental", from:"motivation", to:"mental", beta:-0.030, estimate:-0.057, se:0.096, z:-.599, p:.549, ci:[-0.251,0.125], interpretation:"The standardized association is small and negative, with the CI spanning zero." },
-  { id:"kurang-physical", from:"kurang", to:"physical", beta:0.718, estimate:1.230, se:0.128, z:9.602, p:"<.001", ci:[1.006,1.514], interpretation:"Low Energy is strongly and positively associated with Physical Fatigue." },
-  { id:"prolong-physical", from:"prolong", to:"physical", beta:0.238, estimate:0.465, se:0.092, z:5.073, p:"<.001", ci:[0.299,0.668], interpretation:"Prolonged Fatigue is positively associated with Physical Fatigue, with a CI excluding zero." },
+  { id:"kurang-physical", from:"kurang", to:"physical", beta:0.718, estimate:1.230, se:0.128, z:9.602, p:0.000, ci:[1.006,1.514], interpretation:"Low Energy is strongly and positively associated with Physical Fatigue." },
+  { id:"prolong-physical", from:"prolong", to:"physical", beta:0.238, estimate:0.465, se:0.092, z:5.073, p:0.000, ci:[0.299,0.668], interpretation:"Prolonged Fatigue is positively associated with Physical Fatigue, with a CI excluding zero." },
   { id:"motivation-physical", from:"motivation", to:"physical", beta:-0.035, estimate:-0.069, se:0.095, z:-.721, p:.471, ci:[-0.259,0.117], interpretation:"The standardized association is small and negative, with the CI spanning zero." },
-  { id:"prolong-kurang", from:"prolong", to:"kurang", beta:0.512, estimate:0.586, se:0.060, z:9.711, p:"<.001", ci:[0.473,0.708], interpretation:"Prolonged Fatigue is positively associated with Low Energy." },
+  { id:"prolong-kurang", from:"prolong", to:"kurang", beta:0.512, estimate:0.586, se:0.060, z:9.711, p:0.000, ci:[0.473,0.708], interpretation:"Prolonged Fatigue is positively associated with Low Energy." },
   { id:"motivation-kurang", from:"motivation", to:"kurang", beta:0.087, estimate:0.101, se:0.076, z:1.329, p:.184, ci:[-0.049,0.248], interpretation:"The direct association is small and not statistically distinguishable from zero." },
   { id:"motivation-prolong", from:"motivation", to:"prolong", beta:-0.162, estimate:-0.165, se:0.076, z:-2.174, p:.030, ci:[-0.314,-0.005], interpretation:"Higher Motivation is associated with lower Prolonged Fatigue in the fitted model; the CI narrowly excludes zero." },
 ];
