@@ -4,10 +4,8 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 
-// Instantiate your secure Supabase bridge mirroring your hook variables
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
+// Supabase is created only in the browser at submit time.
+    // This keeps Next.js prerendering independent of deployment-time Supabase vars.
 
 export default function LoginPage() {
   const router = useRouter();
@@ -24,6 +22,16 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+      if (!supabaseUrl || !supabaseAnonKey) {
+        setErrorMessage('Authentication is not configured for this deployment.');
+        return;
+      }
+
+      const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
       // Execute the direct Supabase authentication pass line
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
