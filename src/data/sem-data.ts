@@ -6,7 +6,7 @@ export type SemPath = {
   estimate: number;
   se: number;
   z: number;
-  p: number;
+  p: number | string;
   ci: [number, number];
   interpretation: string;
 };
