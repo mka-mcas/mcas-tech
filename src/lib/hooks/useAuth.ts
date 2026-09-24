@@ -1,11 +1,5 @@
 import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
-import { User } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
+import { createClient, User } from '@supabase/supabase-js';
 
 interface UseAuthReturn {
   user: User | null;
@@ -18,7 +12,18 @@ export function useAuth(): UseAuthReturn {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
+    // Create the Supabase client only in the browser. This keeps Next.js
+    // static/404 prerendering independent of deployment-time Supabase vars.
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      setLoading(false);
+      return;
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
     const getSession = async () => {
       const { data } = await supabase.auth.getSession();
       setUser(data?.session?.user ?? null);
@@ -27,7 +32,6 @@ export function useAuth(): UseAuthReturn {
 
     getSession();
 
-    // Subscribe to auth state changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -41,6 +45,12 @@ export function useAuth(): UseAuthReturn {
   }, []);
 
   const signOut = async () => {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) return;
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
     await supabase.auth.signOut();
     setUser(null);
   };
