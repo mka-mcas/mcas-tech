@@ -112,6 +112,7 @@ function markerId(p:SemPath){return p.beta<0?"arrow-neg":p.p<.05?"arrow-pos":"ar
 
 function SEMCanvas({tab,std,detail,onDetail}:{tab:Tab;std:boolean;detail:Detail;onDetail:(d:Detail)=>void}){
   const showStructural=tab!=="measurement";
+  const displayLabelMap = new Map(constructs.flatMap(c=>c.indicators.map(i=>[i.id,i.label])));
   const indicatorEdges=[
     ["kurang","CFS_4"],["kurang","CFS_5"],["kurang","CFS_6"],["kurang","CFS_7"],
     ["mental","CFS_8"],["mental","CFS_9"],["mental","CFS_10"],["mental","CFS_11"],
@@ -157,7 +158,7 @@ function SEMCanvas({tab,std,detail,onDetail}:{tab:Tab;std:boolean;detail:Detail;
     </g>
     {Object.entries(obs).map(([id,n])=><g key={id}>
       <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="3" fill="#101827" stroke={id==="Crash_hist"?"#c084fc":"#475569"} strokeWidth="1.5"/>
-      <text x={n.x+n.w/2} y={n.y+21} fill="#cbd5e1" fontSize="9.5" textAnchor="middle">{id}</text>
+      <text x={n.x+n.w/2} y={n.y+21} fill="#cbd5e1" fontSize="9.5" textAnchor="middle">{displayLabelMap.get(id) ?? id}</text>
     </g>)}
     {Object.entries(latent).map(([id,n])=>{
       const c=constructMap.get(id)!; const selected=detail?.kind==="construct"&&detail.item.id===id;
