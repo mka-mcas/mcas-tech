@@ -17,22 +17,21 @@ const pathColor = (p: SemPath) => p.p < .05 ? (p.beta < 0 ? "#fb7185" : "#38bdf8
 function fmt(n:number, digits=3){ return n.toFixed(digits).replace(/^-0\.000$/,"0.000"); }
 function pLabel(p:number|string){ return typeof p==="string" ? p : p < .001 ? "<.001" : p.toFixed(3).replace(/^0/,""); }
 
+
 export default function InteractiveSEM(){
   const [tab,setTab]=useState<Tab>("model");
   const [detail,setDetail]=useState<Detail>(null);
   const [std,setStd]=useState(true);
 
-  const visiblePaths = useMemo(()=> tab==="measurement" ? [] : paths, [tab]);
-
   return (
     <div className="min-h-screen bg-[#090d16] text-slate-100">
       <header className="border-b border-slate-800/80 bg-[#0b101b]/95">
-        <div className="mx-auto max-w-[1500px] px-5 pb-5 pt-28 md:px-8">
+        <div className="mx-auto max-w-[1550px] px-5 pb-5 pt-28 md:px-8">
           <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div>
               <div className="mb-3 flex items-center gap-2 text-[11px] font-mono uppercase tracking-[0.25em] text-sky-400"><Network size={14}/> Interactive SEM Explorer</div>
               <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">From model diagram to statistical story.</h1>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400 md:text-base">Explore the locked final SEM one relationship at a time. Tap a construct, path, indicator or covariance to see what the model actually estimates.</p>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400 md:text-base">Explore the locked final SEM one relationship at a time. The diagram follows conventional SEM notation: ellipses are latent variables, rectangles are observed indicators, one-headed arrows are directed paths, and double-headed curved arrows are covariances.</p>
             </div>
             <div className="grid grid-cols-2 gap-2 text-center md:grid-cols-4">
               {[["N",fit.n],["CFI",fit.cfi.toFixed(3)],["RMSEA",fit.rmsea.toFixed(3)],["SRMR",fit.srmr.toFixed(3)]].map(([k,v])=><div key={k} className="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-3"><div className="text-[10px] uppercase tracking-widest text-slate-500">{k}</div><div className="mt-1 font-mono text-lg text-white">{v}</div></div>)}
@@ -41,7 +40,7 @@ export default function InteractiveSEM(){
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1500px] px-5 py-6 md:px-8">
+      <main className="mx-auto max-w-[1550px] px-5 py-6 md:px-8">
         <div className="mb-5 flex flex-wrap items-center gap-2">
           {([["model","Full model"],["structural","Structural"],["measurement","Measurement"],["journey","Model journey"]] as [Tab,string][]).map(([id,label])=>
             <button key={id} onClick={()=>setTab(id)} className={`rounded-full border px-4 py-2 text-xs font-semibold transition ${tab===id ? "border-sky-400/50 bg-sky-400/10 text-sky-300":"border-slate-800 bg-slate-900 text-slate-400 hover:text-white"}`}>{label}</button>
@@ -56,42 +55,18 @@ export default function InteractiveSEM(){
         {tab==="journey" ? <Journey onOpen={(key)=>setDetail({kind:"journey",key})}/> :
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_390px]">
           <section className="overflow-hidden rounded-2xl border border-slate-800 bg-[#0b111c]">
-            <div className="flex items-center justify-between border-b border-slate-800 px-5 py-4">
-              <div><div className="text-sm font-semibold">Locked final model</div><div className="mt-1 text-xs text-slate-500">Click any construct or path. Red = negative standardized association.</div></div>
-              <div className="hidden items-center gap-4 text-[10px] uppercase tracking-wider text-slate-500 md:flex"><span className="flex items-center gap-1"><i className="h-2 w-2 rounded-full bg-sky-400"/> supported path</span><span className="flex items-center gap-1"><i className="h-2 w-2 rounded-full bg-slate-600"/> p ≥ .05</span></div>
+            <div className="flex flex-col gap-3 border-b border-slate-800 px-5 py-4 md:flex-row md:items-center md:justify-between">
+              <div><div className="text-sm font-semibold">Locked final model · conventional SEM notation</div><div className="mt-1 text-xs text-slate-500">Click any ellipse, rectangle, directed path or covariance. Dashed purple curve = residual covariance.</div></div>
+              <div className="flex flex-wrap gap-3 text-[10px] uppercase tracking-wider text-slate-500">
+                <span className="flex items-center gap-1"><i className="h-2 w-2 rounded-full bg-sky-400"/> p &lt; .05</span>
+                <span className="flex items-center gap-1"><i className="h-2 w-2 rounded-full bg-slate-600"/> p ≥ .05</span>
+                <span className="flex items-center gap-1"><i className="h-2 w-2 rounded-full bg-violet-400"/> covariance</span>
+              </div>
             </div>
-            <div className="overflow-x-auto">
-              <svg viewBox="0 0 1190 600" className="min-w-[1050px] w-full select-none">
-                <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke"/></marker></defs>
-                <rect x="0" y="0" width="1190" height="600" fill="#0b111c"/>
-                {tab!=="measurement" && visiblePaths.map(p=>{
-                  const a=pos[p.from], b=pos[p.to]; const dx=b.x-a.x, dy=b.y-a.y;
-                  const x1=a.x+58, y1=a.y+25, x2=b.x-58, y2=b.y+25;
-                  const path=`M ${x1} ${y1} C ${x1+dx*.35} ${y1}, ${x2-dx*.35} ${y2}, ${x2} ${y2}`;
-                  return <g key={p.id} onClick={()=>setDetail({kind:"path",item:p})} className="cursor-pointer">
-                    <path d={path} fill="none" stroke={pathColor(p)} strokeWidth={p.p<.05?2.5:1.5} strokeOpacity={p.p<.05?.95:.55} markerEnd="url(#arrow)"/>
-                    <path d={path} fill="none" stroke="transparent" strokeWidth="14"/>
-                    <text x={(x1+x2)/2} y={(y1+y2)/2-8} fill={pathColor(p)} fontSize="12" textAnchor="middle" fontFamily="ui-monospace">{std?fmt(p.beta):fmt(p.estimate)}</text>
-                  </g>
-                })}
-                <g onClick={()=>setDetail({kind:"covariance"})} className="cursor-pointer">
-                  <path d="M 1010 246 C 1010 305, 900 325, 850 315" fill="none" stroke="#a78bfa" strokeWidth="2" strokeDasharray="5 5"/>
-                  <text x="920" y="335" fill="#a78bfa" fontSize="11" textAnchor="middle">residual covariance .469</text>
-                </g>
-                {constructs.map(c=>{
-                  const p=pos[c.id];
-                  return <g key={c.id} onClick={()=>setDetail({kind:"construct",item:c})} className="cursor-pointer">
-                    <rect x={p.x-58} y={p.y} width="116" height="50" rx="10" fill="#121b2a" stroke={detail?.kind==="construct"&&detail.item.id===c.id?"#38bdf8":"#334155"} strokeWidth="2"/>
-                    <text x={p.x} y={p.y+21} fill="#f8fafc" fontSize="12" fontWeight="600" textAnchor="middle">{c.label.length>17?c.label.slice(0,16)+"…":c.label}</text>
-                    <text x={p.x} y={p.y+39} fill="#64748b" fontSize="9" textAnchor="middle">R² {c.r2?.toFixed(3)}</text>
-                  </g>
-                })}
-                <text x="110" y="405" fill="#64748b" fontSize="11">Indicators are expanded in the Measurement view and in the construct panel.</text>
-                <text x="1030" y="410" fill="#64748b" fontSize="11" textAnchor="middle">N = 689 · ML · 57 parameters</text>
-              </svg>
+            <div className="overflow-auto">
+              <SEMCanvas tab={tab} std={std} detail={detail} onDetail={setDetail}/>
             </div>
           </section>
-
           <DetailPanel detail={detail} std={std} onClose={()=>setDetail(null)}/>
         </div>}
 
@@ -107,6 +82,95 @@ export default function InteractiveSEM(){
       </main>
     </div>
   );
+}
+
+type NodeBox = { x:number;y:number; w:number;h:number };
+const latent: Record<string,NodeBox> = {
+  motivation:{x:120,y:390,w:170,h:70}, prolong:{x:350,y:300,w:180,h:70},
+  kurang:{x:580,y:180,w:175,h:70}, physical:{x:820,y:105,w:175,h:70},
+  mental:{x:820,y:300,w:175,h:70}, unsafe:{x:1090,y:205,w:185,h:70}
+};
+const obs: Record<string,NodeBox> = {
+  CFS_4:{x:500,y:80,w:92,h:34}, CFS_5:{x:610,y:55,w:92,h:34}, CFS_6:{x:720,y:35,w:92,h:34}, CFS_7:{x:830,y:25,w:92,h:34},
+  CFS_8:{x:995,y:385,w:92,h:34}, CFS_9:{x:1100,y:405,w:92,h:34}, CFS_10:{x:1205,y:425,w:92,h:34}, CFS_11:{x:1310,y:445,w:92,h:34},
+  CFS_1:{x:755,y:5,w:92,h:34}, CFS_2:{x:850,y:0,w:92,h:34}, CFS_3:{x:945,y:10,w:92,h:34},
+  P_sleepy:{x:240,y:175,w:108,h:34}, P_napped:{x:355,y:145,w:108,h:34}, P_month:{x:470,y:125,w:108,h:34},
+  Tj_mng:{x:25,y:505,w:115,h:34}, Umur:{x:150,y:525,w:95,h:34},
+  Letih_RLR:{x:1160,y:85,w:112,h:34}, Letih_bwk_laju:{x:1285,y:110,w:125,h:34}, Letih_ubah_tbt:{x:1320,y:195,w:125,h:34}, Crash_hist:{x:1285,y:300,w:112,h:34}
+};
+
+function nodeCenter(n:NodeBox){return {x:n.x+n.w/2,y:n.y+n.h/2};}
+function edgePoint(a:NodeBox,b:NodeBox){
+  const ac=nodeCenter(a), bc=nodeCenter(b), dx=bc.x-ac.x, dy=bc.y-ac.y;
+  const scale=Math.min((a.w/2)/Math.max(Math.abs(dx),1),(a.h/2)/Math.max(Math.abs(dy),1));
+  const s={x:ac.x+dx*scale,y:ac.y+dy*scale};
+  const scale2=Math.min((b.w/2)/Math.max(Math.abs(dx),1),(b.h/2)/Math.max(Math.abs(dy),1));
+  const e={x:bc.x-dx*scale2,y:bc.y-dy*scale2};
+  return {s,e};
+}
+function markerId(p:SemPath){return p.beta<0?"arrow-neg":p.p<.05?"arrow-pos":"arrow-muted";}
+
+function SEMCanvas({tab,std,detail,onDetail}:{tab:Tab;std:boolean;detail:Detail;onDetail:(d:Detail)=>void}){
+  const showStructural=tab!=="measurement";
+  const indicatorEdges=[
+    ["kurang","CFS_4"],["kurang","CFS_5"],["kurang","CFS_6"],["kurang","CFS_7"],
+    ["mental","CFS_8"],["mental","CFS_9"],["mental","CFS_10"],["mental","CFS_11"],
+    ["physical","CFS_1"],["physical","CFS_2"],["physical","CFS_3"],
+    ["prolong","P_sleepy"],["prolong","P_napped"],["prolong","P_month"],
+    ["motivation","Tj_mng"],["motivation","Umur"],["motivation","Crash_hist"],
+    ["unsafe","Letih_RLR"],["unsafe","Letih_bwk_laju"],["unsafe","Letih_ubah_tbt"],["unsafe","Crash_hist"]
+  ];
+  const loadingMap=new Map(constructs.flatMap(c=>c.indicators.map(i=>[c.id+"|"+i.id,i.loading])));
+  const constructMap=new Map(constructs.map(c=>[c.id,c]));
+  return <svg viewBox="0 0 1450 610" className="min-w-[1180px] w-full bg-[#0b111c] select-none" role="img" aria-label="Interactive structural equation model diagram">
+    <defs>
+      <marker id="arrow-pos" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#38bdf8"/></marker>
+      <marker id="arrow-neg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#fb7185"/></marker>
+      <marker id="arrow-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker>
+      <marker id="arrow-load" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/></marker>
+    </defs>
+    <rect width="1450" height="610" fill="#0b111c"/>
+    {showStructural && paths.map(p=>{
+      const a=latent[p.from],b=latent[p.to]; const {s,e}=edgePoint(a,b);
+      const mx=(s.x+e.x)/2,my=(s.y+e.y)/2;
+      const d=`M ${s.x} ${s.y} Q ${mx} ${my+(p.from==="motivation"?35:-25)} ${e.x} ${e.y}`;
+      const col=pathColor(p);
+      return <g key={p.id} onClick={()=>onDetail({kind:"path",item:p})} className="cursor-pointer">
+        <path d={d} fill="none" stroke="transparent" strokeWidth="16"/>
+        <path d={d} fill="none" stroke={col} strokeWidth={p.p<.05?2.7:1.5} strokeOpacity={p.p<.05?.95:.55} markerEnd={`url(#${markerId(p)})`}/>
+        <text x={mx} y={my-7} fill={col} fontSize="12" textAnchor="middle" fontFamily="ui-monospace">{std?fmt(p.beta):fmt(p.estimate)}</text>
+      </g>
+    })}
+    {indicatorEdges.map(([cid,iid])=>{
+      const a=latent[cid],b=obs[iid]; if(!a||!b)return null;
+      const {s,e}=edgePoint(a,b); const loading=loadingMap.get(cid+"|"+iid) ?? 0; const isCross=iid==="Crash_hist";
+      return <g key={cid+"-"+iid} onClick={()=>onDetail({kind:"construct",item:constructMap.get(cid)!})} className="cursor-pointer">
+        <path d={`M ${s.x} ${s.y} L ${e.x} ${e.y}`} fill="none" stroke="#64748b" strokeWidth="1.2" markerEnd="url(#arrow-load)"/>
+        <text x={(s.x+e.x)/2} y={(s.y+e.y)/2-4} fill="#94a3b8" fontSize="9" textAnchor="middle" fontFamily="ui-monospace">{loading.toFixed(3)}</text>
+        {isCross && cid==="motivation" && <text x={(s.x+e.x)/2+5} y={(s.y+e.y)/2+12} fill="#c084fc" fontSize="8">cross-loading</text>}
+      </g>
+    })}
+    <g onClick={()=>onDetail({kind:"covariance"})} className="cursor-pointer">
+      <path d="M 1270 102 C 1375 20, 1430 80, 1385 135" fill="none" stroke="#a78bfa" strokeWidth="2.2" strokeDasharray="6 5"/>
+      <path d="M 1270 102 C 1375 20, 1430 80, 1385 135" fill="none" stroke="transparent" strokeWidth="14"/>
+      <text x="1365" y="55" fill="#a78bfa" fontSize="10" textAnchor="middle">~~ .469</text>
+    </g>
+    {Object.entries(obs).map(([id,n])=><g key={id}>
+      <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="3" fill="#101827" stroke={id==="Crash_hist"?"#c084fc":"#475569"} strokeWidth="1.5"/>
+      <text x={n.x+n.w/2} y={n.y+21} fill="#cbd5e1" fontSize="9.5" textAnchor="middle">{id}</text>
+    </g>)}
+    {Object.entries(latent).map(([id,n])=>{
+      const c=constructMap.get(id)!; const selected=detail?.kind==="construct"&&detail.item.id===id;
+      return <g key={id} onClick={()=>onDetail({kind:"construct",item:c})} className="cursor-pointer">
+        <ellipse cx={n.x+n.w/2} cy={n.y+n.h/2} rx={n.w/2} ry={n.h/2} fill="#121b2a" stroke={selected?"#38bdf8":"#64748b"} strokeWidth={selected?2.5:1.8}/>
+        <text x={n.x+n.w/2} y={n.y+31} fill="#f8fafc" fontSize="12" fontWeight="600" textAnchor="middle">{c.label}</text>
+        <text x={n.x+n.w/2} y={n.y+49} fill="#64748b" fontSize="9" textAnchor="middle">R² {c.r2?.toFixed(3)}</text>
+      </g>
+    })}
+    <text x="25" y="35" fill="#475569" fontSize="10" fontFamily="ui-monospace">LATENT VARIABLES</text>
+    <text x="25" y="55" fill="#475569" fontSize="10">ellipses</text>
+    <text x="1120" y="575" fill="#475569" fontSize="10">N = 689 · ML · 57 parameters</text>
+  </svg>;
 }
 
 function DetailPanel({detail,std,onClose}:{detail:Detail;std:boolean;onClose:()=>void}){
@@ -126,8 +190,8 @@ function PathDetail({p,std}:{p:SemPath;std:boolean}){
   const significant=p.p<.05;
   return <div>
     <div className="grid grid-cols-2 gap-2">{[[std?"Std. β":"Estimate",std?fmt(p.beta):fmt(p.estimate)],["p",pLabel(p.p)],["SE",fmt(p.se)],["z",fmt(p.z)],["95% CI",`[${fmt(p.ci[0])}, ${fmt(p.ci[1])}]`]].map(([k,v])=><div key={String(k)} className="rounded-xl border border-slate-800 bg-slate-950/50 p-3"><div className="text-[10px] uppercase tracking-wider text-slate-500">{k}</div><div className="mt-1 font-mono text-sm text-white">{v}</div></div>)}</div>
-    <div className={`mt-4 rounded-xl border p-4 ${significant?"border-sky-500/20 bg-sky-500/5":"border-slate-800 bg-slate-950/30"}`}><div className="text-xs font-semibold">{significant?"Evidence in the fitted model":"Uncertain / not conventionally significant"}</div><p className="mt-2 text-sm leading-6 text-slate-400">{p.interpretation}</p></div>
-    <div className="mt-5 border-t border-slate-800 pt-4"><div className="text-xs font-semibold text-slate-300">Technical</div><p className="mt-2 text-xs leading-5 text-slate-500">Structural coefficient reported from the locked lavaan solution. Standardized coefficients use <span className="font-mono text-slate-300">Std.all</span>; raw estimates are the unstandardized model coefficients.</p></div>
+    <div className={`mt-4 rounded-xl border p-4 ${significant?"border-sky-500/20 bg-sky-500/5":"border-slate-800 bg-slate-950/30"}`}><div className="text-xs font-semibold">{significant?"Evidence in the fitted model":"Not conventionally significant at p < .05"}</div><p className="mt-2 text-sm leading-6 text-slate-400">{p.interpretation}</p></div>
+    <div className="mt-5 border-t border-slate-800 pt-4"><div className="text-xs font-semibold text-slate-300">Technical</div><p className="mt-2 text-xs leading-5 text-slate-500">Standardized structural coefficients use <span className="font-mono text-slate-300">Std.all</span>. The displayed confidence interval is for the unstandardized estimate from the locked lavaan output; it should not be read as a CI for Std. β.</p></div>
   </div>
 }
 
