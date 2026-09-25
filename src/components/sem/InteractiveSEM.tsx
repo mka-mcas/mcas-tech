@@ -24,6 +24,7 @@ export default function InteractiveSEM(){
   const [detail,setDetail]=useState<Detail>(null);
   const [std,setStd]=useState(true);
   const [light,setLight]=useState(false);
+  const [showGuide,setShowGuide]=useState(false);
 
   return (
     <div className={light ? "sem-light min-h-screen bg-slate-50 text-slate-900" : "min-h-screen bg-[#090d16] text-slate-100"}>
@@ -69,6 +70,26 @@ export default function InteractiveSEM(){
       </header>
 
       <main className="mx-auto max-w-[1550px] px-5 py-6 md:px-8">
+        <div className="mb-5 rounded-2xl border border-sky-500/20 bg-sky-500/5 p-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-400/10 text-sky-300"><Info size={17}/></div>
+              <div><div className="text-sm font-semibold">New to SEM?</div><div className="text-xs text-slate-500">A quick guide to the method behind this explorer.</div></div>
+            </div>
+            <button onClick={()=>setShowGuide(!showGuide)} className="cursor-pointer rounded-full border border-sky-500/30 bg-sky-400/10 px-3 py-2 text-xs font-semibold text-sky-300 hover:bg-sky-400/15">{showGuide ? "Hide guide" : "Show SEM guide"}</button>
+          </div>
+          {showGuide && <div className="mt-4 grid gap-3 border-t border-sky-500/10 pt-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-slate-800 bg-slate-950/30 p-3"><div className="text-[10px] font-semibold uppercase tracking-wider text-sky-300">SEM</div><p className="mt-1 text-xs leading-5 text-slate-400"><b className="text-slate-200">Structural Equation Modeling</b> tests relationships among latent constructs and their observed indicators in one model.</p></div>
+            <div className="rounded-xl border border-slate-800 bg-slate-950/30 p-3"><div className="text-[10px] font-semibold uppercase tracking-wider text-sky-300">CB-SEM</div><p className="mt-1 text-xs leading-5 text-slate-400">This is <b className="text-slate-200">covariance-based SEM</b>, not PLS-SEM. The model is evaluated against the observed covariance structure and overall fit.</p></div>
+            <div className="rounded-xl border border-slate-800 bg-slate-950/30 p-3"><div className="text-[10px] font-semibold uppercase tracking-wider text-sky-300">MLR</div><p className="mt-1 text-xs leading-5 text-slate-400"><b className="text-slate-200">Maximum Likelihood Robust</b> is the estimator used for the final model, providing robust inference when normality assumptions are not ideal.</p></div>
+            <div className="rounded-xl border border-slate-800 bg-slate-950/30 p-3"><div className="text-[10px] font-semibold uppercase tracking-wider text-sky-300">Std. β</div><p className="mt-1 text-xs leading-5 text-slate-400">A standardized path coefficient shows the modelled direction and relative magnitude of an association. <b className="text-slate-200">It is not a causal effect.</b></p></div>
+            <div className="rounded-xl border border-slate-800 bg-slate-950/30 p-3"><div className="text-[10px] font-semibold uppercase tracking-wider text-sky-300">Latent variable</div><p className="mt-1 text-xs leading-5 text-slate-400">An ellipse represents a construct inferred from multiple observed indicators, shown as rectangles in the model diagram.</p></div>
+            <div className="rounded-xl border border-slate-800 bg-slate-950/30 p-3"><div className="text-[10px] font-semibold uppercase tracking-wider text-sky-300">p-value</div><p className="mt-1 text-xs leading-5 text-slate-400">Here, p-values assess evidence against a zero path in the fitted model. <b className="text-slate-200">p &lt; .05</b> is used as the displayed significance threshold.</p></div>
+            <div className="rounded-xl border border-slate-800 bg-slate-950/30 p-3"><div className="text-[10px] font-semibold uppercase tracking-wider text-sky-300">Model fit</div><p className="mt-1 text-xs leading-5 text-slate-400">CFI, TLI, RMSEA and SRMR describe how well the <b className="text-slate-200">model as a whole</b> reproduces the observed data.</p></div>
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3"><div className="text-[10px] font-semibold uppercase tracking-wider text-amber-300">Study boundary</div><p className="mt-1 text-xs leading-5 text-slate-400">This is a <b className="text-slate-200">cross-sectional</b> model. Statistical association, significance or good fit does not by itself establish causality.</p></div>
+          </div>}
+        </div>
+
         <InterpretiveSummary onOpen={(id)=>{ const p=paths.find(x=>x.id===id); if(p) setDetail({kind:"path",item:p}); }} />
 
         <div className="mb-5 flex flex-wrap items-center gap-2">
