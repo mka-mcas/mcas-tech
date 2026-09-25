@@ -42,7 +42,7 @@ export default function InteractiveSEM(){
       </header>
 
       <main className="mx-auto max-w-[1550px] px-5 py-6 md:px-8">
-        <InterpretiveSummary />
+        <InterpretiveSummary onOpen={(id)=>{ const p=paths.find(x=>x.id===id); if(p) setDetail({kind:"path",item:p}); }} />
 
         <div className="mb-5 flex flex-wrap items-center gap-2">
           {([["model","Full model"],["structural","Structural"],["measurement","Measurement"],["journey","Model journey"]] as [Tab,string][]).map(([id,label])=>
@@ -180,7 +180,7 @@ function SEMCanvas({tab,std,detail,onDetail}:{tab:Tab;std:boolean;detail:Detail;
   </svg>;
 }
 
-function InterpretiveSummary(){
+function InterpretiveSummary({onOpen}:{onOpen:(id:string)=>void}){
   return <section className="mb-5 rounded-2xl border border-slate-800 bg-[#0b111c] p-5">
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
       <div className="max-w-2xl">
@@ -199,7 +199,7 @@ function InterpretiveSummary(){
     <div className="mt-5 grid gap-2 md:grid-cols-5">
       {directUnsafeInterpretation.map(item => {
         const significant=item.status==="significant";
-        return <div key={item.id} className={`rounded-xl border p-3 ${significant?"border-sky-500/20 bg-sky-500/5":"border-slate-800 bg-slate-950/30"}`}>
+        return <button key={item.id} onClick={()=>onOpen(item.id)} className={`w-full rounded-xl border p-3 text-left transition hover:border-sky-400/40 ${significant?"border-sky-500/20 bg-sky-500/5":"border-slate-800 bg-slate-950/30"}`}>
           <div className="flex items-start justify-between gap-2">
             <div className="text-xs font-semibold text-slate-200">{item.label}</div>
             <span className={`rounded-full px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wider ${significant?"bg-sky-400/10 text-sky-300":"bg-slate-800 text-slate-500"}`}>{significant?"Sig.":"n.s."}</span>
@@ -207,7 +207,7 @@ function InterpretiveSummary(){
           <div className="mt-3 font-mono text-sm text-sky-300">β = {item.beta.toFixed(3)}</div>
           <div className="mt-1 font-mono text-[10px] text-slate-500">p {pLabel(item.p)}</div>
           <p className="mt-2 text-[11px] leading-5 text-slate-500">{item.message}</p>
-        </div>;
+        </button>;
       })}
     </div>
 
@@ -222,7 +222,7 @@ function DetailPanel({detail,std,onClose}:{detail:Detail;std:boolean;onClose:()=
   return <aside className="min-h-[520px] rounded-2xl border border-slate-800 bg-[#0b111c] p-5">
     {!detail ? <div className="flex h-full min-h-[480px] flex-col items-center justify-center text-center"><Route className="text-slate-700" size={34}/><h3 className="mt-4 font-semibold text-slate-300">Explore the model</h3><p className="mt-2 max-w-xs text-sm leading-6 text-slate-500">Select a path, construct, or covariance. The panel will explain the statistic and its interpretation.</p></div> :
     <div>
-      <div className="mb-5 flex items-start justify-between gap-4"><div><div className="text-[10px] uppercase tracking-[.2em] text-sky-400">{detail.kind}</div><h3 className="mt-1 text-xl font-semibold">{detail.kind==="path"?`${detail.item.from} → ${detail.item.to}`:detail.kind==="construct"?detail.item.label:detail.kind==="indicator"?detail.item.label:"Residual covariance"}</h3></div><button onClick={onClose} className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-800 hover:text-white"><X size={16}/></button></div>
+      <div className="mb-5 flex items-start justify-between gap-4"><div><div className="text-[10px] uppercase tracking-[.2em] text-sky-400">{detail.kind}</div><h3 className="mt-1 text-xl font-semibold">{detail.kind==="path"?`${({motivation:"Motivation",prolong:"Prolonged fatigue",kurang:"Low Energy",physical:"Physical fatigue",mental:"Mental fatigue",unsafe:"Unsafe riding"} as Record<string,string>)[detail.item.from] ?? detail.item.from} → ${({motivation:"Motivation",prolong:"Prolonged fatigue",kurang:"Low Energy",physical:"Physical fatigue",mental:"Mental fatigue",unsafe:"Unsafe riding"} as Record<string,string>)[detail.item.to] ?? detail.item.to}`:detail.kind==="construct"?detail.item.label:detail.kind==="indicator"?detail.item.label:"Residual covariance"}</h3></div><button onClick={onClose} className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-800 hover:text-white"><X size={16}/></button></div>
       {detail.kind==="path" && <PathDetail p={detail.item} std={std}/>}
       {detail.kind==="construct" && <ConstructDetail c={detail.item}/>}
       {detail.kind==="indicator" && <IndicatorDetailPanel i={detail.item}/>}
@@ -273,8 +273,8 @@ function PathDetail({p,std}:{p:SemPath;std:boolean}){
       <div className="text-xs font-semibold text-emerald-300">How to read this</div>
       <p className="mt-2 text-sm leading-6 text-slate-400">
         {significant
-          ? `A positive standardized coefficient means higher levels of ${fromLabel} are associated with higher Unsafe Riding scores in this model.`
-          : `The estimated direct association between ${fromLabel} and Unsafe Riding was not statistically significant in this model.`}
+          ? `A positive standardized coefficient means higher levels of ${fromLabel} are associated with higher ${toLabel} scores in this model.`
+          : `The estimated direct association between ${fromLabel} and ${toLabel} was not statistically significant in this model.`}
       </p>
     </div>
 
