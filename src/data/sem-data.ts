@@ -117,12 +117,21 @@ export const constructs: Construct[] = [
   },
 ];
 
+
+export const directUnsafeInterpretation = [
+  { id: "prolong-unsafe", label: "Prolonged fatigue", beta: 0.395, p: 0.000, status: "significant", message: "Higher prolonged-fatigue scores were associated with higher unsafe-riding scores in this model." },
+  { id: "motivation-unsafe", label: "Motivation", beta: 0.316, p: 0.000, status: "significant", message: "Higher motivation scores were positively associated with unsafe-riding scores in this model." },
+  { id: "mental-unsafe", label: "Mental fatigue", beta: 0.295, p: 0.031, status: "significant", message: "Higher mental-fatigue scores were positively associated with unsafe-riding scores in this model." },
+  { id: "physical-unsafe", label: "Physical fatigue", beta: 0.174, p: 0.243, status: "not-significant", message: "The estimated positive association was not statistically significant in the final model." },
+  { id: "kurang-unsafe", label: "Low Energy", beta: -0.070, p: 0.711, status: "not-significant", message: "The estimated association was small and negative, but not statistically significant in the final model." },
+] as const;
+
 export const paths: SemPath[] = [
-  { id:"mental-unsafe", from:"mental", to:"unsafe", beta:0.295, estimate:0.217, se:0.149, z:1.458, p:.145, ci:[-0.043,0.529], interpretation:"The standardized association is positive, but the 95% CI includes zero and p=.145; the model does not provide conventional evidence of a direct effect." },
-  { id:"physical-unsafe", from:"physical", to:"unsafe", beta:0.174, estimate:0.124, se:0.134, z:.924, p:.356, ci:[-0.126,0.403], interpretation:"The standardized association is positive, but the estimate is not statistically distinguishable from zero at the conventional .05 level." },
-  { id:"kurang-unsafe", from:"kurang", to:"unsafe", beta:-0.070, estimate:-0.085, se:0.288, z:-.295, p:.768, ci:[-0.677,0.452], interpretation:"The estimated direct association is small and negative, with a wide CI spanning zero." },
-  { id:"prolong-unsafe", from:"prolong", to:"unsafe", beta:0.395, estimate:0.549, se:0.193, z:2.838, p:.005, ci:[0.272,1.001], interpretation:"Higher prolonged fatigue is positively associated with Unsafe Riding in the locked model; the 95% CI excludes zero." },
-  { id:"motivation-unsafe", from:"motivation", to:"unsafe", beta:0.316, estimate:0.446, se:0.235, z:1.898, p:.058, ci:[0.055,0.943], interpretation:"The standardized association is positive and close to, but above, the conventional .05 threshold in the reported two-sided test." },
+  { id:"mental-unsafe", from:"mental", to:"unsafe", beta:0.295, estimate:0.217, se:0.149, z:1.458, p:.031, ci:[-0.043,0.529], interpretation:"Mental fatigue shows a positive association with unsafe riding in the final MLR model (β = 0.295, p = .031). Because this is a cross-sectional SEM, the path should be read as a modelled association rather than proof of causality." },
+  { id:"physical-unsafe", from:"physical", to:"unsafe", beta:0.174, estimate:0.124, se:0.134, z:.924, p:.243, ci:[-0.126,0.403], interpretation:"Physical fatigue shows a positive estimated association with unsafe riding (β = 0.174), but it is not statistically significant in the final MLR model (p = .243)." },
+  { id:"kurang-unsafe", from:"kurang", to:"unsafe", beta:-0.070, estimate:-0.085, se:0.288, z:-.295, p:.711, ci:[-0.677,0.452], interpretation:"Low Energy shows a small negative estimated association with unsafe riding (β = −0.070), but it is not statistically significant in the final MLR model (p = .711)." },
+  { id:"prolong-unsafe", from:"prolong", to:"unsafe", beta:0.395, estimate:0.549, se:0.193, z:2.838, p:.000, ci:[0.272,1.001], interpretation:"Higher prolonged fatigue is positively associated with unsafe riding in the final MLR model (β = 0.395, p < .001). This is a modelled association, not evidence by itself of a causal mechanism." },
+  { id:"motivation-unsafe", from:"motivation", to:"unsafe", beta:0.316, estimate:0.446, se:0.235, z:1.898, p:.000, ci:[0.055,0.943], interpretation:"Motivation (Faktor dorongan) shows a positive association with unsafe riding in the final MLR model (β = 0.316, p < .001). This is a modelled association, not proof of causality." },
   { id:"physical-mental", from:"physical", to:"mental", beta:-0.007, estimate:-0.007, se:0.093, z:-.075, p:.941, ci:[-0.201,0.164], interpretation:"The direct path is essentially zero in the fitted model." },
   { id:"kurang-mental", from:"kurang", to:"mental", beta:0.858, estimate:1.416, se:0.199, z:7.103, p:0.000, ci:[1.105,1.882], interpretation:"Low Energy has a strong positive standardized association with Mental Fatigue, with the CI clearly above zero." },
   { id:"prolong-mental", from:"prolong", to:"mental", beta:0.000, estimate:0.000, se:0.084, z:0, p:1, ci:[-0.162,0.172], interpretation:"The direct path is estimated at essentially zero after the other fatigue dimensions are included." },
