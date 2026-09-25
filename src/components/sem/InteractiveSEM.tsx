@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { ChevronRight, Info, Network, Route, SlidersHorizontal, Sun, Moon, X } from "lucide-react";
 import { constructs, covariance, fit, paths, sequentialIndirect, directUnsafeInterpretation, type Construct, type SemPath } from "@/data/sem-data";
 
@@ -84,6 +84,36 @@ export default function InteractiveSEM(){
           <div className="flex items-start gap-3"><Info className="mt-0.5 text-sky-400" size={17}/><div><h2 className="font-semibold">Same-cohort context</h2><p className="mt-1 max-w-5xl text-sm leading-6 text-slate-400">In the same cohort, occupational/service riders reported substantially greater riding exposure (about 6.63 vs 2.99 h/day), while fatigue prevalence was similar (33.4% vs 30.9%) and crash involvement was higher (32.7% vs 22.5%). These are separate analyses—not coefficients from this SEM—and help motivate examining exposure, fatigue and unsafe riding as related but distinct phenomena.</p></div></div>
         </section>
       </main>
+        <style jsx global>{`
+          .sem-light .text-slate-100 { color:#0f172a !important; }
+          .sem-light .text-slate-200 { color:#1e293b !important; }
+          .sem-light .text-slate-300 { color:#334155 !important; }
+          .sem-light .text-slate-400 { color:#475569 !important; }
+          .sem-light .text-slate-500 { color:#64748b !important; }
+          .sem-light .text-slate-600 { color:#64748b !important; }
+          .sem-light .text-white { color:#0f172a !important; }
+          .sem-light .bg-slate-900 { background:#f8fafc !important; }
+          .sem-light .bg-slate-900\/60 { background:#f1f5f9 !important; }
+          .sem-light .bg-slate-950\/50 { background:rgba(248,250,252,.85) !important; }
+          .sem-light .bg-slate-950\/40 { background:rgba(248,250,252,.75) !important; }
+          .sem-light .bg-slate-950\/30 { background:rgba(241,245,249,.85) !important; }
+          .sem-light .border-slate-800 { border-color:#cbd5e1 !important; }
+          .sem-light .border-slate-700 { border-color:#cbd5e1 !important; }
+          .sem-light .bg-\\[\\#0b111c\\] { background:#ffffff !important; }
+          .sem-light .bg-\\[\\#101827\\] { background:#f8fafc !important; }
+          .sem-light svg { background:#ffffff !important; }
+          .sem-light svg > rect:first-child { fill:#ffffff !important; }
+          .sem-light svg ellipse { fill:#f8fafc !important; stroke:#64748b !important; }
+          .sem-light svg rect { fill:#ffffff !important; }
+          .sem-light svg text[fill="#f8fafc"] { fill:#0f172a !important; }
+          .sem-light svg text[fill="#cbd5e1"] { fill:#334155 !important; }
+          .sem-light svg text[fill="#94a3b8"] { fill:#64748b !important; }
+          .sem-light svg text[fill="#475569"] { fill:#94a3b8 !important; }
+          .sem-light svg text[fill="#64748b"] { fill:#94a3b8 !important; }
+          .sem-light svg text[fill="#a78bfa"] { fill:#7c3aed !important; }
+          .sem-light svg path[stroke="#64748b"] { stroke:#94a3b8 !important; }
+          .sem-light svg path[stroke="#a78bfa"] { stroke:#7c3aed !important; }
+        `}</style>
     </div>
   );
 }
