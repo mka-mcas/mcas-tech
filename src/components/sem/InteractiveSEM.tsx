@@ -111,6 +111,10 @@ export default function InteractiveSEM(){
         </section>
       </main>
         <style jsx global>{`
+          /* Daylight theme: remap the entire explorer surface coherently. */
+          .sem-light {
+            color-scheme: light;
+          }
           .sem-light .text-slate-100 { color:#0f172a !important; }
           .sem-light .text-slate-200 { color:#1e293b !important; }
           .sem-light .text-slate-300 { color:#334155 !important; }
@@ -118,15 +122,50 @@ export default function InteractiveSEM(){
           .sem-light .text-slate-500 { color:#64748b !important; }
           .sem-light .text-slate-600 { color:#64748b !important; }
           .sem-light .text-white { color:#0f172a !important; }
+
+          .sem-light .bg-slate-950 { background:#ffffff !important; }
+          .sem-light .bg-slate-950\/50 { background:#f8fafc !important; }
+          .sem-light .bg-slate-950\/40 { background:#f8fafc !important; }
+          .sem-light .bg-slate-950\/30 { background:#f1f5f9 !important; }
           .sem-light .bg-slate-900 { background:#f8fafc !important; }
           .sem-light .bg-slate-900\/60 { background:#f1f5f9 !important; }
-          .sem-light .bg-slate-950\/50 { background:rgba(248,250,252,.85) !important; }
-          .sem-light .bg-slate-950\/40 { background:rgba(248,250,252,.75) !important; }
-          .sem-light .bg-slate-950\/30 { background:rgba(241,245,249,.85) !important; }
+          .sem-light .bg-slate-900\/50 { background:#f8fafc !important; }
+          .sem-light .bg-slate-800 { background:#e2e8f0 !important; }
+          .sem-light .bg-slate-800\/80 { background:rgba(241,245,249,.95) !important; }
+
           .sem-light .border-slate-800 { border-color:#cbd5e1 !important; }
           .sem-light .border-slate-700 { border-color:#cbd5e1 !important; }
+          .sem-light .border-slate-600 { border-color:#94a3b8 !important; }
+
+          .sem-light .border-sky-500\/20 { border-color:#bae6fd !important; }
+          .sem-light .border-sky-400\/50 { border-color:#7dd3fc !important; }
+          .sem-light .border-sky-500\/30 { border-color:#7dd3fc !important; }
+          .sem-light .bg-sky-500\/5 { background:#f0f9ff !important; }
+          .sem-light .bg-sky-400\/10 { background:#e0f2fe !important; }
+          .sem-light .bg-sky-500\/10 { background:#e0f2fe !important; }
+          .sem-light .text-sky-500 { color:#0369a1 !important; }
+          .sem-light .text-sky-400 { color:#0284c7 !important; }
+          .sem-light .text-sky-300 { color:#0369a1 !important; }
+
+          .sem-light .border-emerald-500\/20 { border-color:#a7f3d0 !important; }
+          .sem-light .bg-emerald-500\/5 { background:#ecfdf5 !important; }
+          .sem-light .text-emerald-300 { color:#047857 !important; }
+
+          .sem-light .border-amber-500\/20 { border-color:#fde68a !important; }
+          .sem-light .bg-amber-500\/5 { background:#fffbeb !important; }
+          .sem-light .text-amber-300 { color:#b45309 !important; }
+
+          .sem-light .bg-violet-500\/5 { background:#f5f3ff !important; }
+          .sem-light .border-violet-500\/20 { border-color:#ddd6fe !important; }
+          .sem-light .text-violet-300 { color:#6d28d9 !important; }
+
+          .sem-light .hover\\:bg-slate-800:hover { background:#e2e8f0 !important; }
+          .sem-light .hover\\:text-white:hover { color:#0f172a !important; }
+
           .sem-light .bg-\\[\\#0b111c\\] { background:#ffffff !important; }
           .sem-light .bg-\\[\\#101827\\] { background:#f8fafc !important; }
+
+          /* SVG / model diagram */
           .sem-light svg { background:#ffffff !important; }
           .sem-light svg > rect:first-child { fill:#ffffff !important; }
           .sem-light svg ellipse { fill:#f8fafc !important; stroke:#64748b !important; }
@@ -134,8 +173,8 @@ export default function InteractiveSEM(){
           .sem-light svg text[fill="#f8fafc"] { fill:#0f172a !important; }
           .sem-light svg text[fill="#cbd5e1"] { fill:#334155 !important; }
           .sem-light svg text[fill="#94a3b8"] { fill:#64748b !important; }
-          .sem-light svg text[fill="#475569"] { fill:#94a3b8 !important; }
-          .sem-light svg text[fill="#64748b"] { fill:#94a3b8 !important; }
+          .sem-light svg text[fill="#475569"] { fill:#64748b !important; }
+          .sem-light svg text[fill="#64748b"] { fill:#64748b !important; }
           .sem-light svg text[fill="#a78bfa"] { fill:#7c3aed !important; }
           .sem-light svg path[stroke="#64748b"] { stroke:#94a3b8 !important; }
           .sem-light svg path[stroke="#a78bfa"] { stroke:#7c3aed !important; }
