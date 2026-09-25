@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { ArrowDownRight, ChevronRight, Info, Network, Route, Sigma, SlidersHorizontal, X } from "lucide-react";
+import { ChevronRight, Info, Network, Route, SlidersHorizontal, Sun, Moon, X } from "lucide-react";
 import { constructs, covariance, fit, paths, sequentialIndirect, directUnsafeInterpretation, type Construct, type SemPath } from "@/data/sem-data";
 
 type Tab = "model" | "structural" | "measurement" | "journey";
@@ -23,18 +23,19 @@ export default function InteractiveSEM(){
   const [tab,setTab]=useState<Tab>("model");
   const [detail,setDetail]=useState<Detail>(null);
   const [std,setStd]=useState(true);
+  const [light,setLight]=useState(false);
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100">
-      <header className="border-b border-slate-800/80 bg-[#0b101b]/95">
+    <div className={light ? "sem-light min-h-screen bg-slate-50 text-slate-900" : "min-h-screen bg-[#090d16] text-slate-100"}>
+      <header className={light ? "border-b border-slate-200 bg-white/95" : "border-b border-slate-800/80 bg-[#0b101b]/95"}>
         <div className="mx-auto max-w-[1550px] px-5 pb-5 pt-28 md:px-8">
           <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div>
-              <div className="mb-3 flex items-center gap-2 text-[11px] font-mono uppercase tracking-[0.25em] text-sky-400"><Network size={14}/> Interactive SEM Explorer</div>
+              <div className="mb-3 flex items-center gap-2 text-[11px] font-mono uppercase tracking-[0.25em] text-sky-500"><Network size={14}/> Interactive SEM Explorer</div>
               <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">From model diagram to statistical story.</h1>
               <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400 md:text-base">Explore the locked final SEM one relationship at a time. The diagram follows conventional SEM notation: ellipses are latent variables, rectangles are observed indicators, one-headed arrows are directed paths, and double-headed curved arrows are covariances.</p>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-center md:grid-cols-4">
+            <div className="flex flex-wrap items-center justify-end gap-2 md:gap-3"><button onClick={()=>setLight(!light)} aria-label={light ? "Switch to dark mode" : "Switch to daylight mode"} className={`flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition ${light ? "border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200" : "border-slate-700 bg-slate-900 text-slate-300 hover:border-slate-500"}`}>{light ? <Moon size={14}/> : <Sun size={14}/>} {light ? "Dark" : "Daylight"}</button><div className="grid grid-cols-2 gap-2 text-center md:grid-cols-4">
               {[["N",fit.n],["CFI",fit.cfi.toFixed(3)],["RMSEA",fit.rmsea.toFixed(3)],["SRMR",fit.srmr.toFixed(3)]].map(([k,v])=><div key={k} className="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-3"><div className="text-[10px] uppercase tracking-widest text-slate-500">{k}</div><div className="mt-1 font-mono text-lg text-white">{v}</div></div>)}
             </div>
           </div>
