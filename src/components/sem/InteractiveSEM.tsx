@@ -176,7 +176,7 @@ function SEMCanvas({tab,std,detail,onDetail}:{tab:Tab;std:boolean;detail:Detail;
     })}
     <text x="25" y="35" fill="#475569" fontSize="10" fontFamily="ui-monospace">LATENT VARIABLES</text>
     <text x="25" y="55" fill="#475569" fontSize="10">ellipses</text>
-    <text x="1120" y="575" fill="#475569" fontSize="10">N = 689 · ML · 57 parameters</text>
+    <text x="1120" y="575" fill="#475569" fontSize="10">N = 689 · MLR · 57 parameters</text>
   </svg>;
 }
 
