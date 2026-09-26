@@ -22,9 +22,9 @@ const tabItems: Array<[Tab,string,string]> = [
   ["study","03","Study"],
   ["methods","04","Methods"],
   ["data","05","Data"],
-  ["simulation","06","Monte Carlo"],
-  ["framework","07","Framework Lab"],
-  ["provenance","08","Evidence"]
+  ["provenance","06","Evidence"],
+  ["simulation","07","Monte Carlo"],
+  ["framework","08","Framework Lab"]
 ];
 
 function ChartTooltip({active,payload,label}:{active?:boolean;payload?:Array<{value?:number;name?:string}>;label?:string}) {
@@ -102,7 +102,7 @@ export default function ResearchExplorer(){
       {tab==="data" && <DataExplorer/>}
       {tab==="simulation" && <MonteCarlo/>}
       {tab==="framework" && <FrameworkLab/>}
-      {tab==="provenance" && <Provenance/>}
+      {tab==="provenance" && <Provenance onGo={setTab}/>} 
     </main>
     <style jsx global>{`
       .research-light { color-scheme: light; background:#f1f5f9 !important; color:#0f172a !important; }
@@ -137,8 +137,8 @@ const paperFigures = [
     page: 1,
     number: 1,
     caption: "Motorcycle fatalities by rider age group (2017–2021)",
-    src: "https://www.researchgate.net/publication/411013459/figure/download/fig1/AS%3A11431282315049030%401785435555525/Motorcycle-fatalities-by-rider-age-group-2017-2021-Source-Authors-analysis-of-Royal.png",
-    note: "Original figure image"
+    src: "https://raw.githubusercontent.com/mka-mcas/mcas-tech/main/public/images/JKej_Fig1_mcas.png",
+    note: "Original published figure · Paper 1, Figure 1 · p. 1586"
   },
   {
     page: 1,
@@ -391,6 +391,15 @@ function FigureZoomModal({figure,onClose}:{figure:typeof paperFigures[number];on
           {figure.number===6 ? <FrameworkFigure interactive/> : <img src={figure.src ?? ""} alt={`Figure ${figure.number}: ${figure.caption}`} draggable={false} className="max-h-[82vh] max-w-[92vw] select-none object-contain" />}
         </div>
       </div>
+      {figure.number===1 && <div className="border-t border-violet-200 bg-violet-50 px-4 py-4 text-slate-700">
+        <div className="text-[9px] font-mono uppercase tracking-[.18em] text-violet-700">Figure 1 · Research notes</div>
+        <div className="mt-2 grid gap-3 md:grid-cols-3">
+          <div><div className="text-[10px] font-semibold text-slate-900">2017–2021</div><p className="mt-1 text-[10px] leading-4 text-slate-600">The paper examines motorcycle fatalities by rider age group across this five-year period.</p></div>
+          <div><div className="text-[10px] font-semibold text-slate-900">16–25 years</div><p className="mt-1 text-[10px] leading-4 text-slate-600">The paper reports that this age range accounted for over one-third of motorcycle fatalities and injuries.</p></div>
+          <div><div className="text-[10px] font-semibold text-slate-900">16–20 years</div><p className="mt-1 text-[10px] leading-4 text-slate-600">More than half of the combined 16–25 fatalities and injuries each year were concentrated in the 16–20 group.</p></div>
+        </div>
+        <div className="mt-3 rounded-lg border border-violet-200 bg-white px-3 py-2 text-[10px] leading-4 text-slate-600"><b className="text-violet-700">Source:</b> Paper 1, Figure 1 and the accompanying text on p. 1586. Data source stated in the paper: authors’ analysis of Royal Malaysia Police (PDRM) data.</div>
+      </div>}
       <div className="border-t border-slate-800 px-4 py-2 text-[10px] text-slate-500">
         <span className="inline-flex items-center gap-1"><ZoomIn size={12}/> Wheel / + / − to zoom</span>
         <span className="mx-3">·</span>
@@ -1206,10 +1215,28 @@ function FrameworkLab(){
   </div>;
 }
 
-function Provenance(){
+function Provenance({onGo}:{onGo:(t:Tab)=>void}){
+  const refs:Record<string,string>={
+    e1:"Paper 1 · Experiment 1 · pp. 1587–1589",
+    e2:"Paper 1 · Experiment 2 · pp. 1588–1590",
+    m1:"Paper 1 · Methodology / HPT · p. 1587",
+    m2:"Paper 1 · Methodology / MRSAA · pp. 1587–1588",
+    f1:"Paper 1 · IMSEF-MY / Figure 6 · p. 1591",
+    s1:"Explorer-generated · not part of the published paper"
+  };
   return <div className="space-y-5">
-    <Card className="p-6 md:p-8"><div className="flex items-center gap-2 text-emerald-300"><GitBranch size={17}/><span className="text-[10px] font-mono uppercase tracking-[.2em]">06 · Evidence provenance</span></div><h2 className="mt-2 text-2xl font-semibold">Every number should tell you where it came from.</h2><p className="mt-3 max-w-4xl text-sm leading-6 text-slate-400">This layer is designed to prevent the Explorer from blurring observed findings, calculations and simulations. Later versions can connect each item to a page, table, dataset field, video, form or analysis script.</p></Card>
-    <div className="grid gap-3 md:grid-cols-2">{provenance.map(p=><div key={p.id} className="rounded-2xl border border-slate-800 bg-[#0b111c] p-5"><div className="flex items-center justify-between gap-3"><h3 className="font-semibold">{p.title}</h3><EvidenceBadge kind={p.status}/></div><p className="mt-3 text-sm leading-6 text-slate-500">{p.detail}</p><div className="mt-4 flex items-center gap-2 text-[10px] font-mono text-slate-600"><Info size={12}/> Source trace slot · ready for citation binding</div></div>)}</div>
-    <Card className="p-5"><div className="flex items-center gap-2"><BookOpen size={16} className="text-sky-400"/><h3 className="font-semibold">Publication boundary</h3></div><p className="mt-2 text-sm leading-6 text-slate-500">The published article remains the immutable scholarly record. This Explorer is the interactive companion. Simulations and scenarios should be versioned and clearly distinguished from the paper's empirical results.</p></Card>
+    <Card className="border-emerald-500/20 bg-emerald-500/5 p-6 md:p-8">
+      <div className="flex items-center gap-2 text-emerald-300"><GitBranch size={17}/><span className="text-[10px] font-mono uppercase tracking-[.2em]">06 · Evidence provenance</span></div>
+      <h2 className="mt-2 text-2xl font-semibold">Every number should tell you where it came from.</h2>
+      <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-400">This is the provenance layer for the interactive companion. The observed evidence below is anchored directly to <b className="text-slate-200">{paperMeta.title}</b>, the published Paper 1. Calculations, simulations and scenario outputs generated by the Explorer are explicitly separated from that scholarly record.</p>
+      <div className="mt-5 rounded-2xl border border-emerald-200 bg-white p-4 dark:border-emerald-500/20 dark:bg-slate-950/40">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div><div className="text-[9px] font-mono uppercase tracking-[.18em] text-emerald-600">Primary source · Paper 1</div><div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">{paperMeta.journal} · pp. {paperMeta.pages}</div><div className="mt-1 text-[10px] text-slate-500">DOI {paperMeta.doi}</div></div>
+          <button type="button" onClick={()=>onGo("paper")} className="rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-[10px] font-semibold text-violet-700 hover:border-violet-400">Open Paper 1 →</button>
+        </div>
+      </div>
+    </Card>
+    <div className="grid gap-3 md:grid-cols-2">{provenance.map(p=><div key={p.id} className="rounded-2xl border border-slate-800 bg-[#0b111c] p-5"><div className="flex items-center justify-between gap-3"><h3 className="font-semibold">{p.title}</h3><EvidenceBadge kind={p.status}/></div><p className="mt-3 text-sm leading-6 text-slate-500">{p.detail}</p><div className="mt-4 flex items-center gap-2 text-[10px] font-mono text-slate-600"><Info size={12}/> {refs[p.id]}</div></div>)}</div>
+    <Card className="p-5"><div className="flex items-center gap-2"><BookOpen size={16} className="text-sky-400"/><h3 className="font-semibold">Publication boundary</h3></div><p className="mt-2 text-sm leading-6 text-slate-500">The published article remains the scholarly record. The Explorer adds navigation, visualisation and clearly labelled derived, simulated and scenario layers around it; those additions should not be read as new empirical findings.</p></Card>
   </div>;
 }
