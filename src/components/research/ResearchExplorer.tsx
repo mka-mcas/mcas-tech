@@ -107,6 +107,11 @@ export default function ResearchExplorer(){
 }
 
 function Overview({onGo}:{onGo:(t:Tab)=>void}){
+  const exploreCards: Array<{title:string; desc:string; target:Tab; Icon:LucideIcon}> = [
+    {title:"Explore the study", desc:"Follow participants, instruments, videos and research questions.", target:"study", Icon:Video},
+    {title:"Inspect the evidence", desc:"Move from reported statistics to distributions and cohort comparisons.", target:"data", Icon:BarChart3},
+    {title:"Test assumptions", desc:"Change sample size, effect, noise and intervention assumptions.", target:"simulation", Icon:FlaskConical}
+  ];
   return <div className="space-y-5">
     <Card className="p-6 md:p-8">
       <div className="grid gap-8 lg:grid-cols-[1.15fr_.85fr]">
@@ -124,19 +129,14 @@ function Overview({onGo}:{onGo:(t:Tab)=>void}){
       </div>
     </Card>
     <div className="grid gap-5 md:grid-cols-3">
-      {[
-        ["Explore the study","Follow participants, instruments, videos and research questions.","study",Video],
-        ["Inspect the evidence","Move from reported statistics to distributions and cohort comparisons.","data",BarChart3],
-        ["Test assumptions","Change sample size, effect, noise and intervention assumptions.","simulation",FlaskConical]
-      ].map(([title,desc,target,Icon]) => {
-        const CardIcon = Icon;
-        return <button key={target} onClick={()=>onGo(target as Tab)} className="rounded-2xl border border-slate-800 bg-[#0b111c] p-5 text-left hover:border-violet-500/40">
-          <CardIcon className="text-violet-400" size={20}/>
+      {exploreCards.map(({title, desc, target, Icon}) => (
+        <button key={target} onClick={()=>onGo(target)} className="rounded-2xl border border-slate-800 bg-[#0b111c] p-5 text-left hover:border-violet-500/40">
+          <Icon className="text-violet-400" size={20}/>
           <h3 className="mt-4 font-semibold">{title}</h3>
           <p className="mt-2 text-sm leading-6 text-slate-500">{desc}</p>
           <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-violet-300">Open <ChevronRight size={13}/></span>
-        </button>;
-      })}
+        </button>
+      ))}
     </div>
   </div>;
 }
