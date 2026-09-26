@@ -128,7 +128,15 @@ function Overview({onGo}:{onGo:(t:Tab)=>void}){
         ["Explore the study","Follow participants, instruments, videos and research questions.","study",Video],
         ["Inspect the evidence","Move from reported statistics to distributions and cohort comparisons.","data",BarChart3],
         ["Test assumptions","Change sample size, effect, noise and intervention assumptions.","simulation",FlaskConical]
-      ] as [string,string,Tab,LucideIcon][]).map(([title,desc,target,Icon])=><button key={String(target)} onClick={()=>onGo(target as Tab)} className="rounded-2xl border border-slate-800 bg-[#0b111c] p-5 text-left hover:border-violet-500/40"><Icon className="text-violet-400" size={20}/><h3 className="mt-4 font-semibold">{title}</h3><p className="mt-2 text-sm leading-6 text-slate-500">{desc as string}</p><span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-violet-300">Open <ChevronRight size={13}/></span></button>)}
+      ].map(([title,desc,target,Icon]) => {
+        const CardIcon = Icon;
+        return <button key={target} onClick={()=>onGo(target as Tab)} className="rounded-2xl border border-slate-800 bg-[#0b111c] p-5 text-left hover:border-violet-500/40">
+          <CardIcon className="text-violet-400" size={20}/>
+          <h3 className="mt-4 font-semibold">{title}</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-500">{desc}</p>
+          <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-violet-300">Open <ChevronRight size={13}/></span>
+        </button>;
+      })}
     </div>
   </div>;
 }
