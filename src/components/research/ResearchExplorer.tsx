@@ -935,7 +935,7 @@ function MonteCarlo(){
   const [noise,setNoise]=useState(1);
   const [runs,setRuns]=useState(5000);
   const [cohort,setCohort]=useState("observed");
-  const [result,setResult]=useState<{hist:{bin:string,count:number}[];power:number;median:number;mean:number;examples:number[]}|null>(null);
+  const [result,setResult]=useState<{hist:{bin:string,count:number}[];power:number;median:number;mean:number;values:number[]}|null>(null);
   const run=()=>{
     const rng=mulberry32(20260926+n+Math.round(effect*100)+Math.round(noise*10));
     const m1=17.9;
@@ -957,7 +957,7 @@ function MonteCarlo(){
     const bins=12;const min=Math.min(...values),max=Math.max(...values);const width=(max-min||1)/bins;
     const counts=Array.from({length:bins},()=>0);
     values.forEach(v=>counts[Math.min(bins-1,Math.floor((v-min)/width))]++);
-    setResult({hist:counts.map((c,i)=>({bin:(min+(i+.5)*width).toFixed(1),count:c})),power:sig/runs*100,median:sorted[Math.floor(sorted.length/2)],mean:meanV,examples:values.slice(0,12)});
+    setResult({hist:counts.map((c,i)=>({bin:(min+(i+.5)*width).toFixed(1),count:c})),power:sig/runs*100,median:sorted[Math.floor(sorted.length/2)],mean:meanV,values});
   };
   return <div className="space-y-5">
     <Card className="p-6 md:p-8"><div className="flex items-start justify-between gap-5"><div><div className="text-[10px] font-mono uppercase tracking-[.2em] text-violet-400">04 · Monte Carlo laboratory</div><h2 className="mt-2 text-2xl font-semibold">Repeat a synthetic version of the cohort comparison.</h2><p className="mt-3 max-w-4xl text-sm leading-6 text-slate-400">The original study reported a 17.4-point difference between older and younger riders. This lab does not alter that result. It generates synthetic studies under your selected assumptions and recomputes an approximate two-group test.</p></div><EvidenceBadge kind="simulated"/></div></Card>
@@ -975,7 +975,7 @@ function MonteCarlo(){
       <Card className="p-5">
         {!result ? <div className="flex min-h-[430px] flex-col items-center justify-center text-center"><Activity size={36} className="text-slate-700"/><h3 className="mt-4 font-semibold">No simulation yet</h3><p className="mt-2 max-w-md text-sm leading-6 text-slate-500">Change an assumption and run the lab. The resulting distribution will be clearly labelled as simulated.</p></div> :
         <div>
-          <div className="mb-3 flex justify-end"><DownloadButton label="Download simulation CSV" onClick={()=>downloadCSV("research-explorer-monte-carlo.csv",result.examples.map((v,i)=>({simulation:i+1,older_minus_younger:v,total_sample:n,effect_multiplier:effect,noise_multiplier:noise,cohort_assumption:cohort})))} /></div><div className="grid gap-3 sm:grid-cols-3"><Metric label="Median difference" value={result.median.toFixed(1)} sub="Synthetic older − younger" kind="simulated"/><Metric label="Mean difference" value={result.mean.toFixed(1)} sub="Across simulated studies" kind="simulated"/><Metric label="p < .05 frequency" value={result.power.toFixed(1)+"%"} sub="Approximate detection frequency" kind="simulated"/></div>
+          <div className="mb-3 flex justify-end"><DownloadButton label="Download simulation CSV" onClick={()=>downloadCSV("research-explorer-monte-carlo.csv",result.values.map((v,i)=>({simulation:i+1,older_minus_younger:v,total_sample:n,effect_multiplier:effect,noise_multiplier:noise,cohort_assumption:cohort})))} /></div><div className="grid gap-3 sm:grid-cols-3"><Metric label="Median difference" value={result.median.toFixed(1)} sub="Synthetic older − younger" kind="simulated"/><Metric label="Mean difference" value={result.mean.toFixed(1)} sub="Across simulated studies" kind="simulated"/><Metric label="p < .05 frequency" value={result.power.toFixed(1)+"%"} sub="Approximate detection frequency" kind="simulated"/></div>
           <div className="mt-5 h-72"><ResponsiveContainer width="100%" height="100%"><BarChart data={result.hist}><CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/><XAxis dataKey="bin" tick={{fill:"#64748b",fontSize:9}}/><YAxis tick={{fill:"#64748b",fontSize:9}}/><Tooltip content={<ChartTooltip/>} cursor={{fill:"rgba(148,163,184,0.10)"}}/><Bar dataKey="count" fill="#a78bfa"/></BarChart></ResponsiveContainer></div>
           <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 text-xs leading-5 text-slate-500"><b className="text-amber-300">Simulation note:</b> these are synthetic studies generated from reported group means/SDs with an approximate normal-tail p calculation. They are not replications of the original experiment and should not be presented as new empirical evidence.</div>
         </div>}
