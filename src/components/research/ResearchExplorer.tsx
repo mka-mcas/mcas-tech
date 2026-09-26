@@ -665,7 +665,9 @@ function ResearchProgrammeMap(){
       <b className="text-slate-800">Scientific boundary:</b> this is a programme-level conceptual synthesis, not a single tested causal model. The arrows communicate the working research logic and should not be read as estimated path coefficients or confirmed causal effects.
     </div>
   </Card>;
-}id}){
+}
+
+function ResearchLibrary({onGo}:{onGo:(t:Tab)=>void}){
   const sources=[
     {id:"Paper 1",title:"Motorcyclist Hazard Perception & Situational Awareness",detail:"Current working paper · full interactive reader available",status:"LIVE",target:"paper" as Tab},
     {id:"Paper 2",title:"Future paper / study",detail:"Reserved slot for the next publication or manuscript",status:"PLANNED"},
