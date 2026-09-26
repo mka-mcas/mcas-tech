@@ -220,9 +220,9 @@ function FigureZoomModal({figure,onClose}:{figure:typeof paperFigures[number];on
         onPointerMove={e=>{if(!dragging)return;const dx=e.clientX-last.x,dy=e.clientY-last.y;setOffset(o=>({x:o.x+dx,y:o.y+dy}));setLast({x:e.clientX,y:e.clientY})}}
         onPointerUp={()=>setDragging(false)} onPointerCancel={()=>setDragging(false)}>
         {figure.src ? (
-          <img src={figure.src} alt={\`Figure \${figure.number}: \${figure.caption}\`} draggable={false}
-            className="absolute left-1/2 top-1/2 max-h-none max-w-none select-none"
-            style={{transform:\`translate(calc(-50% + \${offset.x}px), calc(-50% + \${offset.y}px)) scale(\${scale})\`,transformOrigin:"center center"}} />
+          <img src={figure.src} alt={`Figure ${figure.number}: ${figure.caption}`} draggable={false}
+            className="absolute left-1/2 top-1/2 max-h-[82vh] max-w-[92vw] select-none object-contain"
+            style={{transform:`translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px)) scale(${scale})`,transformOrigin:"center center"}} />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center p-8">
             <div className="max-w-3xl rounded-2xl border border-violet-500/20 bg-violet-500/5 p-8 text-center">
@@ -306,7 +306,7 @@ function Paper({onGo}:{onGo:(t:Tab)=>void}){
   let before=current;
   let after="";
   if(figure){
-    const marker=\`FIGURE \${figure.number}. \${figure.caption}\`;
+    const marker=`FIGURE ${figure.number}. ${figure.caption}`;
     const at=current.indexOf(marker);
     if(at>=0){
       before=current.slice(0,at).trimEnd();
@@ -337,7 +337,7 @@ function Paper({onGo}:{onGo:(t:Tab)=>void}){
             {paperSections.map(s=>{
               const next=paperSections.find(x=>x.page>s.page);
               const active=page+1>=s.page && (!next || page+1<next.page);
-              return <button key={s.id} onClick={()=>jump(s.page)} className={\`w-full rounded-lg px-3 py-2 text-left text-[11px] transition \${active ? "bg-violet-500/10 text-violet-700" : "text-slate-500 hover:bg-slate-900 hover:text-white"}\`}><span className="mr-2 font-mono text-[9px] text-slate-500">{s.page}</span>{s.label}</button>;
+              return <button key={s.id} onClick={()=>jump(s.page)} className={`w-full rounded-lg px-3 py-2 text-left text-[11px] transition ${active ? "bg-violet-500/10 text-violet-700" : "text-slate-500 hover:bg-slate-900 hover:text-white"}`}><span className="mr-2 font-mono text-[9px] text-slate-500">{s.page}</span>{s.label}</button>;
             })}
           </div>
           <div className="mt-5 border-t border-slate-800 pt-4">
@@ -358,9 +358,9 @@ function Paper({onGo}:{onGo:(t:Tab)=>void}){
             <div className="hidden text-[10px] font-mono uppercase tracking-[.18em] text-slate-600 sm:block">Use ← → to turn pages</div>
             <button disabled={page===total-1} onClick={()=>setPage(p=>Math.min(total-1,p+1))} className="inline-flex items-center gap-2 rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-xs font-semibold text-violet-300 disabled:opacity-30">Next →</button>
           </div>
-          <div className="h-1 bg-slate-900"><div className="h-full bg-violet-500 transition-all" style={{width:\`\${((page+1)/total)*100}%\`}}/></div>
+          <div className="h-1 bg-slate-900"><div className="h-full bg-violet-500 transition-all" style={{width:`${((page+1)/total)*100}%`}}/></div>
 
-          <article className={\`mx-auto min-h-[720px] max-w-4xl bg-[#fbfaf6] px-6 py-9 text-[14px] leading-7 text-slate-800 shadow-inner md:px-12 md:py-12 lg:px-16 \${readerPulse ? "ring-4 ring-violet-300/60" : ""}\`}>
+          <article className={`mx-auto min-h-[720px] max-w-4xl bg-[#fbfaf6] px-6 py-9 text-[14px] leading-7 text-slate-800 shadow-inner md:px-12 md:py-12 lg:px-16 ${readerPulse ? "ring-4 ring-violet-300/60" : ""}`}>
             <div className="mb-8 flex items-center justify-between border-b border-slate-300 pb-3 text-[9px] font-mono uppercase tracking-[.18em] text-slate-400">
               <span>{paperMeta.journal}</span><span>{1584+page+1}</span>
             </div>
