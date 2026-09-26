@@ -905,7 +905,7 @@ function FrameworkLab(){
   const [baselineSCE,setBaselineSCE]=useState(0);
   const [baselineCrashes,setBaselineCrashes]=useState(0);
   const [unitCost,setUnitCost]=useState(2500);
-  const [result,setResult]=useState<{hpt:number;sa:number;coverage:number;sceMitigated:number;crashesMitigated:number;cost:number}|null>(null);
+  const [result,setResult]=useState<{hpt:number;sa:number;coverage:number;exposureReduction:number;sceMitigated:number;crashesMitigated:number;cost:number}|null>(null);
 
   const run=()=>{
     const hpt=clamp(49.3+training,0,100);
@@ -913,10 +913,10 @@ function FrameworkLab(){
     // Technology is modelled as a compensatory safety layer, not as an SA improvement.
     const sa=clamp(23.2+training*.35+retraining*.10,0,100);
     const coverage=clamp(technology/30,0,1);
-    const sceMitigated=baselineSCE*coverage*(sceEffectiveness/100);
+    const exposureReduction=clamp(exposure/100,0,0.30);\n    const sceMitigated=baselineSCE*coverage*(sceEffectiveness/100);
     const crashesMitigated=baselineCrashes*coverage*(sceEffectiveness/100);
     const cost=Math.round(targetRiders*coverage*unitCost);
-    setResult({hpt,sa,coverage,sceMitigated,crashesMitigated,cost});
+    setResult({hpt,sa,coverage,exposureReduction,sceMitigated,crashesMitigated,cost});
   };
 
   const controls=[
