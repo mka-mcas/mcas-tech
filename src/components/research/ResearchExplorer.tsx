@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Activity, ArrowRight, BarChart3, BookOpen, CheckCircle2, ChevronRight,
   CircleHelp, FlaskConical, GitBranch, Info, Play, RotateCcw, ShieldCheck,
@@ -11,18 +11,20 @@ import {
   Tooltip, XAxis, YAxis
 } from "recharts";
 import { evidenceLegend, provenance, studyFacts } from "@/data/research-explorer";
+import { paperMeta, paperPages, paperSections } from "@/data/research-paper";
 import type { LucideIcon } from "lucide-react";
 
-type Tab = "overview" | "study" | "methods" | "data" | "simulation" | "framework" | "provenance";
+type Tab = "overview" | "paper" | "study" | "methods" | "data" | "simulation" | "framework" | "provenance";
 
 const tabItems: Array<[Tab,string,string]> = [
   ["overview","01","Research"],
-  ["study","02","Study"],
-  ["methods","03","Methods"],
-  ["data","04","Data"],
-  ["simulation","05","Monte Carlo"],
-  ["framework","06","Framework Lab"],
-  ["provenance","07","Evidence"]
+  ["paper","02","Paper"],
+  ["study","03","Study"],
+  ["methods","04","Methods"],
+  ["data","05","Data"],
+  ["simulation","06","Monte Carlo"],
+  ["framework","07","Framework Lab"],
+  ["provenance","08","Evidence"]
 ];
 
 function EvidenceBadge({ kind }: { kind: "observed"|"derived"|"simulated"|"scenario" }) {
@@ -85,6 +87,7 @@ export default function ResearchExplorer(){
         {tabItems.map(([id,num,label])=><button key={id} onClick={()=>setTab(id)} className={`shrink-0 rounded-full border px-4 py-2 text-xs font-semibold transition ${tab===id ? "border-violet-400/50 bg-violet-400/10 text-violet-300" : "border-slate-800 bg-slate-900 text-slate-400 hover:text-white"}`}><span className="mr-2 font-mono text-[9px] text-slate-600">{num}</span>{label}</button>)}
       </div>
       {tab==="overview" && <Overview onGo={setTab}/>}
+      {tab==="paper" && <Paper onGo={setTab}/>}
       {tab==="study" && <Study/>}
       {tab==="methods" && <Methods/>}
       {tab==="data" && <DataExplorer/>}
@@ -103,6 +106,95 @@ export default function ResearchExplorer(){
       .research-light .border-slate-800,.research-light .border-slate-700 { border-color:#cbd5e1 !important; }
       .research-light .hover\\:text-white:hover { color:#0f172a !important; }
     `}</style>
+  </div>;
+}
+
+function Paper({onGo}:{onGo:(t:Tab)=>void}){
+  const [page,setPage]=useState(0);
+  const total=paperPages.length;
+  const current=paperPages[page];
+
+  useEffect(()=>{
+    const onKey=(e:KeyboardEvent)=>{
+      if(e.key==="ArrowRight") setPage(p=>Math.min(total-1,p+1));
+      if(e.key==="ArrowLeft") setPage(p=>Math.max(0,p-1));
+    };
+    window.addEventListener("keydown",onKey);
+    return ()=>window.removeEventListener("keydown",onKey);
+  },[total]);
+
+  const jump=(targetPage:number)=>{
+    setPage(Math.max(0,Math.min(total-1,targetPage-1)));
+    window.scrollTo({top:0,behavior:"smooth"});
+  };
+
+  const evidenceLinks=[
+    {label:"23.2% total SA",note:"Observed result",go:"data" as Tab},
+    {label:"HPT 49.3%",note:"Observed competency result",go:"data" as Tab},
+    {label:"MRSAA / SAGAT",note:"Measurement method",go:"methods" as Tab},
+    {label:"Table 3",note:"Cohort comparison",go:"data" as Tab},
+    {label:"IMSEF-MY",note:"Framework laboratory",go:"framework" as Tab}
+  ];
+
+  return <div className="space-y-5">
+    <Card className="overflow-hidden">
+      <div className="border-b border-slate-800 bg-slate-950/50 p-5 md:p-7">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-4xl">
+            <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[.2em] text-violet-400"><BookOpen size={14}/> Living paper reader</div>
+            <h2 className="mt-2 text-2xl font-semibold leading-tight md:text-3xl">{paperMeta.title}</h2>
+            <p className="mt-3 text-xs text-slate-500">{paperMeta.journal} · pp. {paperMeta.pages} · DOI {paperMeta.doi}</p>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <span className="rounded-full border border-violet-500/20 bg-violet-500/5 px-3 py-1.5 text-violet-300">Original paper</span>
+            <span>Page {page+1} of {total}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-[220px_1fr]">
+        <aside className="border-b border-slate-800 bg-[#090e18] p-4 lg:border-b-0 lg:border-r">
+          <div className="text-[9px] font-mono uppercase tracking-[.2em] text-slate-600">Jump to section</div>
+          <div className="mt-3 space-y-1">
+            {paperSections.map(s=><button key={s.id} onClick={()=>jump(s.page)} className={`w-full rounded-lg px-3 py-2 text-left text-[11px] transition ${page===s.page-1 ? "bg-violet-500/10 text-violet-300" : "text-slate-500 hover:bg-slate-900 hover:text-white"}`}><span className="mr-2 font-mono text-[9px] text-slate-700">{s.page}</span>{s.label}</button>)}
+          </div>
+          <div className="mt-5 border-t border-slate-800 pt-4">
+            <div className="text-[9px] font-mono uppercase tracking-[.2em] text-slate-600">Live evidence</div>
+            <div className="mt-3 space-y-2">
+              {evidenceLinks.map(x=><button key={x.label} onClick={()=>onGo(x.go)} className="w-full rounded-lg border border-slate-800 bg-slate-950/40 p-2.5 text-left hover:border-violet-500/30"><div className="text-[11px] font-semibold text-violet-300">{x.label}</div><div className="mt-0.5 text-[9px] text-slate-600">{x.note} →</div></button>)}
+            </div>
+          </div>
+        </aside>
+
+        <div className="min-w-0">
+          <div className="flex items-center justify-between border-b border-slate-800 px-5 py-3 md:px-8">
+            <button disabled={page===0} onClick={()=>setPage(p=>Math.max(0,p-1))} className="inline-flex items-center gap-2 rounded-lg border border-slate-800 px-3 py-2 text-xs font-semibold text-slate-400 disabled:opacity-30 hover:text-white">← Previous</button>
+            <div className="hidden text-[10px] font-mono uppercase tracking-[.18em] text-slate-600 sm:block">Use ← → to turn pages</div>
+            <button disabled={page===total-1} onClick={()=>setPage(p=>Math.min(total-1,p+1))} className="inline-flex items-center gap-2 rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-xs font-semibold text-violet-300 disabled:opacity-30">Next →</button>
+          </div>
+          <div className="h-1 bg-slate-900"><div className="h-full bg-violet-500 transition-all" style={{width:`${((page+1)/total)*100}%`}}/></div>
+
+          <article className="mx-auto min-h-[720px] max-w-4xl bg-[#fbfaf6] px-6 py-9 text-[14px] leading-7 text-slate-800 shadow-inner md:px-12 md:py-12 lg:px-16">
+            <div className="mb-8 flex items-center justify-between border-b border-slate-300 pb-3 text-[9px] font-mono uppercase tracking-[.18em] text-slate-400">
+              <span>{paperMeta.journal}</span><span>{1584+page+1}</span>
+            </div>
+            <div className="whitespace-pre-wrap font-serif">
+              {current}
+            </div>
+          </article>
+
+          <div className="flex items-center justify-between border-t border-slate-800 bg-slate-950/50 px-5 py-4 md:px-8">
+            <button disabled={page===0} onClick={()=>setPage(p=>Math.max(0,p-1))} className="text-xs text-slate-500 hover:text-white disabled:opacity-30">← Previous page</button>
+            <span className="font-mono text-[10px] text-slate-600">{page+1} / {total}</span>
+            <button disabled={page===total-1} onClick={()=>setPage(p=>Math.min(total-1,p+1))} className="text-xs text-violet-300 hover:text-violet-200 disabled:opacity-30">Next page →</button>
+          </div>
+        </div>
+      </div>
+    </Card>
+
+    <Card className="border-violet-500/20 bg-violet-500/5 p-5 md:p-6">
+      <div className="flex items-start gap-3"><Sparkles className="mt-0.5 text-violet-300" size={17}/><div><h3 className="font-semibold">The paper is now a gateway, not a dead end.</h3><p className="mt-1 text-sm leading-6 text-slate-400">Read page by page, jump directly to sections, then follow evidence into the interactive Study, Methods, Data and Framework Lab tabs. The reader text is transcribed from the supplied article; interactive outputs remain separately labelled from the published record.</p></div></div>
+    </Card>
   </div>;
 }
 
