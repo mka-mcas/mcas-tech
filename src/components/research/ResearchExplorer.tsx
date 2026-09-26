@@ -144,15 +144,15 @@ const paperFigures = [
     page: 1,
     number: 2,
     caption: "Motorcycle injuries by rider age group (2017–2021)",
-    src: "https://www.researchgate.net/publication/411013459/figure/download/fig2/AS%3A11431282315049031%401785435555838/Motorcycle-injuries-by-rider-age-group-2017-2021-Source-Authors-analysis-of-Royal.png",
-    note: "Original figure image"
+    src: "https://raw.githubusercontent.com/mka-mcas/mcas-tech/main/public/images/JKej_Fig2_mcas.png",
+    note: "Original published figure · Paper 1, Figure 2 · p. 1586"
   },
   {
     page: 2,
     number: 3,
     caption: "MRRT Motorcycle instrumentation details",
-    src: "https://www.researchgate.net/publication/411013459/figure/download/fig3/AS%3A11431282315049032%401785435556028/MRRT-Motorcycle-instrumentation-details.png",
-    note: "Original figure image"
+    src: "https://raw.githubusercontent.com/mka-mcas/mcas-tech/main/public/images/JKej_Fig3_mcas.png",
+    note: "Original published figure · Paper 1, Figure 3 · p. 1587"
   },
   {
     page: 3,
@@ -165,8 +165,8 @@ const paperFigures = [
     page: 4,
     number: 5,
     caption: "Scores across assessment methods (MRRT, Knowledge, HPT)",
-    src: "https://www.researchgate.net/publication/411013459/figure/download/fig5/AS%3A11431282315224649%401785435556695/Scores-across-assessment-methods-MRRT-Knowledge-HPT.png",
-    note: "Original figure image"
+    src: "https://raw.githubusercontent.com/mka-mcas/mcas-tech/main/public/images/JKej_Fig5_mcas.png",
+    note: "Original published figure · Paper 1, Figure 5 · p. 1589"
   },
   {
     page: 6,
