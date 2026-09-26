@@ -69,7 +69,7 @@ export default function ResearchExplorer(){
           <div className="max-w-4xl">
             <div className="mb-3 flex items-center gap-2 text-[11px] font-mono uppercase tracking-[.25em] text-violet-400"><FlaskConical size={14}/> Interactive Research Article</div>
             <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">Research Explorer</h1>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400 md:text-base">From research question to evidence, measurement, analysis and controlled simulation. Explore the study without changing the locked SEM Explorer.</p>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400 md:text-base">An interactive research companion connecting the question, study, evidence, measurement, analysis, simulation and safety-system implications — while the locked SEM Explorer remains untouched.</p>
           </div>
           <button onClick={()=>setLight(!light)} className="self-start rounded-full border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-300 hover:border-slate-500">{light ? "Dark mode" : "Daylight mode"}</button>
         </div>
