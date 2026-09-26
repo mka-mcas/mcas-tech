@@ -321,7 +321,7 @@ function Paper({onGo}:{onGo:(t:Tab)=>void}){
     const nodes:React.ReactNode[]=[];
     let cursor=0;
     for(const fig of pageFigures){
-      const marker=`FIGURE ${fig.number}. ${fig.caption}`;
+      const marker=fig.number===1 ? "FIGURE 1. Motorcycle fatalities by rider age group" : fig.number===2 ? "FIGURE 2. Motorcycle injuries by rider age group" : `FIGURE ${fig.number}. ${fig.caption}`;
       const at=current.indexOf(marker,cursor);
       if(at<0) continue;
       const before=current.slice(cursor,at).trimEnd();
