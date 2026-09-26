@@ -530,8 +530,6 @@ function Paper({onGo}:{onGo:(t:Tab)=>void}){
   </div>;
 }
 function ResearchProgrammeMap(){
-  const nodes=[
- function ResearchProgrammeMap(){
   return <Card className="overflow-hidden border-violet-500/20 bg-violet-500/5 p-6 md:p-8">
     <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
       <div>
