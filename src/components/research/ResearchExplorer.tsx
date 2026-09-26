@@ -27,6 +27,15 @@ const tabItems: Array<[Tab,string,string]> = [
   ["provenance","08","Evidence"]
 ];
 
+function ChartTooltip({active,payload,label}:{active?:boolean;payload?:Array<{value?:number;name?:string}>;label?:string}) {
+  if(!active || !payload?.length) return null;
+  const value=payload[0]?.value;
+  return <div className="rounded-lg border border-slate-300 bg-white px-3 py-2 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+    <div className="text-[10px] font-mono font-semibold text-slate-700 dark:text-slate-200">{label}</div>
+    <div className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">Value: <span className="font-mono font-semibold text-slate-900 dark:text-white">{typeof value==="number" ? value.toFixed(1) : value}</span></div>
+  </div>;
+}
+
 function EvidenceBadge({ kind }: { kind: "observed"|"derived"|"simulated"|"scenario" }) {
   const map = {
     observed: ["Observed","bg-sky-500/10 text-sky-300 border-sky-500/20"],
@@ -477,6 +486,28 @@ function Paper({onGo}:{onGo:(t:Tab)=>void}){
         </div>
       </div>
 
+      <div className="border-b border-slate-200 bg-white p-5 md:p-7">
+        <div className="flex items-start gap-3">
+          <div className="mt-0.5 rounded-lg bg-violet-100 p-2 text-violet-700"><BookOpen size={16}/></div>
+          <div>
+            <div className="text-[9px] font-mono uppercase tracking-[.2em] text-violet-600">Paper 1 · At a glance</div>
+            <h3 className="mt-1 text-lg font-semibold text-slate-900">What this paper asked, found, and proposes</h3>
+            <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-600">The paper examines whether hazard perception and situational awareness reveal competency gaps that conventional motorcycle training and assessment may not fully capture. It uses two controlled experiments and then connects the findings to collision-warning technology and the proposed Integrated Motorcycle Safety Empowerment Framework for Malaysia (IMSEF-MY).</p>
+          </div>
+        </div>
+        <div className="mt-5 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-sky-600">Experiment 1</div><div className="mt-1 text-sm font-semibold text-slate-900">31 courier motorcyclists</div><p className="mt-1 text-[11px] leading-5 text-slate-600">MRRT + HPT + theory test.</p></div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-sky-600">Experiment 2</div><div className="mt-1 text-sm font-semibold text-slate-900">264 riders</div><p className="mt-1 text-[11px] leading-5 text-slate-600">MRSAA using perception, comprehension and projection.</p></div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-amber-600">Key finding</div><div className="mt-1 text-sm font-semibold text-slate-900">Total SA = 23.2%</div><p className="mt-1 text-[11px] leading-5 text-slate-600">Level 1 perception = 27.5%; older riders scored 17.4% higher than younger riders.</p></div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-emerald-600">Implication</div><div className="mt-1 text-sm font-semibold text-slate-900">Beyond basic skills</div><p className="mt-1 text-[11px] leading-5 text-slate-600">The paper proposes collision-warning technology and IMSEF-MY as longer-term safety responses.</p></div>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button type="button" onClick={()=>jump(1)} className="rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-[10px] font-semibold text-violet-700 hover:border-violet-400">Read from Abstract →</button>
+          <button type="button" onClick={()=>jump(3)} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-semibold text-slate-600 hover:border-violet-300 hover:text-violet-700">Go to Methodology →</button>
+          <button type="button" onClick={()=>jump(4)} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-semibold text-slate-600 hover:border-violet-300 hover:text-violet-700">Go to Results →</button>
+        </div>
+      </div>
+
       <div className="grid lg:grid-cols-[220px_1fr]">
         <aside className="border-b border-slate-800 bg-[#090e18] p-4 lg:border-b-0 lg:border-r">
           <div className="text-[9px] font-mono uppercase tracking-[.2em] text-slate-600">Jump to section</div>
@@ -797,8 +828,8 @@ function DataExplorer(){
   return <div className="space-y-5">
     <Card className="p-6"><div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"><div><div className="text-[10px] font-mono uppercase tracking-[.2em] text-sky-400">03 · Reported results</div><h2 className="mt-2 text-2xl font-semibold">Explore the reported numbers before touching simulation.</h2></div><EvidenceBadge kind="observed"/></div></Card>
     <div className="grid gap-5 xl:grid-cols-2">
-      <Card className="p-5"><h3 className="font-semibold">Experiment 1 · competency scores</h3><p className="mt-1 text-xs text-slate-500">Means with reported SD.</p><div className="mt-5 h-64"><ResponsiveContainer width="100%" height="100%"><BarChart data={rows}><CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/><XAxis dataKey="name" tick={{fill:"#94a3b8",fontSize:11}}/><YAxis domain={[0,80]} tick={{fill:"#64748b",fontSize:10}}/><Tooltip contentStyle={{background:"#0b111c",border:"1px solid #334155"}}/><Bar dataKey="value" radius={[6,6,0,0]}>{rows.map((_,i)=><Cell key={i} fill={["#38bdf8","#a78bfa","#34d399"][i]}/>)}</Bar></BarChart></ResponsiveContainer></div></Card>
-      <Card className="p-5"><h3 className="font-semibold">Experiment 2 · total SA by cohort</h3><p className="mt-1 text-xs text-slate-500">Reported group means.</p><div className="mt-5 h-64"><ResponsiveContainer width="100%" height="100%"><BarChart data={sa}><CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/><XAxis dataKey="name" tick={{fill:"#94a3b8",fontSize:11}}/><YAxis domain={[0,45]} tick={{fill:"#64748b",fontSize:10}}/><Tooltip contentStyle={{background:"#0b111c",border:"1px solid #334155"}}/><Bar dataKey="value" radius={[6,6,0,0]} fill="#38bdf8"/></BarChart></ResponsiveContainer></div></Card>
+      <Card className="p-5"><h3 className="font-semibold">Experiment 1 · competency scores</h3><p className="mt-1 text-xs text-slate-500">Means with reported SD.</p><div className="mt-5 h-64"><ResponsiveContainer width="100%" height="100%"><BarChart data={rows}><CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/><XAxis dataKey="name" tick={{fill:"#94a3b8",fontSize:11}}/><YAxis domain={[0,80]} tick={{fill:"#64748b",fontSize:10}}/><Tooltip content={<ChartTooltip/>} cursor={{fill:"rgba(148,163,184,0.10)"}}/><Bar dataKey="value" radius={[6,6,0,0]}>{rows.map((_,i)=><Cell key={i} fill={["#38bdf8","#a78bfa","#34d399"][i]}/>)}</Bar></BarChart></ResponsiveContainer></div></Card>
+      <Card className="p-5"><h3 className="font-semibold">Experiment 2 · total SA by cohort</h3><p className="mt-1 text-xs text-slate-500">Reported group means.</p><div className="mt-5 h-64"><ResponsiveContainer width="100%" height="100%"><BarChart data={sa}><CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/><XAxis dataKey="name" tick={{fill:"#94a3b8",fontSize:11}}/><YAxis domain={[0,45]} tick={{fill:"#64748b",fontSize:10}}/><Tooltip content={<ChartTooltip/>} cursor={{fill:"rgba(148,163,184,0.10)"}}/><Bar dataKey="value" radius={[6,6,0,0]} fill="#38bdf8"/></BarChart></ResponsiveContainer></div></Card>
     </div>
     <div className="grid gap-3 md:grid-cols-4">
       <Metric label="Age effect" value="17.4 pp" sub="Older minus younger mean SA" kind="derived"/>
@@ -856,7 +887,7 @@ function MonteCarlo(){
         {!result ? <div className="flex min-h-[430px] flex-col items-center justify-center text-center"><Activity size={36} className="text-slate-700"/><h3 className="mt-4 font-semibold">No simulation yet</h3><p className="mt-2 max-w-md text-sm leading-6 text-slate-500">Change an assumption and run the lab. The resulting distribution will be clearly labelled as simulated.</p></div> :
         <div>
           <div className="grid gap-3 sm:grid-cols-3"><Metric label="Median difference" value={result.median.toFixed(1)} sub="Synthetic older − younger" kind="simulated"/><Metric label="Mean difference" value={result.mean.toFixed(1)} sub="Across simulated studies" kind="simulated"/><Metric label="p < .05 frequency" value={result.power.toFixed(1)+"%"} sub="Approximate detection frequency" kind="simulated"/></div>
-          <div className="mt-5 h-72"><ResponsiveContainer width="100%" height="100%"><BarChart data={result.hist}><CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/><XAxis dataKey="bin" tick={{fill:"#64748b",fontSize:9}}/><YAxis tick={{fill:"#64748b",fontSize:9}}/><Tooltip contentStyle={{background:"#0b111c",border:"1px solid #334155"}}/><Bar dataKey="count" fill="#a78bfa"/></BarChart></ResponsiveContainer></div>
+          <div className="mt-5 h-72"><ResponsiveContainer width="100%" height="100%"><BarChart data={result.hist}><CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/><XAxis dataKey="bin" tick={{fill:"#64748b",fontSize:9}}/><YAxis tick={{fill:"#64748b",fontSize:9}}/><Tooltip content={<ChartTooltip/>} cursor={{fill:"rgba(148,163,184,0.10)"}}/><Bar dataKey="count" fill="#a78bfa"/></BarChart></ResponsiveContainer></div>
           <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 text-xs leading-5 text-slate-500"><b className="text-amber-300">Simulation note:</b> these are synthetic studies generated from reported group means/SDs with an approximate normal-tail p calculation. They are not replications of the original experiment and should not be presented as new empirical evidence.</div>
         </div>}
       </Card>
