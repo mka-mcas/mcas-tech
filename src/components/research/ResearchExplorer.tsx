@@ -310,7 +310,7 @@ function Paper({onGo}:{onGo:(t:Tab)=>void}){
     const at=current.indexOf(marker);
     if(at>=0){
       before=current.slice(0,at).trimEnd();
-      after=current.slice(at+marker.length).replace(/^\\n\\n/,"");
+      after=current.slice(at+marker.length).replace(/^\n\n/,"");
     }
   }
 
