@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import {
   Activity, ArrowRight, BarChart3, BookOpen, CheckCircle2, ChevronRight,
-  CircleHelp, FlaskConical, GitBranch, Info, Play, RotateCcw, ShieldCheck,
+  CircleHelp, Download, FlaskConical, GitBranch, Info, MessageCircle, Paperclip, Play, RotateCcw, ShieldCheck,
   SlidersHorizontal, Sparkles, Video, X, ZoomIn, Move
 } from "lucide-react";
 import {
@@ -68,6 +68,82 @@ function welchT(a:number[],b:number[]){const ma=mean(a),mb=mean(b),va=variance(a
 function normalPApprox(t:number){return 2*(1-0.5*(1+erf(t/Math.sqrt(2))));}
 function erf(x:number){const sign=x<0?-1:1; x=Math.abs(x); const a1=.254829592,a2=-.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=.3275911; const t=1/(1+p*x); return sign*(1-((((a5*t+a4)*t+a3)*t+a2)*t+a1)*t*Math.exp(-x*x));}
 
+
+const anchorSummaries: Record<string,{title:string;summary:string;takeaway:string}> = {
+  abstract:{title:"The whole study in one minute",summary:"The paper combines two experiments to examine higher-order rider competencies. Experiment 1 compares practical riding, hazard perception and knowledge among 31 courier riders. Experiment 2 measures situational awareness among 264 motorcyclists. Both experiments point to important gaps in recognising, interpreting and anticipating hazards.",takeaway:"The central argument is that conventional riding competence does not fully reveal hazard-perception and situation-awareness deficits."},
+  introduction:{title:"Why the study was needed",summary:"The introduction frames motorcycle safety as a persistent Malaysian problem and focuses on young and newly licensed riders. It argues that closed-circuit training can develop basic manoeuvring without fully exposing riders to complex public-road hazards, creating a need to examine higher-order cognitive competencies.",takeaway:"The research question grows from a gap between basic riding skills and the cognitive demands of real traffic."},
+  methodology:{title:"How the researchers tested it",summary:"Two complementary experiments were used. Experiment 1 combined a knowledge test, a video-based hazard perception test and an instrumented Motorcycle Riding Road Test. Experiment 2 used the Motorcycle Riding Situation Awareness Assessment with SAGAT-style questions covering perception, comprehension and projection.",takeaway:"The design deliberately measures different layers of competency instead of treating safe riding as one score."},
+  "experiment-1":{title:"Experiment 1 · practical skill vs cognitive skill",summary:"Thirty-one courier riders completed MRRT, HPT and knowledge assessments. The MRRT used an instrumented 100 cc motorcycle on a 6.5 km route, while the HPT used 12 clips containing 31 real-road hazards. The comparison tests whether practical riding performance, knowledge and hazard perception reveal the same level of competence.",takeaway:"Hazard perception is tested as a distinct higher-order competency rather than assumed from practical riding performance."},
+  "experiment-2":{title:"Experiment 2 · seeing, understanding and anticipating",summary:"Two hundred and sixty-four motorcyclists completed a video-based situation-awareness assessment. Questions targeted three levels: perception, comprehension and projection. Demographic and riding-exposure information was also collected so SA could be examined against rider characteristics.",takeaway:"The assessment asks not only what a rider sees, but what the situation means and what could happen next."},
+  participants:{title:"Who took part",summary:"Experiment 1 involved 31 consented courier riders aged 19–46. Experiment 2 involved 264 motorcyclists aged 16–57, with the sample predominantly male. The two samples therefore represent different research contexts and should not be treated as one combined cohort.",takeaway:"The two experiments answer related questions using different participant groups."},
+  results:{title:"What Experiment 1 found",summary:"MRRT had the highest reported mean score at 68.1%, followed by knowledge at 54.5% and HPT at 49.3%. The repeated-measures ANOVA was significant, and Bonferroni comparisons showed HPT was lower than both MRRT and knowledge, while MRRT and knowledge did not differ significantly.",takeaway:"The most important result is the separation between practical riding performance and hazard-perception performance."},
+  sa:{title:"What Experiment 2 found",summary:"Mean total situational awareness was 23.2%, with Level 1 perception at 27.5%. Older riders scored higher than younger riders across the three SA levels. Age correlated positively with total SA, while riding exposure showed a weaker positive relationship and was notably associated with Level 3 projection.",takeaway:"The study identifies substantial SA deficits and a consistent age-related difference in performance."},
+  technology:{title:"Why technology enters the discussion",summary:"The paper proposes collision-warning technologies as a layered assistive strategy for situations where human hazard detection or response may be delayed. LiDAR, radar or image processing could provide speed-sensitive warnings before a conflict becomes critical. The paper presents this as a safety rationale, not as a measured population crash-reduction effect.",takeaway:"Technology is proposed as a compensatory safety layer alongside, not instead of, rider development."},
+  framework:{title:"The IMSEF-MY idea",summary:"The Integrated Motorcycle Safety Empowerment Framework translates the paper's findings into five action domains: pre-licensing, licensing, technology, exposure control and retraining. These sit within broader safe-system principles and are intended to connect rider capability, technology and policy into a longer-term safety architecture.",takeaway:"The framework is a programme-level synthesis built from the study's evidence and proposed interventions."},
+  conclusion:{title:"The paper's closing argument",summary:"The conclusion argues that conventional education, enforcement and engineering can take time to produce measurable outcomes, while safety technologies can provide an additional immediate protection layer. It presents IMSEF-MY as a longer-term framework for sustained motorcycle-safety reform.",takeaway:"The paper closes by linking immediate assistive technology with longer-term system reform."},
+  references:{title:"Follow the scholarly trail",summary:"The references page contains the studies, methods and background sources used to build the paper's argument, including work on hazard perception, motorcycle training, situation awareness, work zones and motorcycle dynamics.",takeaway:"Use the bibliography when you want to move from the paper's synthesis back to the underlying literature."}
+};
+
+function downloadCSV(filename:string, rows:Array<Record<string,string|number>>){
+  if(!rows.length) return;
+  const headers=Object.keys(rows[0]);
+  const esc=(v:unknown)=>String(v??"").replace(/"/g,'""');
+  const csv=[headers.map(v=>'"'+esc(v)+'"').join(","),...rows.map(r=>headers.map(h=>'"'+esc(r[h])+'"').join(","))].join("\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function DownloadButton({label,onClick}:{label:string;onClick:()=>void}){
+  return <button type="button" onClick={onClick} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-[10px] font-semibold text-slate-700 transition hover:border-violet-300 hover:text-violet-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:border-violet-500/40"><Download size={12}/>{label}</button>;
+}
+
+function ResearchGuide({sectionId}:{sectionId:string}){
+  const item=anchorSummaries[sectionId] ?? anchorSummaries.abstract;
+  return <details className="group rounded-2xl border border-violet-200 bg-violet-50/80 p-4 md:p-5">
+    <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
+      <div className="flex items-center gap-3">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-violet-200 bg-white text-violet-700 shadow-sm"><Paperclip size={17}/></div>
+        <div><div className="text-[9px] font-mono uppercase tracking-[.18em] text-violet-600">Research Guide · plain-language companion</div><div className="mt-1 text-sm font-semibold text-slate-900">{item.title}</div></div>
+      </div>
+      <span className="rounded-full border border-violet-200 bg-white px-2.5 py-1 text-[9px] font-semibold text-violet-700 group-open:hidden">Explain this section</span>
+    </summary>
+    <div className="mt-4 grid gap-3 md:grid-cols-[1fr_.8fr]">
+      <div className="rounded-xl border border-violet-100 bg-white p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-violet-600">In plain English</div><p className="mt-2 text-xs leading-6 text-slate-700">{item.summary}</p></div>
+      <div className="rounded-xl border border-violet-100 bg-white p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-violet-600">What should I notice?</div><p className="mt-2 text-xs leading-6 text-slate-700">{item.takeaway}</p><div className="mt-3 text-[9px] font-mono text-slate-500">Grounded to the published Paper 1 section · no new empirical claims added.</div></div>
+    </div>
+  </details>;
+}
+
+function CommentDock(){
+  const options=[
+    ["general","General Research Explorer"],
+    ...paperSections.filter(s=>s.id!=="references").map(s=>[s.id,"Paper · "+s.label] as [string,string]),
+    ["data","Data"],["methods","Methods"],["simulation","Monte Carlo"],["framework","Framework Lab"]
+  ] as Array<[string,string]>;
+  const [open,setOpen]=useState(false);
+  const [section,setSection]=useState("general");
+  const [comment,setComment]=useState("");
+  const [saved,setSaved]=useState(false);
+  const submit=()=>{
+    const text=comment.trim(); if(!text) return;
+    const existing=JSON.parse(localStorage.getItem("research-explorer-comments")||"[]");
+    existing.push({section,comment:text,createdAt:new Date().toISOString()});
+    localStorage.setItem("research-explorer-comments",JSON.stringify(existing));
+    setComment(""); setSaved(true); setTimeout(()=>setSaved(false),1800);
+  };
+  return <div className="fixed bottom-5 right-5 z-40">
+    {open && <div className="mb-3 w-[min(390px,calc(100vw-2rem))] rounded-2xl border border-slate-300 bg-white p-4 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+      <div className="flex items-center justify-between"><div><div className="text-[9px] font-mono uppercase tracking-[.18em] text-violet-600">Research feedback</div><h3 className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">Leave a comment</h3></div><button onClick={()=>setOpen(false)} className="rounded-lg p-1 text-slate-400 hover:text-slate-700"><X size={15}/></button></div>
+      <label className="mt-4 block"><span className="text-[10px] font-semibold text-slate-600 dark:text-slate-400">What are you commenting on?</span><select value={section} onChange={e=>setSection(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">{options.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label>
+      <textarea value={comment} onChange={e=>setComment(e.target.value)} placeholder="What should be improved, clarified or explored?" className="mt-3 min-h-[110px] w-full resize-y rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs leading-5 text-slate-800 outline-none focus:border-violet-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"/>
+      <div className="mt-3 flex items-center justify-between gap-3"><span className="text-[9px] text-slate-500">{saved ? "Saved on this device ✓" : "Private local note · not sent to a server"}</span><button disabled={!comment.trim()} onClick={submit} className="rounded-lg bg-violet-600 px-3 py-2 text-[10px] font-bold text-white disabled:opacity-40">Save comment</button></div>
+    </div>}
+    <button onClick={()=>setOpen(v=>!v)} className="flex items-center gap-2 rounded-full border border-violet-300 bg-white px-4 py-2.5 text-xs font-bold text-violet-700 shadow-lg hover:border-violet-500 dark:border-violet-500/40 dark:bg-slate-900 dark:text-violet-300"><MessageCircle size={15}/>{open ? "Close" : "Comment"}</button>
+  </div>;
+}
+
 export default function ResearchExplorer(){
   const [tab,setTab]=useState<Tab>("overview");
   const [light,setLight]=useState(true);
@@ -104,6 +180,7 @@ export default function ResearchExplorer(){
       {tab==="framework" && <FrameworkLab/>}
       {tab==="provenance" && <Provenance onGo={setTab}/>} 
     </main>
+    <CommentDock/>
     <style jsx global>{`
       .research-light { color-scheme: light; background:#f1f5f9 !important; color:#0f172a !important; }
       .research-light header { background:#ffffff !important; border-color:#cbd5e1 !important; }
@@ -479,7 +556,10 @@ function Paper({onGo}:{onGo:(t:Tab)=>void}){
     return <>{nodes}</>;
   };
 
+  const activeSection=paperSections.slice().reverse().find(s=>page+1>=s.page)?.id ?? "abstract";
+
   return <div className="space-y-5" ref={readerRef}>
+    <ResearchGuide sectionId={activeSection}/>
     <Card className="overflow-hidden">
       <div className="border-b border-slate-800 bg-slate-950/50 p-5 md:p-7">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
@@ -835,7 +915,7 @@ function DataExplorer(){
   ];
   const sa=[{name:"Younger",value:17.9,n:184},{name:"Older",value:35.3,n:79}];
   return <div className="space-y-5">
-    <Card className="p-6"><div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"><div><div className="text-[10px] font-mono uppercase tracking-[.2em] text-sky-400">03 · Reported results</div><h2 className="mt-2 text-2xl font-semibold">Explore the reported numbers before touching simulation.</h2></div><EvidenceBadge kind="observed"/></div></Card>
+    <Card className="p-6"><div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"><div><div className="text-[10px] font-mono uppercase tracking-[.2em] text-sky-400">03 · Reported results</div><h2 className="mt-2 text-2xl font-semibold">Explore the reported numbers before touching simulation.</h2></div><div className="flex items-center gap-2"><EvidenceBadge kind="observed"/><DownloadButton label="Download CSV" onClick={()=>downloadCSV("research-explorer-reported-results.csv",[...rows.map(x=>({experiment:"Experiment 1",measure:x.name,mean_percent:x.value,sd_percent:x.sd})),...sa.map(x=>({experiment:"Experiment 2",measure:"Total SA · "+x.name,mean_percent:x.value,n:x.n}))])}/></div></div></Card>
     <div className="grid gap-5 xl:grid-cols-2">
       <Card className="p-5"><h3 className="font-semibold">Experiment 1 · competency scores</h3><p className="mt-1 text-xs text-slate-500">Means with reported SD.</p><div className="mt-5 h-64"><ResponsiveContainer width="100%" height="100%"><BarChart data={rows}><CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/><XAxis dataKey="name" tick={{fill:"#94a3b8",fontSize:11}}/><YAxis domain={[0,80]} tick={{fill:"#64748b",fontSize:10}}/><Tooltip content={<ChartTooltip/>} cursor={{fill:"rgba(148,163,184,0.10)"}}/><Bar dataKey="value" radius={[6,6,0,0]}>{rows.map((_,i)=><Cell key={i} fill={["#38bdf8","#a78bfa","#34d399"][i]}/>)}</Bar></BarChart></ResponsiveContainer></div></Card>
       <Card className="p-5"><h3 className="font-semibold">Experiment 2 · total SA by cohort</h3><p className="mt-1 text-xs text-slate-500">Reported group means.</p><div className="mt-5 h-64"><ResponsiveContainer width="100%" height="100%"><BarChart data={sa}><CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/><XAxis dataKey="name" tick={{fill:"#94a3b8",fontSize:11}}/><YAxis domain={[0,45]} tick={{fill:"#64748b",fontSize:10}}/><Tooltip content={<ChartTooltip/>} cursor={{fill:"rgba(148,163,184,0.10)"}}/><Bar dataKey="value" radius={[6,6,0,0]} fill="#38bdf8"/></BarChart></ResponsiveContainer></div></Card>
@@ -1169,7 +1249,7 @@ function FrameworkLab(){
             <Metric label="Potential crashes prevented" value={baselineCrashes>0 ? result.crashesMitigated.toFixed(1) : "Enter crash baseline"} sub={baselineCrashes>0 ? "Baseline crashes × technology coverage × assumed mitigation" : "Requires a user-supplied crash baseline"} kind="scenario"/>
           </div> : <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-center dark:border-slate-800 dark:bg-slate-950/40"><div className="text-sm font-semibold text-slate-900 dark:text-white">No scenario calculated yet</div><p className="mt-1 text-[11px] text-slate-500">Change the intervention assumptions and run the laboratory. No crash or SCE estimate is invented when a baseline is missing.</p></div>}
 
-          {result && <div className="mt-4 grid gap-3 md:grid-cols-2">
+          {result && <div className="mb-4 flex justify-end"><DownloadButton label="Download scenario CSV" onClick={()=>downloadCSV("research-explorer-framework-scenario.csv",[{target_riders:targetRiders,technology_coverage_percent:Math.round(result.coverage*100),training_assumption:training,retraining_assumption:retraining,exposure_control:exposure,assumed_sce_mitigation_percent:sceEffectiveness,baseline_sces:baselineSCE,baseline_crashes:baselineCrashes,unit_cost_rm:unitCost,scenario_hpt:result.hpt,scenario_sa:result.sa,potential_sces_mitigated:result.sceMitigated,potential_crashes_prevented:result.crashesMitigated,programme_cost_rm:result.cost}])}/></div>}{result && <div className="mt-4 grid gap-3 md:grid-cols-2">
             <Metric label="Programme cost" value={money(result.cost)} sub="Target riders × technology coverage × unit cost" kind="scenario"/>
             <Metric label="Capability change" value={(result.sa-23.2).toFixed(1)+" pp"} sub="Illustrative change in SA from training/retraining only" kind="scenario"/>
           </div>}
