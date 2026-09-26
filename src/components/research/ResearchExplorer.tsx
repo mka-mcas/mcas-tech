@@ -69,7 +69,7 @@ export default function ResearchExplorer(){
           <div className="max-w-4xl">
             <div className="mb-3 flex items-center gap-2 text-[11px] font-mono uppercase tracking-[.25em] text-violet-400"><FlaskConical size={14}/> Interactive Research Article</div>
             <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">Research Explorer</h1>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400 md:text-base">An interactive research companion connecting the question, study, evidence, measurement, analysis, simulation and safety-system implications — while the locked SEM Explorer remains untouched.</p>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400 md:text-base">An interactive research companion connecting the question, study, evidence, measurement, analysis, simulation and safety-system implications.</p>
           </div>
           <button onClick={()=>setLight(!light)} className="self-start rounded-full border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-300 hover:border-slate-500">{light ? "Dark mode" : "Daylight mode"}</button>
         </div>
@@ -531,43 +531,141 @@ function Paper({onGo}:{onGo:(t:Tab)=>void}){
 }
 function ResearchProgrammeMap(){
   const nodes=[
-    ["Training","Hazard Perception","Situational Awareness"],
-    ["Fatigue","Riding Behaviour","Crash Risk"],
-    ["Technology","Exposure","Safety System"]
-  ];
+ function ResearchProgrammeMap(){
   return <Card className="overflow-hidden border-violet-500/20 bg-violet-500/5 p-6 md:p-8">
-    <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+    <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
       <div>
         <div className="text-[10px] font-mono uppercase tracking-[.2em] text-violet-500">The bigger picture</div>
         <h2 className="mt-2 text-2xl font-semibold md:text-3xl">From rider capability to a safety system.</h2>
-        <p className="mt-3 max-w-4xl text-sm leading-7 text-slate-600">This is the working synthesis behind the research programme: training shapes what riders can detect; hazard perception and situational awareness shape how risk is understood; fatigue and riding behaviour can influence how that capability is expressed in traffic; technology and exposure controls provide additional layers before the final safety-system outcome.</p>
+        <p className="mt-3 max-w-4xl text-sm leading-7 text-slate-600">A working conceptual map of how the research threads fit together. The layout makes the intended direction explicit: capability → perception → awareness → risk expression → crash risk → safety layers.</p>
       </div>
-      <span className="shrink-0 rounded-full border border-violet-200 bg-white px-3 py-1.5 text-[9px] font-mono uppercase tracking-wider text-violet-700">Conceptual synthesis</span>
+      <span className="shrink-0 rounded-full border border-violet-200 bg-white px-3 py-1.5 text-[9px] font-mono uppercase tracking-wider text-violet-700">Working conceptual map</span>
     </div>
+
     <div className="mt-7 overflow-x-auto">
       <div className="mx-auto min-w-[760px] max-w-5xl">
-        <div className="grid grid-cols-3 gap-3">
-          {nodes[0].map((x,i)=><div key={x} className="rounded-xl border border-sky-200 bg-white p-4 text-center shadow-sm"><div className="text-[9px] font-mono uppercase tracking-wider text-sky-600">Layer {i+1}</div><div className="mt-1 text-sm font-semibold text-slate-800">{x}</div></div>)}
-        </div>
-        <div className="grid grid-cols-3 text-center text-xl text-violet-500"><div>↓</div><div>↓</div><div>↓</div></div>
-        <div className="grid grid-cols-2 gap-3 px-[16.5%]">
-          {nodes[1].map(x=><div key={x} className="rounded-xl border border-amber-200 bg-white p-4 text-center shadow-sm"><div className="text-[9px] font-mono uppercase tracking-wider text-amber-600">Risk expression</div><div className="mt-1 text-sm font-semibold text-slate-800">{x}</div></div>)}
-        </div>
-        <div className="relative h-12 text-center text-xl text-violet-500"><span>↘</span><span className="mx-20">↓</span><span>↙</span></div>
-        <div className="rounded-xl border-2 border-violet-300 bg-white p-4 text-center shadow-sm"><div className="text-[9px] font-mono uppercase tracking-wider text-violet-600">Outcome layer</div><div className="mt-1 text-base font-semibold text-slate-900">Crash Risk</div></div>
-        <div className="grid grid-cols-3 text-center text-xl text-violet-500"><div>↙</div><div>↓</div><div>↘</div></div>
-        <div className="grid grid-cols-3 gap-3">
-          {nodes[2].map(x=><div key={x} className="rounded-xl border border-emerald-200 bg-white p-4 text-center shadow-sm"><div className="text-[9px] font-mono uppercase tracking-wider text-emerald-600">Safety layer</div><div className="mt-1 text-sm font-semibold text-slate-800">{x}</div></div>)}
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-7">
+          <div className="text-center">
+            <div className="mx-auto max-w-md rounded-xl border-2 border-sky-200 bg-sky-50 px-5 py-4">
+              <div className="text-[9px] font-mono uppercase tracking-[.18em] text-sky-600">Layer 1 · Capability</div>
+              <div className="mt-1 text-base font-semibold text-slate-900">Training</div>
+            </div>
+
+            <div className="mx-auto flex h-10 w-8 flex-col items-center justify-center">
+              <div className="h-6 w-px bg-violet-300"></div>
+              <div className="text-lg leading-none text-violet-500">▼</div>
+            </div>
+
+            <div className="mx-auto max-w-md rounded-xl border-2 border-sky-200 bg-sky-50 px-5 py-4">
+              <div className="text-[9px] font-mono uppercase tracking-[.18em] text-sky-600">Layer 2 · Perception</div>
+              <div className="mt-1 text-base font-semibold text-slate-900">Hazard Perception</div>
+            </div>
+
+            <div className="mx-auto flex h-10 w-8 flex-col items-center justify-center">
+              <div className="h-6 w-px bg-violet-300"></div>
+              <div className="text-lg leading-none text-violet-500">▼</div>
+            </div>
+
+            <div className="mx-auto max-w-md rounded-xl border-2 border-sky-200 bg-sky-50 px-5 py-4">
+              <div className="text-[9px] font-mono uppercase tracking-[.18em] text-sky-600">Layer 3 · Awareness</div>
+              <div className="mt-1 text-base font-semibold text-slate-900">Situational Awareness</div>
+            </div>
+
+            <div className="relative mx-auto h-16 max-w-3xl">
+              <div className="absolute left-1/2 top-0 h-5 w-px -translate-x-1/2 bg-violet-300"></div>
+              <div className="absolute left-1/4 right-1/4 top-5 h-px bg-violet-300"></div>
+              <div className="absolute left-1/4 top-5 h-5 w-px bg-violet-300"></div>
+              <div className="absolute right-1/4 top-5 h-5 w-px bg-violet-300"></div>
+              <div className="absolute left-[25%] top-8 -translate-x-1/2 text-lg leading-none text-violet-500">▼</div>
+              <div className="absolute right-[25%] top-8 translate-x-1/2 text-lg leading-none text-violet-500">▼</div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-5">
+              <div className="rounded-xl border-2 border-amber-200 bg-amber-50 px-5 py-4">
+                <div className="text-[9px] font-mono uppercase tracking-[.18em] text-amber-600">Risk expression</div>
+                <div className="mt-1 text-base font-semibold text-slate-900">Fatigue</div>
+                <div className="mt-2 text-[10px] leading-4 text-slate-500">A rider-state dimension that can shape how capability is expressed.</div>
+              </div>
+              <div className="rounded-xl border-2 border-amber-200 bg-amber-50 px-5 py-4">
+                <div className="text-[9px] font-mono uppercase tracking-[.18em] text-amber-600">Risk expression</div>
+                <div className="mt-1 text-base font-semibold text-slate-900">Riding Behaviour</div>
+                <div className="mt-2 text-[10px] leading-4 text-slate-500">Observed riding behaviour through which risk may become expressed.</div>
+              </div>
+            </div>
+
+            <div className="relative mx-auto h-20 max-w-3xl">
+              <div className="absolute left-1/4 top-0 h-6 w-px bg-violet-300"></div>
+              <div className="absolute right-1/4 top-0 h-6 w-px bg-violet-300"></div>
+              <div className="absolute left-1/4 right-1/4 top-6 h-px bg-violet-300"></div>
+              <div className="absolute left-1/2 top-6 h-7 w-px bg-violet-300"></div>
+              <div className="absolute left-1/2 top-11 -translate-x-1/2 text-lg leading-none text-violet-500">▼</div>
+            </div>
+
+            <div className="rounded-xl border-2 border-violet-300 bg-violet-50 px-5 py-5 shadow-sm">
+              <div className="text-[9px] font-mono uppercase tracking-[.18em] text-violet-600">Outcome layer</div>
+              <div className="mt-1 text-lg font-semibold text-slate-900">Crash Risk</div>
+              <div className="mx-auto mt-2 max-w-xl text-[10px] leading-4 text-slate-500">The common outcome layer used to connect rider-level risk expression with downstream safety interventions.</div>
+            </div>
+
+            <div className="relative mx-auto h-20 max-w-3xl">
+              <div className="absolute left-1/2 top-0 h-6 w-px bg-violet-300"></div>
+              <div className="absolute left-1/4 right-1/4 top-6 h-px bg-violet-300"></div>
+              <div className="absolute left-1/4 top-6 h-6 w-px bg-violet-300"></div>
+              <div className="absolute right-1/4 top-6 h-6 w-px bg-violet-300"></div>
+              <div className="absolute left-[25%] top-11 -translate-x-1/2 text-lg leading-none text-violet-500">▼</div>
+              <div className="absolute right-[25%] top-11 translate-x-1/2 text-lg leading-none text-violet-500">▼</div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-5">
+              <div className="rounded-xl border-2 border-emerald-200 bg-emerald-50 px-5 py-4">
+                <div className="text-[9px] font-mono uppercase tracking-[.18em] text-emerald-600">Safety layer</div>
+                <div className="mt-1 text-base font-semibold text-slate-900">Technology</div>
+                <div className="mt-2 text-[10px] leading-4 text-slate-500">Assistive and engineering measures that can add another protection layer.</div>
+              </div>
+              <div className="rounded-xl border-2 border-emerald-200 bg-emerald-50 px-5 py-4">
+                <div className="text-[9px] font-mono uppercase tracking-[.18em] text-emerald-600">Safety layer</div>
+                <div className="mt-1 text-base font-semibold text-slate-900">Exposure</div>
+                <div className="mt-2 text-[10px] leading-4 text-slate-500">Controls that can reduce or reshape exposure to high-risk riding conditions.</div>
+              </div>
+            </div>
+
+            <div className="relative mx-auto h-16 max-w-3xl">
+              <div className="absolute left-1/4 top-0 h-5 w-px bg-violet-300"></div>
+              <div className="absolute right-1/4 top-0 h-5 w-px bg-violet-300"></div>
+              <div className="absolute left-1/4 right-1/4 top-5 h-px bg-violet-300"></div>
+              <div className="absolute left-1/2 top-5 h-5 w-px bg-violet-300"></div>
+              <div className="absolute left-1/2 top-8 -translate-x-1/2 text-lg leading-none text-violet-500">▼</div>
+            </div>
+
+            <div className="mx-auto max-w-md rounded-xl border-2 border-emerald-300 bg-emerald-50 px-5 py-4 shadow-sm">
+              <div className="text-[9px] font-mono uppercase tracking-[.18em] text-emerald-600">System outcome</div>
+              <div className="mt-1 text-base font-semibold text-slate-900">Safety System</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <div className="mt-5 rounded-xl border border-slate-200 bg-white p-4 text-[11px] leading-5 text-slate-600">
-      <b className="text-slate-800">Important:</b> this map is a programme-level conceptual synthesis, not a single tested causal model. The Explorer lets each component be traced to the evidence that actually supports it.
+
+    <div className="mt-5 grid gap-3 md:grid-cols-3">
+      <div className="rounded-xl border border-sky-200 bg-sky-50 p-4">
+        <div className="text-[9px] font-mono uppercase tracking-wider text-sky-700">01 · Capability</div>
+        <p className="mt-2 text-[11px] leading-5 text-slate-600">Training, hazard perception and situational awareness form the cognitive-capability thread.</p>
+      </div>
+      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+        <div className="text-[9px] font-mono uppercase tracking-wider text-amber-700">02 · Risk expression</div>
+        <p className="mt-2 text-[11px] leading-5 text-slate-600">Fatigue and riding behaviour are shown as risk-expression dimensions before the crash-risk outcome.</p>
+      </div>
+      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+        <div className="text-[9px] font-mono uppercase tracking-wider text-emerald-700">03 · Safety layers</div>
+        <p className="mt-2 text-[11px] leading-5 text-slate-600">Technology and exposure are shown as downstream protection/control layers that converge on the wider safety system.</p>
+      </div>
+    </div>
+
+    <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4 text-[11px] leading-5 text-slate-600">
+      <b className="text-slate-800">Scientific boundary:</b> this is a programme-level conceptual synthesis, not a single tested causal model. The arrows communicate the working research logic and should not be read as estimated path coefficients or confirmed causal effects.
     </div>
   </Card>;
-}
-
-function ResearchLibrary({onGo}:{onGo:(t:Tab)=>void}){
+}id}){
   const sources=[
     {id:"Paper 1",title:"Motorcyclist Hazard Perception & Situational Awareness",detail:"Current working paper · full interactive reader available",status:"LIVE",target:"paper" as Tab},
     {id:"Paper 2",title:"Future paper / study",detail:"Reserved slot for the next publication or manuscript",status:"PLANNED"},
