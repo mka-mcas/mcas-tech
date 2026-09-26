@@ -896,57 +896,315 @@ function MonteCarlo(){
 }
 
 function FrameworkLab(){
-  const [training,setTraining]=useState(10),[technology,setTechnology]=useState(10),[exposure,setExposure]=useState(5),[retraining,setRetraining]=useState(5);
-  const [effectiveness,setEffectiveness]=useState(25),[targetRiders,setTargetRiders]=useState(10000),[baselineEvents,setBaselineEvents]=useState(0),[unitCost,setUnitCost]=useState(2500);
-  const [result,setResult]=useState<{sa:number;hpt:number;coverage:number;avoided:number;cost:number}|null>(null);
+  const [training,setTraining]=useState(10);
+  const [technology,setTechnology]=useState(10);
+  const [exposure,setExposure]=useState(5);
+  const [retraining,setRetraining]=useState(5);
+  const [sceEffectiveness,setSceEffectiveness]=useState(25);
+  const [targetRiders,setTargetRiders]=useState(10000);
+  const [baselineSCE,setBaselineSCE]=useState(0);
+  const [baselineCrashes,setBaselineCrashes]=useState(0);
+  const [unitCost,setUnitCost]=useState(2500);
+  const [result,setResult]=useState<{hpt:number;sa:number;coverage:number;sceMitigated:number;crashesMitigated:number;cost:number}|null>(null);
+
   const run=()=>{
     const hpt=clamp(49.3+training,0,100);
-    const sa=clamp(23.2+training*.35+technology*.12+exposure*.08+retraining*.10,0,100);
+    // Only capability-oriented interventions move the illustrative HPT/SA indicators.
+    // Technology is modelled as a compensatory safety layer, not as an SA improvement.
+    const sa=clamp(23.2+training*.35+retraining*.10,0,100);
     const coverage=clamp(technology/30,0,1);
-    const avoided=baselineEvents*coverage*(effectiveness/100);
+    const sceMitigated=baselineSCE*coverage*(sceEffectiveness/100);
+    const crashesMitigated=baselineCrashes*coverage*(sceEffectiveness/100);
     const cost=Math.round(targetRiders*coverage*unitCost);
-    setResult({sa,hpt,coverage,avoided,cost});
+    setResult({hpt,sa,coverage,sceMitigated,crashesMitigated,cost});
   };
-  const controls=[["Hazard-perception training",training,setTraining],["MCAS / collision-warning coverage",technology,setTechnology],["Exposure control",exposure,setExposure],["Retraining",retraining,setRetraining]] as const;
+
+  const controls=[
+    ["Hazard-perception training",training,setTraining],
+    ["MCAS / collision-warning coverage",technology,setTechnology],
+    ["Exposure control",exposure,setExposure],
+    ["Retraining",retraining,setRetraining]
+  ] as const;
+
   const money=(n:number)=>"RM "+n.toLocaleString("en-MY",{maximumFractionDigits:0});
+
+  const evidenceCards=[
+    {
+      level:"01",
+      label:"Direct MCAS evidence",
+      kind:"observed" as const,
+      title:"LiDAR-based Motorcycle Collision Alert System",
+      finding:"Four prototype units were installed on 100–150 cc motorcycles. Across controlled and on-road testing, LiDAR, GPS, visual and auditory alert components showed high operational performance; four Safety-Critical Events were examined and timely alerts with collision-avoidance responses were observed.",
+      number:"4 SCEs analysed · 164,286 data points",
+      href:"https://jsaem.my/index.php/journal/article/view/241"
+    },
+    {
+      level:"02",
+      label:"Closest technology analogue",
+      kind:"observed" as const,
+      title:"Motorcycle Forward Collision Warning / Crash Warning",
+      finding:"An on-road study evaluated motorcycle crash-warning interfaces for forward collision warning, intersection movement assist and lane-departure warning. Auditory, visual and haptic warning modalities were tested with 39 licensed riders.",
+      number:"39 riders · on-road evaluation",
+      href:"https://www.sciencedirect.com/science/article/abs/pii/S0968090X16302170"
+    },
+    {
+      level:"03",
+      label:"Crash-applicability evidence",
+      kind:"derived" as const,
+      title:"Advanced Rider Assistance Systems",
+      finding:"An analysis of 390 real PTW crashes linked crash situations to 14 rider-assistance systems. At the French national weighting stage, an anti-collision warning system was estimated to have an influence on 29.8% of crashes. This is an applicability estimate, not a measured crash-reduction rate.",
+      number:"390 crashes · 29.8% estimated applicability",
+      href:"https://pmc.ncbi.nlm.nih.gov/articles/PMC10875574/"
+    },
+    {
+      level:"04",
+      label:"Population simulation",
+      kind:"simulated" as const,
+      title:"PTW collision-warning market-penetration model",
+      finding:"A hybrid traffic-system simulation modelled a motorcycle collision-warning system for rear-end conflicts. At 100% market penetration, the model estimated about a 29.5% reduction in PTW rear-end collisions and an associated reduction in economic crash costs.",
+      number:"29.5% simulated reduction at 100% penetration",
+      href:"https://pubmed.ncbi.nlm.nih.gov/37572423/"
+    },
+    {
+      level:"05",
+      label:"Research landscape",
+      kind:"derived" as const,
+      title:"Systematic review of PTW active safety",
+      finding:"A systematic review identified 62 studies covering PTW active-safety technologies including collision avoidance, collision warning, AEB, intersection support, ITS, curve warning and human-machine interfaces. The review found development maturity varied substantially and called for more structured safety-impact evaluation.",
+      number:"62 studies · 22 early-stage system studies",
+      href:"https://pubmed.ncbi.nlm.nih.gov/31914321/"
+    }
+  ];
+
+  const policyCards=[
+    {
+      title:"Mandatory Hazard Perception Test for learner / novice riders",
+      jurisdiction:"Queensland, Australia · Western Australia · United Kingdom",
+      mechanism:"Capability verification",
+      detail:"Queensland requires the motorcycle Hazard Perception Test before progressing from the learner stage; Western Australia requires the HPT before the practical driving assessment; the UK motorcycle theory test includes a hazard-perception component.",
+      href:"https://www.qld.gov.au/transport/licensing/getting/hazard/motorcycle-hazard-perception-test"
+    },
+    {
+      title:"Mandatory night-riding restriction",
+      jurisdiction:"New Zealand",
+      mechanism:"Exposure control",
+      detail:"Motorcycle learner-licence holders are prohibited from riding between 10 pm and 5 am, reducing exposure to higher-risk conditions while riding experience is developing.",
+      href:"https://nzta.govt.nz/driver-licences/other-licence-classes-and-endorsements/motorcycles/learner-licence"
+    },
+    {
+      title:"Mandatory pillion / passenger restriction for novice riders",
+      jurisdiction:"New Zealand · Queensland · Victoria · New South Wales",
+      mechanism:"Exposure control",
+      detail:"Multiple jurisdictions restrict passenger carriage during novice licensing stages, limiting an additional riding task while experience and competency are still developing.",
+      href:"https://www.nzta.govt.nz/driver-licences/other-licence-classes-and-endorsements/motorcycles/learner-licence"
+    },
+    {
+      title:"Mandatory supervised riding / driving hours",
+      jurisdiction:"Western Australia · New South Wales · Victoria",
+      mechanism:"Structured exposure",
+      detail:"Western Australia requires learner motorcycle riders to record supervised riding experience, including night riding; Australian car GDL systems also use substantial supervised-hour requirements to build experience before independent driving.",
+      href:"https://www.transport.wa.gov.au/licensing/drivers-licence/get-a-licence/restricted-motorcycle/learn-to-ride"
+    },
+    {
+      title:"Motorcycle performance / power restriction",
+      jurisdiction:"New Zealand · Victoria",
+      mechanism:"Exposure control",
+      detail:"Learner and restricted riders are limited to approved motorcycle classes under LAMS-style schemes, reducing novice exposure to higher-performance motorcycles.",
+      href:"https://nzta.govt.nz/driver-licences/other-licence-classes-and-endorsements/motorcycles/learner-licence"
+    },
+    {
+      title:"Demerit-point and licence-consequence systems",
+      jurisdiction:"Australia · New Zealand",
+      mechanism:"Enforcement & compliance",
+      detail:"Demerit systems attach licence consequences to offences and breaches of novice conditions. This belongs to enforcement rather than exposure control.",
+      href:"https://www.nzta.govt.nz/driver-licences/other-licence-classes-and-endorsements/motorcycles/learner-licence"
+    },
+    {
+      title:"Mandatory advanced braking requirements",
+      jurisdiction:"European Union",
+      mechanism:"Engineering protection",
+      detail:"EU type-approval rules introduced advanced braking requirements for relevant L-category motorcycle classes, providing an engineering safety layer rather than a rider-capability intervention.",
+      href:"https://eur-lex.europa.eu/eli/reg/2013/168/2016-01-01/eng"
+    }
+  ];
+
   return <div className="space-y-5">
     <Card className="border-amber-500/20 bg-amber-500/5 p-6 md:p-8">
-      <div className="flex items-start justify-between gap-5"><div><div className="text-[10px] font-mono uppercase tracking-[.2em] text-amber-500">05 · Safety impact laboratory</div><h2 className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">What could a safety intervention change?</h2><p className="mt-3 max-w-4xl text-sm leading-6 text-slate-600 dark:text-slate-400">Start with the observed Malaysian study profile, then test a transparent planning scenario. The simulator separates measured findings from intervention assumptions.</p></div><EvidenceBadge kind="scenario"/></div>
-      <div className="mt-5 grid gap-3 md:grid-cols-3">
-        <div className="rounded-xl border border-sky-200 bg-white p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-sky-600">Observed baseline</div><div className="mt-1 text-xl font-mono font-semibold text-slate-900">N = 264</div><div className="mt-1 text-[11px] text-slate-500">Total SA mean = 23.2%</div></div>
-        <div className="rounded-xl border border-amber-200 bg-white p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-amber-600">Planning assumption</div><div className="mt-1 text-xl font-mono font-semibold text-slate-900">{effectiveness}%</div><div className="mt-1 text-[11px] text-slate-500">Assumed intervention effectiveness</div></div>
-        <div className="rounded-xl border border-emerald-200 bg-white p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-emerald-600">Scale</div><div className="mt-1 text-xl font-mono font-semibold text-slate-900">{targetRiders.toLocaleString()}</div><div className="mt-1 text-[11px] text-slate-500">Target riders</div></div>
+      <div className="flex items-start justify-between gap-5">
+        <div>
+          <div className="text-[10px] font-mono uppercase tracking-[.2em] text-amber-500">05 · Safety impact & evidence laboratory</div>
+          <h2 className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">From evidence to a testable safety intervention</h2>
+          <p className="mt-3 max-w-5xl text-sm leading-6 text-slate-600 dark:text-slate-400">
+            Explore how training, technology, exposure control and retraining act through different safety pathways. The laboratory separates observed findings, external evidence, simulations and user-defined scenarios.
+          </p>
+        </div>
+        <EvidenceBadge kind="scenario"/>
       </div>
     </Card>
-    <div className="grid gap-5 xl:grid-cols-[430px_1fr]">
-      <Card className="p-5"><div className="flex items-center gap-2 text-amber-600 dark:text-amber-300"><SlidersHorizontal size={16}/><h3 className="font-semibold text-slate-900 dark:text-white">Build an intervention scenario</h3></div><p className="mt-2 text-[11px] leading-5 text-slate-500">These are scenario levers, not measured effect sizes.</p>
-        <div className="mt-5 space-y-5">
-          {controls.map(([label,value,set])=><label key={label} className="block"><div className="flex justify-between gap-3 text-xs text-slate-700 dark:text-slate-300"><span>{label}</span><b className="font-mono">{value}%</b></div><input aria-label={label} type="range" min="0" max="30" value={value} onChange={e=>set(Number(e.target.value))} className="mt-2 w-full"/></label>)}
-          <label className="block"><div className="flex justify-between text-xs text-slate-700 dark:text-slate-300"><span title="A user-controlled planning assumption. It must be replaced by validated intervention evidence before the result is used as an effectiveness estimate.">Assumed intervention effectiveness ⓘ</span><b className="font-mono">{effectiveness}%</b></div><input aria-label="Assumed intervention effectiveness" type="range" min="0" max="100" value={effectiveness} onChange={e=>setEffectiveness(Number(e.target.value))} className="mt-2 w-full"/><div className="mt-1 text-[9px] text-slate-500">Planning assumption only — not an observed MCAS effect.</div></label>
-          <div className="border-t border-slate-200 pt-5 dark:border-slate-800"><div className="mb-3 text-[9px] font-mono uppercase tracking-[.18em] text-slate-500">Scale & economics</div><div className="grid gap-3 sm:grid-cols-2">
-            <label><span className="text-[10px] text-slate-600 dark:text-slate-400">Target riders</span><input type="number" min="0" value={targetRiders} onChange={e=>setTargetRiders(Math.max(0,Number(e.target.value)||0))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"/></label>
-            <label><span title="Enter the observed annual baseline for the target population. The simulator does not invent this number.">Baseline events / year ⓘ</span><input type="number" min="0" value={baselineEvents} onChange={e=>setBaselineEvents(Math.max(0,Number(e.target.value)||0))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"/></label>
-            <label><span className="text-[10px] text-slate-600 dark:text-slate-400">MCAS unit cost (RM)</span><input type="number" min="0" value={unitCost} onChange={e=>setUnitCost(Math.max(0,Number(e.target.value)||0))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"/></label>
-          </div></div>
-          <button onClick={run} className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-3 text-xs font-bold text-slate-950 hover:bg-amber-400"><Sparkles size={14}/> Simulate safety scenario</button>
-          <button onClick={()=>{setTraining(10);setTechnology(10);setExposure(5);setRetraining(5);setEffectiveness(25);setTargetRiders(10000);setBaselineEvents(0);setUnitCost(2500);setResult(null)}} className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-3 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-400"><RotateCcw size={14}/> Reset</button>
+
+    <Card className="p-5 md:p-6">
+      <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+        <div>
+          <div className="text-[9px] font-mono uppercase tracking-[.2em] text-violet-600 dark:text-violet-300">Technology evidence ladder</div>
+          <h3 className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">Why motorcycle collision-warning technology is a credible research direction</h3>
+          <p className="mt-2 max-w-4xl text-xs leading-5 text-slate-500">
+            The evidence gets progressively more indirect. MCAS has direct prototype evidence; external studies provide context for the potential of the broader collision-warning technology class. External effect estimates are not transferred to MCAS.
+          </p>
         </div>
-      </Card>
-      <Card className="p-5"><div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-950/50"><div title="Observed total situational-awareness score from Experiment 2; this is not a crash probability." className="cursor-help text-[10px] font-mono uppercase text-slate-500">Observed safety profile ⓘ</div><div className="mt-3 text-4xl font-mono font-semibold text-slate-900 dark:text-white">23.2%</div><div className="mt-1 text-xs text-slate-500">Reported total SA mean, Experiment 2</div></div>
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-500/20 dark:bg-amber-500/5"><div title="Synthetic planning indicator produced by the current scenario assumptions. It is not an observed intervention effect." className="cursor-help text-[10px] font-mono uppercase text-amber-700 dark:text-amber-300">Scenario safety profile ⓘ</div><div className="mt-3 text-4xl font-mono font-semibold text-slate-900 dark:text-white">{result ? result.sa.toFixed(1)+"%" : "—"}</div><div className="mt-1 text-xs text-slate-600">Synthetic SA-like indicator under selected assumptions</div></div>
+        <div className="rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-[9px] font-mono font-semibold text-violet-700">MCAS · evidence-gathering stage</div>
       </div>
-      {result && <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-4"><Metric label="Scenario HPT" value={result.hpt.toFixed(1)+"%"} sub="Illustrative change from observed 49.3% baseline" kind="scenario"/><Metric label="Safety-profile gain" value={(result.sa-23.2).toFixed(1)+" pp"} sub="Change in synthetic SA-like indicator" kind="scenario"/><Metric label="Potential events avoided" value={baselineEvents>0 ? result.avoided.toFixed(1) : "Enter baseline"} sub={baselineEvents>0 ? "Baseline events × coverage × assumed effectiveness" : "Requires a user-supplied baseline"} kind="scenario"/><Metric label="Programme cost" value={money(result.cost)} sub="Target riders × technology coverage × unit cost" kind="scenario"/></div>}
-      <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950/30"><h3 className="font-semibold text-slate-900 dark:text-white">What the output means</h3><div className="mt-4 grid gap-3 md:grid-cols-3">
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/40"><div className="text-[9px] font-mono uppercase tracking-wider text-sky-600">Observed</div><p className="mt-2 text-[11px] leading-5 text-slate-600 dark:text-slate-400">23.2% is the reported mean total situational-awareness score for 264 riders. It is not a probability of an event.</p></div>
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/40"><div className="text-[9px] font-mono uppercase tracking-wider text-amber-600">Scenario</div><p className="mt-2 text-[11px] leading-5 text-slate-600 dark:text-slate-400">The scenario profile is a planning indicator. Its intervention parameters must be replaced by validated evidence before policy or investment claims are made.</p></div>
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/40"><div className="text-[9px] font-mono uppercase tracking-wider text-emerald-600">Economics</div><p className="mt-2 text-[11px] leading-5 text-slate-600 dark:text-slate-400">Programme cost scales with coverage and unit cost. Savings require a defensible baseline and a validated intervention effect.</p></div>
-      </div></div>
-      <div className="mt-5 rounded-xl border border-violet-200 bg-violet-50 p-4 text-xs leading-5 text-slate-600 dark:border-violet-500/20 dark:bg-violet-500/5 dark:text-slate-400"><b className="text-violet-700 dark:text-violet-300">Evidence boundary:</b> the study establishes the observed baseline, not an MCAS effect. External active-safety studies can inform model structure, but their estimates should not be transferred to MCAS without validation.</div>
-      </Card>
+
+      <div className="mt-5 grid gap-3 xl:grid-cols-5">
+        {evidenceCards.map(card=><article key={card.level} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/40">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[9px] font-mono font-bold text-slate-400">{card.level}</span>
+            <EvidenceBadge kind={card.kind}/>
+          </div>
+          <div className="mt-3 text-[9px] font-mono uppercase tracking-wider text-violet-600 dark:text-violet-300">{card.label}</div>
+          <h4 className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">{card.title}</h4>
+          <p className="mt-2 text-[11px] leading-5 text-slate-600 dark:text-slate-400">{card.finding}</p>
+          <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-[9px] font-mono text-slate-600 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-400">{card.number}</div>
+          <a href={card.href} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1 text-[10px] font-semibold text-violet-700 hover:text-violet-900 dark:text-violet-300 dark:hover:text-violet-200">Open source <ArrowRight size={11}/></a>
+        </article>)}
+      </div>
+
+      <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_1fr]">
+        <div className="rounded-2xl border border-violet-200 bg-violet-50 p-5">
+          <div className="text-[9px] font-mono uppercase tracking-[.18em] text-violet-700">What the evidence supports</div>
+          <p className="mt-2 text-sm font-semibold leading-6 text-slate-900">Collision-warning technology is a credible active-safety research pathway for PTWs.</p>
+          <p className="mt-2 text-[11px] leading-5 text-slate-600">The evidence supports feasibility, rider-interface research, crash-scenario applicability and simulated population benefit. It does not establish a validated crash-reduction effect for MCAS.</p>
+        </div>
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+          <div className="text-[9px] font-mono uppercase tracking-[.18em] text-amber-700">What still needs to be measured</div>
+          <p className="mt-2 text-sm font-semibold leading-6 text-slate-900">MCAS → warning → rider response → SCE mitigation → crash outcome.</p>
+          <p className="mt-2 text-[11px] leading-5 text-slate-600">The next field phase should quantify detection reliability, warning timing, rider response, SCE frequency and eventual crash outcomes under naturalistic Malaysian riding conditions.</p>
+        </div>
+      </div>
+    </Card>
+
+    <Card className="p-5 md:p-6">
+      <div className="flex items-center gap-2">
+        <ShieldCheck size={17} className="text-emerald-500"/>
+        <div>
+          <div className="text-[9px] font-mono uppercase tracking-[.18em] text-emerald-600 dark:text-emerald-300">Compensatory safety pathway</div>
+          <h3 className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">MCAS does not need to improve SA to provide a safety benefit</h3>
+        </div>
+      </div>
+      <div className="mt-5 grid gap-2 md:grid-cols-5">
+        {[
+          ["1","Human limitation","SA / attention may be insufficient"],
+          ["2","Hazard","Forward conflict develops"],
+          ["3","MCAS","Detect → warn"],
+          ["4","Rider response","Brake / slow / change trajectory"],
+          ["5","Safety outcome","SCE potentially mitigated"]
+        ].map(([n,title,detail],i)=><React.Fragment key={n}>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/40">
+            <div className="text-[9px] font-mono text-violet-600 dark:text-violet-300">{n}</div>
+            <div className="mt-1 text-xs font-semibold text-slate-900 dark:text-white">{title}</div>
+            <div className="mt-1 text-[10px] leading-4 text-slate-500">{detail}</div>
+          </div>
+          {i<4 && <div className="hidden items-center justify-center md:flex"><ArrowRight size={15} className="text-slate-400"/></div>}
+        </React.Fragment>)}
+      </div>
+      <div className="mt-4 rounded-xl border border-sky-200 bg-sky-50 p-4 text-[11px] leading-5 text-slate-600">
+        <b className="text-sky-700">Interpretation:</b> technology is modelled as a compensatory safety layer. Training and retraining can be linked to capability measures; collision warning is not assumed to increase the rider's SA score.
+      </div>
+    </Card>
+
+    <Card className="p-5">
+      <div className="flex items-center gap-2 text-amber-600 dark:text-amber-300"><SlidersHorizontal size={16}/><h3 className="font-semibold text-slate-900 dark:text-white">Build a transparent intervention scenario</h3></div>
+      <p className="mt-2 text-[11px] leading-5 text-slate-500">Scenario levers are deliberately separated from observed and published effects.</p>
+      <div className="mt-5 grid gap-5 xl:grid-cols-[430px_1fr]">
+        <div className="space-y-5">
+          {controls.map(([label,value,set])=><label key={label} className="block">
+            <div className="flex justify-between gap-3 text-xs text-slate-700 dark:text-slate-300"><span>{label}</span><b className="font-mono">{value}%</b></div>
+            <input aria-label={label} type="range" min="0" max="30" value={value} onChange={e=>set(Number(e.target.value))} className="mt-2 w-full"/>
+          </label>)}
+
+          <label className="block">
+            <div className="flex justify-between text-xs text-slate-700 dark:text-slate-300">
+              <span title="User-controlled planning assumption for the proportion of eligible SCEs that the intervention could potentially mitigate.">Assumed SCE mitigation effectiveness ⓘ</span>
+              <b className="font-mono">{sceEffectiveness}%</b>
+            </div>
+            <input aria-label="Assumed SCE mitigation effectiveness" type="range" min="0" max="100" value={sceEffectiveness} onChange={e=>setSceEffectiveness(Number(e.target.value))} className="mt-2 w-full"/>
+            <div className="mt-1 text-[9px] text-slate-500">Planning assumption only — not an observed MCAS effect.</div>
+          </label>
+
+          <div className="border-t border-slate-200 pt-5 dark:border-slate-800">
+            <div className="mb-3 text-[9px] font-mono uppercase tracking-[.18em] text-slate-500">Scale & economics</div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label><span className="text-[10px] text-slate-600 dark:text-slate-400">Target riders</span><input type="number" min="0" value={targetRiders} onChange={e=>setTargetRiders(Math.max(0,Number(e.target.value)||0))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"/></label>
+              <label><span title="Observed annual safety-critical events for the target population. Do not enter crashes here unless your outcome definition is explicitly crash-based.">Baseline SCEs / year ⓘ</span><input type="number" min="0" value={baselineSCE} onChange={e=>setBaselineSCE(Math.max(0,Number(e.target.value)||0))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"/></label>
+              <label><span title="Observed annual crashes for the target population. The simulator does not derive this from the research study.">Baseline crashes / year ⓘ</span><input type="number" min="0" value={baselineCrashes} onChange={e=>setBaselineCrashes(Math.max(0,Number(e.target.value)||0))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"/></label>
+              <label><span className="text-[10px] text-slate-600 dark:text-slate-400">MCAS unit cost (RM)</span><input type="number" min="0" value={unitCost} onChange={e=>setUnitCost(Math.max(0,Number(e.target.value)||0))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"/></label>
+            </div>
+          </div>
+
+          <button onClick={run} className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-3 text-xs font-bold text-slate-950 hover:bg-amber-400"><Sparkles size={14}/> Run evidence-bounded scenario</button>
+          <button onClick={()=>{setTraining(10);setTechnology(10);setExposure(5);setRetraining(5);setSceEffectiveness(25);setTargetRiders(10000);setBaselineSCE(0);setBaselineCrashes(0);setUnitCost(2500);setResult(null)}} className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-3 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-400"><RotateCcw size={14}/> Reset</button>
+        </div>
+
+        <div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Metric label="Observed HPT" value="49.3%" sub="Experiment 1 reported mean" kind="observed"/>
+            <Metric label="Observed SA" value="23.2%" sub="Experiment 2 reported total mean" kind="observed"/>
+            <Metric label="Technology coverage" value={result ? Math.round(result.coverage*100)+"%" : "—"} sub="Scenario share of target riders receiving MCAS" kind="scenario"/>
+            <Metric label="Assumed SCE mitigation" value={sceEffectiveness+"%"} sub="User-defined planning assumption" kind="scenario"/>
+          </div>
+
+          {result ? <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+            <Metric label="Scenario HPT" value={result.hpt.toFixed(1)+"%"} sub="Illustrative capability pathway: training + retraining" kind="scenario"/>
+            <Metric label="Scenario SA" value={result.sa.toFixed(1)+"%"} sub="Illustrative capability pathway only; technology does not add SA" kind="scenario"/>
+            <Metric label="Potential SCEs mitigated" value={baselineSCE>0 ? result.sceMitigated.toFixed(1) : "Enter SCE baseline"} sub={baselineSCE>0 ? "Baseline SCEs × technology coverage × assumed mitigation" : "Requires a user-supplied SCE baseline"} kind="scenario"/>
+            <Metric label="Potential crashes prevented" value={baselineCrashes>0 ? result.crashesMitigated.toFixed(1) : "Enter crash baseline"} sub={baselineCrashes>0 ? "Baseline crashes × technology coverage × assumed mitigation" : "Requires a user-supplied crash baseline"} kind="scenario"/>
+          </div> : <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-center dark:border-slate-800 dark:bg-slate-950/40"><div className="text-sm font-semibold text-slate-900 dark:text-white">No scenario calculated yet</div><p className="mt-1 text-[11px] text-slate-500">Change the intervention assumptions and run the laboratory. No crash or SCE estimate is invented when a baseline is missing.</p></div>}
+
+          {result && <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <Metric label="Programme cost" value={money(result.cost)} sub="Target riders × technology coverage × unit cost" kind="scenario"/>
+            <Metric label="Capability change" value={(result.sa-23.2).toFixed(1)+" pp"} sub="Illustrative change in SA from training/retraining only" kind="scenario"/>
+          </div>}
+
+          <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950/30">
+            <h3 className="font-semibold text-slate-900 dark:text-white">How to read the result</h3>
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+              <div className="rounded-xl border border-sky-200 bg-sky-50 p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-sky-700">Observed</div><p className="mt-2 text-[11px] leading-5 text-slate-600">Study results are fixed evidence: HPT 49.3% and total SA 23.2%.</p></div>
+              <div className="rounded-xl border border-violet-200 bg-violet-50 p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-violet-700">External evidence</div><p className="mt-2 text-[11px] leading-5 text-slate-600">Collision-warning studies provide context and benchmark ranges, but their effect sizes are not assigned to MCAS.</p></div>
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-amber-700">Scenario</div><p className="mt-2 text-[11px] leading-5 text-slate-600">SCE/crash outputs are conditional calculations from user-supplied baselines, coverage and assumed mitigation.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Card>
+
+    <Card className="p-5 md:p-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="text-[9px] font-mono uppercase tracking-[.2em] text-emerald-600 dark:text-emerald-300">Policy change</div>
+          <h3 className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">Implemented policy precedent outside LMIC settings</h3>
+          <p className="mt-2 max-w-5xl text-xs leading-5 text-slate-500">
+            These are documented policy measures already used in high-income / developed-country jurisdictions. They are shown as implementation precedent, not as claims that the same policy will produce the same effect in Malaysia.
+          </p>
+        </div>
+        <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[9px] font-mono font-semibold text-emerald-700">IMPLEMENTED</span>
+      </div>
+      <div className="mt-5 grid gap-3 lg:grid-cols-2">
+        {policyCards.map(card=><article key={card.title} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/30">
+          <div className="flex items-start justify-between gap-3">
+            <div><h4 className="text-sm font-semibold text-slate-900 dark:text-white">{card.title}</h4><div className="mt-1 text-[9px] font-mono uppercase tracking-wider text-slate-500">{card.jurisdiction}</div></div>
+            <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[8px] font-mono font-bold uppercase text-emerald-700">{card.mechanism}</span>
+          </div>
+          <p className="mt-3 text-[11px] leading-5 text-slate-600 dark:text-slate-400">{card.detail}</p>
+          <a href={card.href} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">Open policy source <ArrowRight size={11}/></a>
+        </article>)}
+      </div>
+    </Card>
+
+    <div className="rounded-2xl border border-violet-200 bg-violet-50 p-5 text-xs leading-5 text-slate-600">
+      <b className="text-violet-700">Evidence boundary:</b> MCAS currently has prototype-level evidence of detection, warning and observed SCE responses. External collision-warning research supports the plausibility and research relevance of this technology class. Population-level crash reduction for MCAS remains an empirical question for the next field-evidence phase.
     </div>
   </div>;
 }
+
 function Provenance(){
   return <div className="space-y-5">
     <Card className="p-6 md:p-8"><div className="flex items-center gap-2 text-emerald-300"><GitBranch size={17}/><span className="text-[10px] font-mono uppercase tracking-[.2em]">06 · Evidence provenance</span></div><h2 className="mt-2 text-2xl font-semibold">Every number should tell you where it came from.</h2><p className="mt-3 max-w-4xl text-sm leading-6 text-slate-400">This layer is designed to prevent the Explorer from blurring observed findings, calculations and simulations. Later versions can connect each item to a page, table, dataset field, video, form or analysis script.</p></Card>
