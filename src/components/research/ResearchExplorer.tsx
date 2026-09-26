@@ -189,6 +189,90 @@ function PaperText({text,onCitation}:{text:string;onCitation:()=>void}) {
   </div>;
 }
 
+
+type FrameworkDomain = "pre" | "licensing" | "technology" | "exposure" | "retraining";
+
+const frameworkDomains: Array<{id:FrameworkDomain;title:string;items:string[]}> = [
+  {id:"pre",title:"Pre-Licensing",items:["Road Safety Education","Learner Training","Community Program"]},
+  {id:"licensing",title:"Licensing",items:["Risk-Based Training Modules","Mandatory HPT Assessment","Simulator Training","Audit & CQI"]},
+  {id:"technology",title:"Technology",items:["Collision Alert Systems","ABS Mandates","Telematics","ITS"]},
+  {id:"exposure",title:"Exposure Control",items:["Graduated Licensing & Rider Restrictions","Protective Gear Compliance","Speed & Route Limitations"]},
+  {id:"retraining",title:"Retraining",items:["Re-skilling & Up-skilling","Employer-Sponsored Programs","Enforced Retraining for Offenders"]}
+];
+
+const frameworkPolicies = ["Safe System Approach","Mode Shift","Shared Accountability","Enforcement","Motorcycle Segregation"];
+const frameworkProblems = ["Mixed-Traffic Vulnerability","Unsafe Riding Behaviour","Risk Appraisal Deficiency","Insufficient Riding Competency","Inherent Motorcycle Risks"];
+
+function FrameworkFigure({interactive=false}:{interactive?:boolean}) {
+  const [selected,setSelected]=useState<FrameworkDomain|"policy"|"problem"|null>(null);
+  const selectedDomain=frameworkDomains.find(d=>d.id===selected);
+  const selectedTitle=selectedDomain?.title ?? (selected==="policy" ? "Policy Alignment for Motorcycle Safety Reform" : selected==="problem" ? "Problem: High Motorcycle Fatalities" : null);
+  const selectedItems=selectedDomain?.items ?? (selected==="policy" ? frameworkPolicies : selected==="problem" ? frameworkProblems : []);
+  const phaseX=[25,263,501,739,977];
+  const phaseW=218;
+  const phaseY=410;
+  const select=(id:FrameworkDomain|"policy"|"problem")=>{if(interactive)setSelected(v=>v===id?null:id);};
+
+  return <div className="w-full overflow-x-auto">
+    <svg viewBox="0 0 1220 780" role="img" aria-label="Integrated Motorcycle Safety Empowerment Framework for Malaysia (IMSEF-MY)" className="h-auto min-w-[820px] w-full">
+      <defs>
+        <filter id="imsef-shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity=".14"/></filter>
+        <marker id="imsef-arrow-green" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#00736b"/></marker>
+        <marker id="imsef-arrow-red" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#ba0c2f"/></marker>
+      </defs>
+      <rect x="0" y="0" width="1220" height="780" rx="18" fill="#fff"/>
+      <g filter="url(#imsef-shadow)">
+        <rect x="25" y="24" width="1170" height="92" rx="12" fill="#eef7f6" stroke="#00736b" strokeWidth="2"/>
+        <text x="610" y="49" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="18" fontWeight="700" fill="#00736b">Policy Alignment for Motorcycle Safety Reform</text>
+        {frameworkPolicies.map((x,i)=><g key={x} onClick={()=>select("policy")} className={interactive?"cursor-pointer":""}>
+          <rect x={45+i*225} y="66" width="205" height="30" rx="15" fill="#fff" stroke="#00736b"/>
+          <text x={147.5+i*225} y="86" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="11" fontWeight="600" fill="#00736b">{x}</text>
+        </g>)}
+      </g>
+      <g filter="url(#imsef-shadow)" onClick={()=>select("problem")} className={interactive?"cursor-pointer":""}>
+        <rect x="25" y="145" width="1170" height="112" rx="12" fill="#fff1f3" stroke="#ba0c2f" strokeWidth="2"/>
+        <text x="610" y="172" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="18" fontWeight="700" fill="#ba0c2f">Problem: High Motorcycle Fatalities</text>
+        {frameworkProblems.map((x,i)=><g key={x}>
+          <rect x={42+i*231} y="191" width="215" height="44" rx="8" fill="#fff" stroke="#ba0c2f"/>
+          <text x={149.5+i*231} y="218" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="10.5" fontWeight="600" fill="#ba0c2f">{x}</text>
+        </g>)}
+      </g>
+      <text x="25" y="286" fontFamily="Arial,sans-serif" fontSize="12" fontWeight="700" fill="#505050">Empower risk appraisal</text>
+      <text x="25" y="304" fontFamily="Arial,sans-serif" fontSize="12" fontWeight="700" fill="#505050">Ensure competency &amp; readiness</text>
+      <text x="1195" y="286" textAnchor="end" fontFamily="Arial,sans-serif" fontSize="12" fontWeight="700" fill="#505050">Enhance capabilities</text>
+      <text x="1195" y="304" textAnchor="end" fontFamily="Arial,sans-serif" fontSize="12" fontWeight="700" fill="#505050">Minimize crash risk and injury</text>
+      <text x="610" y="325" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="12" fontWeight="700" fill="#505050">Maintain standards</text>
+      <path d="M610 116 L610 145" stroke="#00736b" strokeWidth="2.5" markerEnd="url(#imsef-arrow-green)"/>
+      <path d="M610 257 L610 390" stroke="#ba0c2f" strokeWidth="2.5" markerEnd="url(#imsef-arrow-red)"/>
+      <text x="610" y="377" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="13" fontWeight="700" fill="#005a9c">Five action domains</text>
+      <path d="M25 388 H1195" stroke="#005a9c" strokeWidth="2"/>
+      {frameworkDomains.map((domain,i)=><g key={domain.id} onClick={()=>select(domain.id)} className={interactive?"cursor-pointer":""}>
+        <rect x={phaseX[i]} y={phaseY} width={phaseW} height="188" rx="12" fill={selected===domain.id?"#e7f3fb":"#f7fbfe"} stroke="#005a9c" strokeWidth={selected===domain.id?3:2} filter="url(#imsef-shadow)"/>
+        <rect x={phaseX[i]} y={phaseY} width={phaseW} height="40" rx="12" fill="#005a9c"/>
+        <rect x={phaseX[i]} y={phaseY+28} width={phaseW} height="12" fill="#005a9c"/>
+        <text x={phaseX[i]+phaseW/2} y={phaseY+25} textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="13" fontWeight="700" fill="#fff">{domain.title}</text>
+        {domain.items.map((item,j)=><g key={item}>
+          <circle cx={phaseX[i]+15} cy={phaseY+60+j*31} r="3" fill="#005a9c"/>
+          <text x={phaseX[i]+25} y={phaseY+64+j*31} fontFamily="Arial,sans-serif" fontSize="10" fontWeight="600" fill="#253746">{item.length>29?item.slice(0,28)+"…":item}</text>
+        </g>)}
+      </g>)}
+      <path d="M25 618 H1195" stroke="#505050" strokeWidth="1.5"/>
+      <path d="M25 618 V646 H1195 V618" fill="none" stroke="#505050" strokeWidth="1.5"/>
+      <text x="610" y="669" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="14" fontWeight="700" fill="#505050">Post-Licensing Continuum</text>
+      <text x="610" y="708" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="11" fill="#505050">Technology → Exposure Control → Retraining</text>
+      <text x="610" y="744" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="11" fill="#505050">FIGURE 6 · Integrated Motorcycle Safety Empowerment Framework for Malaysia (IMSEF-MY)</text>
+    </svg>
+    {interactive && selected && <div className="mt-3 rounded-xl border border-slate-300 bg-slate-50 p-4">
+      <div className="flex items-start justify-between gap-4">
+        <div><div className="text-[9px] font-mono uppercase tracking-[.18em] text-slate-500">Framework component</div><div className="mt-1 text-sm font-semibold text-slate-900">{selectedTitle}</div></div>
+        <button type="button" onClick={()=>setSelected(null)} className="rounded-lg border border-slate-300 px-2 py-1 text-[10px] text-slate-600">Close</button>
+      </div>
+      <div className="mt-3 grid gap-2 sm:grid-cols-2">{selectedItems.map(item=><div key={item} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700">{item}</div>)}</div>
+      <div className="mt-3 text-[10px] leading-5 text-slate-500">These are framework components reproduced from Figure 6. They are not presented here as independently tested intervention effects.</div>
+    </div>}
+  </div>;
+}
+
 function FigureZoomModal({figure,onClose}:{figure:typeof paperFigures[number];onClose:()=>void}) {
   const [scale,setScale]=useState(1);
   const [offset,setOffset]=useState({x:0,y:0});
@@ -232,19 +316,10 @@ function FigureZoomModal({figure,onClose}:{figure:typeof paperFigures[number];on
         onPointerDown={e=>{setDragging(true);setLast({x:e.clientX,y:e.clientY});e.currentTarget.setPointerCapture(e.pointerId)}}
         onPointerMove={e=>{if(!dragging)return;const dx=e.clientX-last.x,dy=e.clientY-last.y;setOffset(o=>({x:o.x+dx,y:o.y+dy}));setLast({x:e.clientX,y:e.clientY})}}
         onPointerUp={()=>setDragging(false)} onPointerCancel={()=>setDragging(false)}>
-        {figure.src ? (
-          <img src={figure.src} alt={`Figure ${figure.number}: ${figure.caption}`} draggable={false}
-            className="absolute left-1/2 top-1/2 max-h-[82vh] max-w-[92vw] select-none object-contain"
-            style={{transform:`translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px)) scale(${scale})`,transformOrigin:"center center"}} />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center p-8">
-            <div className="max-w-3xl rounded-2xl border border-violet-500/20 bg-violet-500/5 p-8 text-center">
-              <Move className="mx-auto text-violet-300" size={28}/>
-              <h3 className="mt-4 text-xl font-semibold text-white">Figure 6 is now an interactive framework entry point.</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-400">Use the Framework Lab to explore the five action domains rather than treating the framework as a static picture.</p>
-            </div>
-          </div>
-        )}
+        <div className="absolute left-1/2 top-1/2 w-[min(1120px,94vw)]"
+          style={{transform:`translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px)) scale(${scale})`,transformOrigin:"center center"}}>
+          {figure.number===6 ? <FrameworkFigure interactive/> : <img src={figure.src ?? ""} alt={`Figure ${figure.number}: ${figure.caption}`} draggable={false} className="max-h-[82vh] max-w-[92vw] select-none object-contain" />}
+        </div>
       </div>
       <div className="border-t border-slate-800 px-4 py-2 text-[10px] text-slate-500">
         <span className="inline-flex items-center gap-1"><ZoomIn size={12}/> Wheel / + / − to zoom</span>
@@ -261,18 +336,9 @@ function PaperFigure({figure,onOpen,onFramework}:{figure:typeof paperFigures[num
       <span className="text-[9px] font-mono uppercase tracking-[.18em] text-slate-500">Figure {figure.number}</span>
       <span className="text-[9px] font-semibold text-violet-700">{figure.src ? "Click to inspect" : "Open interactive framework"} →</span>
     </div>
-    {figure.src ? (
-      <button type="button" onClick={()=>onOpen(figure)} className="group block w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
-        <img src={figure.src} alt={figure.caption} className="mx-auto max-h-[430px] w-auto max-w-full object-contain transition duration-300 group-hover:scale-[1.015]" />
-      </button>
-    ) : (
-      <button type="button" onClick={onFramework} className="w-full rounded-xl border border-violet-200 bg-violet-50 p-5 text-left transition hover:border-violet-300 hover:bg-violet-100">
-        <div className="grid gap-3 sm:grid-cols-5">
-          {["Pre-Licensing","Licensing","Technology","Exposure Control","Retraining"].map((x,i)=><div key={x} className="rounded-lg border border-violet-200 bg-white p-3 text-center text-[10px] font-semibold text-violet-800"><div className="font-mono text-[9px] text-violet-500">0{i+1}</div>{x}</div>)}
-        </div>
-        <div className="mt-4 text-center text-[10px] text-violet-700">Integrated Motorcycle Safety Empowerment Framework for Malaysia (IMSEF-MY) · interactive view</div>
-      </button>
-    )}
+    <button type="button" onClick={()=>onOpen(figure)} className="group block w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2 text-left">
+      {figure.number===6 ? <FrameworkFigure/> : <img src={figure.src ?? ""} alt={figure.caption} className="mx-auto max-h-[430px] w-auto max-w-full object-contain transition duration-300 group-hover:scale-[1.015]" />}
+    </button>
     <figcaption className="mt-2 px-1 text-[11px] leading-5 text-slate-600">FIGURE {figure.number}. {figure.caption}. <span className="font-semibold text-violet-700">{figure.note}.</span></figcaption>
   </figure>;
 }
