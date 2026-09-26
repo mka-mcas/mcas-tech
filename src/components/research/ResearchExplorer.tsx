@@ -61,7 +61,7 @@ function erf(x:number){const sign=x<0?-1:1; x=Math.abs(x); const a1=.254829592,a
 
 export default function ResearchExplorer(){
   const [tab,setTab]=useState<Tab>("overview");
-  const [light,setLight]=useState(false);
+  const [light,setLight]=useState(true);
   return <div className={light ? "research-light min-h-screen bg-slate-50 text-slate-900" : "min-h-screen bg-[#070b12] text-slate-100"}>
     <header className="border-b border-slate-800/80 bg-[#0b101b]/95">
       <div className="mx-auto max-w-[1550px] px-5 pb-6 pt-28 md:px-8">
@@ -163,8 +163,8 @@ const paperFigures = [
     page: 6,
     number: 6,
     caption: "Integrated Motorcycle Safety Empowerment Framework for Malaysia (IMSEF-MY)",
-    src: null,
-    note: "Source-derived vector reconstruction with interactive hotspots"
+    src: "/images/IMSEF.png",
+    note: "Original published figure · interactive evidence layer added by the Explorer"
   }
 ] as const;
 function PaperCitation({children,onClick}:{children:React.ReactNode;onClick:()=>void}) {
@@ -297,58 +297,39 @@ function FrameworkFigure({interactive=false}:{interactive?:boolean}) {
   const [selected,setSelected]=useState<FrameworkDomain|"policy"|"problem"|null>(null);
   const selectedDomain=frameworkDomains.find(d=>d.id===selected);
   const selectedTitle=selectedDomain?.title ?? (selected==="policy" ? "Policy Alignment for Motorcycle Safety Reform" : selected==="problem" ? "Problem: High Motorcycle Fatalities" : null);
-  const selectedItems=selectedDomain?.items ?? (selected==="policy" ? frameworkPolicies : selected==="problem" ? frameworkProblems : []);
   const selectedEvidence=selectedDomain?.evidence ?? (selected==="policy" ? frameworkPolicyEvidence : selected==="problem" ? frameworkProblemEvidence : []);
-  const phaseX=[25,263,501,739,977];
-  const phaseW=218;
-  const phaseY=410;
-  const select=(id:FrameworkDomain|"policy"|"problem")=>{if(interactive)setSelected(v=>v===id?null:id);};
 
-  return <div className="w-full overflow-x-auto">
+  const select=(id:FrameworkDomain|"policy"|"problem")=>{
+    if(interactive) setSelected(v=>v===id?null:id);
+  };
+
+  const hotspots = [
+    {id:"policy" as const, label:"Policy alignment", x:3.3, y:6.5, w:93.5, h:12.2},
+    {id:"problem" as const, label:"High motorcycle fatalities", x:3.3, y:22.0, w:93.5, h:15.0},
+    {id:"pre" as const, label:"Pre-Licensing", x:3.3, y:56.6, w:17.0, h:25.0},
+    {id:"licensing" as const, label:"Licensing", x:21.8, y:56.6, w:17.1, h:25.0},
+    {id:"technology" as const, label:"Technology", x:40.3, y:56.6, w:17.1, h:25.0},
+    {id:"exposure" as const, label:"Exposure Control", x:58.8, y:56.6, w:17.1, h:25.0},
+    {id:"retraining" as const, label:"Retraining", x:77.2, y:56.6, w:17.2, h:25.0}
+  ];
+
+  return <div className="w-full">
     <div className="mb-2 flex items-center justify-between gap-3 px-1">
-      <div className="text-[9px] font-mono uppercase tracking-[.18em] text-slate-500">Source-derived framework · click a block to reveal the evidence chain</div>
+      <div className="text-[9px] font-mono uppercase tracking-[.18em] text-slate-500">Original published Figure 6 · click a section to reveal the evidence chain</div>
       {interactive && <div className="rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-[9px] font-semibold text-violet-700">Interactive</div>}
     </div>
-    <svg viewBox="0 0 1220 780" role="img" aria-label="Integrated Motorcycle Safety Empowerment Framework for Malaysia (IMSEF-MY)" className="h-auto min-w-[820px] w-full">
-      <defs>
-        <filter id="imsef-shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity=".14"/></filter>
-        <marker id="imsef-arrow-green" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#00736b"/></marker>
-        <marker id="imsef-arrow-red" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#ba0c2f"/></marker>
-      </defs>
-      <rect x="0" y="0" width="1220" height="780" rx="18" fill="#fff"/>
-      <g filter="url(#imsef-shadow)" onClick={()=>select("policy")} className={interactive?"cursor-pointer":""}>
-        <rect x="25" y="24" width="1170" height="92" rx="12" fill="#eef7f6" stroke="#00736b" strokeWidth="2"/>
-        <text x="610" y="49" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="18" fontWeight="700" fill="#00736b">Policy Alignment for Motorcycle Safety Reform</text>
-        {frameworkPolicies.map((x,i)=><g key={x}><rect x={45+i*225} y="66" width="205" height="30" rx="15" fill="#fff" stroke="#00736b"/><text x={147.5+i*225} y="86" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="11" fontWeight="600" fill="#00736b">{x}</text></g>)}
-      </g>
-      <g filter="url(#imsef-shadow)" onClick={()=>select("problem")} className={interactive?"cursor-pointer":""}>
-        <rect x="25" y="145" width="1170" height="112" rx="12" fill="#fff1f3" stroke="#ba0c2f" strokeWidth="2"/>
-        <text x="610" y="172" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="18" fontWeight="700" fill="#ba0c2f">Problem: High Motorcycle Fatalities</text>
-        {frameworkProblems.map((x,i)=><g key={x}><rect x={42+i*231} y="191" width="215" height="44" rx="8" fill="#fff" stroke="#ba0c2f"/><text x={149.5+i*231} y="218" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="10.5" fontWeight="600" fill="#ba0c2f">{x}</text></g>)}
-      </g>
-      <text x="25" y="286" fontFamily="Arial,sans-serif" fontSize="12" fontWeight="700" fill="#505050">Empower risk appraisal</text>
-      <text x="25" y="304" fontFamily="Arial,sans-serif" fontSize="12" fontWeight="700" fill="#505050">Ensure competency &amp; readiness</text>
-      <text x="1195" y="286" textAnchor="end" fontFamily="Arial,sans-serif" fontSize="12" fontWeight="700" fill="#505050">Enhance capabilities</text>
-      <text x="1195" y="304" textAnchor="end" fontFamily="Arial,sans-serif" fontSize="12" fontWeight="700" fill="#505050">Minimize crash risk and injury</text>
-      <text x="610" y="325" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="12" fontWeight="700" fill="#505050">Maintain standards</text>
-      <path d="M610 116 L610 145" stroke="#00736b" strokeWidth="2.5" markerEnd="url(#imsef-arrow-green)"/>
-      <path d="M610 257 L610 390" stroke="#ba0c2f" strokeWidth="2.5" markerEnd="url(#imsef-arrow-red)"/>
-      <text x="610" y="377" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="13" fontWeight="700" fill="#005a9c">Five action domains</text>
-      <path d="M25 388 H1195" stroke="#005a9c" strokeWidth="2"/>
-      {frameworkDomains.map((domain,i)=><g key={domain.id} onClick={()=>select(domain.id)} className={interactive?"cursor-pointer":""}>
-        <rect x={phaseX[i]} y={phaseY} width={phaseW} height="188" rx="12" fill={selected===domain.id?"#e7f3fb":"#f7fbfe"} stroke="#005a9c" strokeWidth={selected===domain.id?3:2} filter="url(#imsef-shadow)"/>
-        <rect x={phaseX[i]} y={phaseY} width={phaseW} height="40" rx="12" fill="#005a9c"/>
-        <rect x={phaseX[i]} y={phaseY+28} width={phaseW} height="12" fill="#005a9c"/>
-        <text x={phaseX[i]+phaseW/2} y={phaseY+25} textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="13" fontWeight="700" fill="#fff">{domain.title}</text>
-        {domain.items.map((item,j)=><g key={item}><circle cx={phaseX[i]+15} cy={phaseY+60+j*31} r="3" fill="#005a9c"/><text x={phaseX[i]+25} y={phaseY+64+j*31} fontFamily="Arial,sans-serif" fontSize="10" fontWeight="600" fill="#253746">{item.length>29?item.slice(0,28)+"…":item}</text></g>)}
-        <text x={phaseX[i]+phaseW-12} y={phaseY+176} textAnchor="end" fontFamily="Arial,sans-serif" fontSize="9" fontWeight="700" fill="#005a9c">{domain.evidence.length} evidence links</text>
-      </g>)}
-      <path d="M501 618 H1195" stroke="#505050" strokeWidth="1.5"/>
-      <path d="M501 618 V646 H1195 V618" fill="none" stroke="#505050" strokeWidth="1.5"/>
-      <text x="848" y="669" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="14" fontWeight="700" fill="#505050">Post-Licensing Continuum</text>
-      <text x="848" y="708" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="11" fill="#505050">Technology → Exposure Control → Retraining</text>
-      <text x="610" y="744" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="11" fill="#505050">FIGURE 6 · Integrated Motorcycle Safety Empowerment Framework for Malaysia (IMSEF-MY)</text>
-    </svg>
+    <div className="relative mx-auto w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <img src="/images/IMSEF.png" alt="Integrated Motorcycle Safety Empowerment Framework for Malaysia (IMSEF-MY)" draggable={false} className="block h-auto w-full select-none" />
+      {interactive && hotspots.map(h=><button
+        key={h.id}
+        type="button"
+        aria-label={`Explore ${h.label}`}
+        title={`Explore ${h.label}`}
+        onClick={()=>select(h.id)}
+        className={`absolute rounded-lg border-2 transition ${selected===h.id ? "border-violet-500 bg-violet-500/10 shadow-[0_0_0_3px_rgba(139,92,246,.12)]" : "border-transparent hover:border-violet-400/60 hover:bg-violet-500/5"}`}
+        style={{left:`${h.x}%`,top:`${h.y}%`,width:`${h.w}%`,height:`${h.h}%`}}
+      />)}
+    </div>
     {interactive && selected && <FrameworkEvidencePanel title={selectedTitle ?? ""} items={selectedEvidence}/>}
   </div>;
 }
@@ -548,35 +529,125 @@ function Paper({onGo}:{onGo:(t:Tab)=>void}){
     {openFigure && <FigureZoomModal figure={openFigure} onClose={()=>setOpenFigure(null)}/>}
   </div>;
 }
-function Overview({onGo}:{onGo:(t:Tab)=>void}){
-  const exploreCards: Array<{title:string; desc:string; target:Tab; Icon:LucideIcon}> = [
-    {title:"Explore the study", desc:"Follow participants, instruments, videos and research questions.", target:"study", Icon:Video},
-    {title:"Inspect the evidence", desc:"Move from reported statistics to distributions and cohort comparisons.", target:"data", Icon:BarChart3},
-    {title:"Test assumptions", desc:"Change sample size, effect, noise and intervention assumptions.", target:"simulation", Icon:FlaskConical}
+function ResearchProgrammeMap(){
+  const nodes=[
+    ["Training","Hazard Perception","Situational Awareness"],
+    ["Fatigue","Riding Behaviour","Crash Risk"],
+    ["Technology","Exposure","Safety System"]
   ];
-  return <div className="space-y-5">
-    <Card className="p-6 md:p-8">
-      <div className="grid gap-8 lg:grid-cols-[1.15fr_.85fr]">
-        <div>
-          <div className="text-[10px] font-mono uppercase tracking-[.2em] text-violet-400">The idea</div>
-          <h2 className="mt-2 text-2xl font-semibold md:text-3xl">Don't just read the paper. Interrogate it.</h2>
-          <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-400">This interactive companion separates what was observed in the study from what is derived, simulated or hypothetical. It is designed to let readers follow the evidence chain, experience selected methods, and test how statistical conclusions respond to changed assumptions.</p>
-          <div className="mt-6 flex flex-wrap gap-2">{evidenceLegend.map(x=><div key={x.key} className="rounded-xl border border-slate-800 bg-slate-950/30 p-3"><EvidenceBadge kind={x.key}/><div className="mt-2 max-w-[180px] text-[11px] leading-5 text-slate-500">{x.note}</div></div>)}</div>
+  return <Card className="overflow-hidden border-violet-500/20 bg-violet-500/5 p-6 md:p-8">
+    <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+      <div>
+        <div className="text-[10px] font-mono uppercase tracking-[.2em] text-violet-500">The bigger picture</div>
+        <h2 className="mt-2 text-2xl font-semibold md:text-3xl">From rider capability to a safety system.</h2>
+        <p className="mt-3 max-w-4xl text-sm leading-7 text-slate-600">This is the working synthesis behind the research programme: training shapes what riders can detect; hazard perception and situational awareness shape how risk is understood; fatigue and riding behaviour can influence how that capability is expressed in traffic; technology and exposure controls provide additional layers before the final safety-system outcome.</p>
+      </div>
+      <span className="shrink-0 rounded-full border border-violet-200 bg-white px-3 py-1.5 text-[9px] font-mono uppercase tracking-wider text-violet-700">Conceptual synthesis</span>
+    </div>
+    <div className="mt-7 overflow-x-auto">
+      <div className="mx-auto min-w-[760px] max-w-5xl">
+        <div className="grid grid-cols-3 gap-3">
+          {nodes[0].map((x,i)=><div key={x} className="rounded-xl border border-sky-200 bg-white p-4 text-center shadow-sm"><div className="text-[9px] font-mono uppercase tracking-wider text-sky-600">Layer {i+1}</div><div className="mt-1 text-sm font-semibold text-slate-800">{x}</div></div>)}
         </div>
-        <div className="rounded-2xl border border-violet-500/20 bg-violet-500/5 p-5">
-          <div className="flex items-center gap-2 text-violet-300"><CircleHelp size={16}/><span className="text-xs font-semibold">Scientific boundary</span></div>
-          <p className="mt-3 text-sm leading-6 text-slate-400">The Explorer never changes a published p-value. Instead, it changes the assumptions that generate a new simulated p-value. Simulation is labelled separately from empirical evidence.</p>
-          <button onClick={()=>onGo("simulation")} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-violet-500 px-4 py-2.5 text-xs font-bold text-white hover:bg-violet-400">Open Monte Carlo Lab <ArrowRight size={14}/></button>
+        <div className="grid grid-cols-3 text-center text-xl text-violet-500"><div>↓</div><div>↓</div><div>↓</div></div>
+        <div className="grid grid-cols-2 gap-3 px-[16.5%]">
+          {nodes[1].map(x=><div key={x} className="rounded-xl border border-amber-200 bg-white p-4 text-center shadow-sm"><div className="text-[9px] font-mono uppercase tracking-wider text-amber-600">Risk expression</div><div className="mt-1 text-sm font-semibold text-slate-800">{x}</div></div>)}
+        </div>
+        <div className="relative h-12 text-center text-xl text-violet-500"><span>↘</span><span className="mx-20">↓</span><span>↙</span></div>
+        <div className="rounded-xl border-2 border-violet-300 bg-white p-4 text-center shadow-sm"><div className="text-[9px] font-mono uppercase tracking-wider text-violet-600">Outcome layer</div><div className="mt-1 text-base font-semibold text-slate-900">Crash Risk</div></div>
+        <div className="grid grid-cols-3 text-center text-xl text-violet-500"><div>↙</div><div>↓</div><div>↘</div></div>
+        <div className="grid grid-cols-3 gap-3">
+          {nodes[2].map(x=><div key={x} className="rounded-xl border border-emerald-200 bg-white p-4 text-center shadow-sm"><div className="text-[9px] font-mono uppercase tracking-wider text-emerald-600">Safety layer</div><div className="mt-1 text-sm font-semibold text-slate-800">{x}</div></div>)}
         </div>
       </div>
+    </div>
+    <div className="mt-5 rounded-xl border border-slate-200 bg-white p-4 text-[11px] leading-5 text-slate-600">
+      <b className="text-slate-800">Important:</b> this map is a programme-level conceptual synthesis, not a single tested causal model. The Explorer lets each component be traced to the evidence that actually supports it.
+    </div>
+  </Card>;
+}
+
+function ResearchLibrary({onGo}:{onGo:(t:Tab)=>void}){
+  const sources=[
+    {id:"Paper 1",title:"Motorcyclist Hazard Perception & Situational Awareness",detail:"Current working paper · full interactive reader available",status:"LIVE",target:"paper" as Tab},
+    {id:"Paper 2",title:"Future paper / study",detail:"Reserved slot for the next publication or manuscript",status:"PLANNED"},
+    {id:"Slide 1",title:"Future presentation / conference deck",detail:"Reserved slot for the first slide-based research story",status:"PLANNED"}
+  ];
+  return <Card className="p-6 md:p-8">
+    <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+      <div>
+        <div className="text-[10px] font-mono uppercase tracking-[.2em] text-slate-500">Research library</div>
+        <h2 className="mt-2 text-2xl font-semibold">One Explorer, many research artefacts.</h2>
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">The architecture is intentionally expandable. Today we are working on Paper 1; later, Paper 2, Slide 1, a thesis chapter, a dataset or a training package can become another evidence-connected object without rewriting the whole Explorer.</p>
+      </div>
+      <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[9px] font-mono text-slate-500">SOURCE INDEX · v0.1</div>
+    </div>
+    <div className="mt-5 grid gap-3 md:grid-cols-3">
+      {sources.map(source=>{
+        const live=source.status==="LIVE";
+        return <button key={source.id} type="button" disabled={!live} onClick={()=>live && source.target && onGo(source.target)} className={`rounded-2xl border p-5 text-left transition ${live ? "border-violet-200 bg-violet-50 hover:border-violet-400 hover:shadow-sm" : "border-dashed border-slate-300 bg-slate-50 opacity-80"}`}>
+          <div className="flex items-center justify-between gap-3"><span className={`text-[9px] font-mono font-bold tracking-[.18em] ${live ? "text-violet-700" : "text-slate-500"}`}>{source.id}</span><span className={`rounded-full px-2 py-1 text-[8px] font-mono font-bold ${live ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-500"}`}>{source.status}</span></div>
+          <h3 className="mt-3 text-sm font-semibold text-slate-800">{source.title}</h3>
+          <p className="mt-2 text-[11px] leading-5 text-slate-600">{source.detail}</p>
+          {live && <span className="mt-4 inline-flex items-center gap-1 text-[10px] font-semibold text-violet-700">Open Paper 1 <ChevronRight size={12}/></span>}
+        </button>;
+      })}
+    </div>
+  </Card>;
+}
+
+function Overview({onGo}:{onGo:(t:Tab)=>void}){
+  const exploreCards: Array<{title:string; desc:string; target:Tab; Icon:LucideIcon}> = [
+    {title:"Read Paper 1", desc:"Turn the current publication into a page-by-page evidence reader with live links into the study.", target:"paper", Icon:BookOpen},
+    {title:"Explore the study", desc:"Follow participants, instruments, videos and research questions behind the publication.", target:"study", Icon:Video},
+    {title:"Interrogate the evidence", desc:"Move from reported statistics to distributions and cohort comparisons.", target:"data", Icon:BarChart3},
+    {title:"Test assumptions", desc:"Change sample size, effect, noise and intervention assumptions in controlled simulations.", target:"simulation", Icon:FlaskConical}
+  ];
+  return <div className="space-y-5">
+    <Card className="border-violet-500/20 bg-violet-500/5 p-6 md:p-8">
+      <div className="grid gap-8 lg:grid-cols-[1.2fr_.8fr]">
+        <div>
+          <div className="text-[10px] font-mono uppercase tracking-[.2em] text-violet-600">Welcome to the research layer</div>
+          <h2 className="mt-2 text-2xl font-semibold md:text-3xl">This is where the research stops being a PDF.</h2>
+          <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600">We are building an interactive companion around the research programme: the paper, the experiments, the measurement logic, the reported data, the framework and the controlled simulations all live in one place. The purpose is not to replace the publication, but to let a reader move from <b>question → evidence → measurement → analysis → interpretation → next research question</b>.</p>
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">The current anchor is <b>Paper 1</b>. Future papers, slides and research materials can be added as separate objects and connected to the same evidence architecture.</p>
+        </div>
+        <div className="rounded-2xl border border-violet-200 bg-white p-5">
+          <div className="flex items-center gap-2 text-violet-700"><CircleHelp size={16}/><span className="text-xs font-semibold">How to use this Explorer</span></div>
+          <ol className="mt-4 space-y-3 text-[11px] leading-5 text-slate-600">
+            <li><b className="text-slate-800">1. Start with Research.</b> Get the big picture and choose the research artefact.</li>
+            <li><b className="text-slate-800">2. Open Paper 1.</b> Read page by page; jump to sections, figures and references.</li>
+            <li><b className="text-slate-800">3. Follow the evidence.</b> Move into Study, Methods and Data to see how claims are measured and reported.</li>
+            <li><b className="text-slate-800">4. Experiment carefully.</b> Monte Carlo and Framework Lab are clearly marked as simulated/scenario layers.</li>
+            <li><b className="text-slate-800">5. Return to Framework Lab.</b> Explore how the research can connect to a wider safety-system architecture.</li>
+          </ol>
+        </div>
+      </div>
+      <div className="mt-6 flex flex-wrap gap-2">{evidenceLegend.map(x=><div key={x.key} className="rounded-xl border border-slate-200 bg-white p-3"><EvidenceBadge kind={x.key}/><div className="mt-2 max-w-[180px] text-[11px] leading-5 text-slate-500">{x.note}</div></div>)}</div>
     </Card>
-    <div className="grid gap-5 md:grid-cols-3">
+
+    <ResearchProgrammeMap/>
+    <ResearchLibrary onGo={onGo}/>
+
+    <div className="grid gap-5 md:grid-cols-2">
+      <Card className="p-6">
+        <div className="flex items-center gap-2 text-violet-700"><CircleHelp size={16}/><span className="text-xs font-semibold">Scientific boundary</span></div>
+        <p className="mt-3 text-sm leading-6 text-slate-600">The Explorer never changes a published p-value. Instead, it changes the assumptions that generate a new simulated result. Simulation is labelled separately from empirical evidence.</p>
+        <button onClick={()=>onGo("simulation")} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-violet-700">Open Monte Carlo Lab <ArrowRight size={14}/></button>
+      </Card>
+      <Card className="p-6">
+        <div className="flex items-center gap-2 text-emerald-700"><GitBranch size={16}/><span className="text-xs font-semibold">Built to grow</span></div>
+        <p className="mt-3 text-sm leading-6 text-slate-600">A future Paper 2 or Slide 1 can be added to the source index, then linked to its own figures, evidence, methods and datasets. The goal is a living research archive rather than a collection of disconnected pages.</p>
+      </Card>
+    </div>
+
+    <div className="grid gap-5 md:grid-cols-4">
       {exploreCards.map(({title, desc, target, Icon}) => (
-        <button key={target} onClick={()=>onGo(target)} className="rounded-2xl border border-slate-800 bg-[#0b111c] p-5 text-left hover:border-violet-500/40">
-          <Icon className="text-violet-400" size={20}/>
-          <h3 className="mt-4 font-semibold">{title}</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-500">{desc}</p>
-          <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-violet-300">Open <ChevronRight size={13}/></span>
+        <button key={target} onClick={()=>onGo(target)} className="rounded-2xl border border-slate-200 bg-white p-5 text-left hover:border-violet-300 hover:shadow-sm">
+          <Icon className="text-violet-600" size={20}/>
+          <h3 className="mt-4 font-semibold text-slate-800">{title}</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-600">{desc}</p>
+          <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-violet-700">Open <ChevronRight size={13}/></span>
         </button>
       ))}
     </div>
