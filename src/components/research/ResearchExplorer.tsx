@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Activity, ArrowRight, BarChart3, BookOpen, CheckCircle2, ChevronRight,
   CircleHelp, FlaskConical, GitBranch, Info, Play, RotateCcw, ShieldCheck,
-  SlidersHorizontal, Sparkles, Target, Video, X
+  SlidersHorizontal, Sparkles, Video, X, ZoomIn, Move
 } from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Line, LineChart, ResponsiveContainer,
@@ -96,23 +96,182 @@ export default function ResearchExplorer(){
       {tab==="provenance" && <Provenance/>}
     </main>
     <style jsx global>{`
-      .research-light { color-scheme: light; }
+      .research-light { color-scheme: light; background:#f1f5f9 !important; color:#0f172a !important; }
+      .research-light header { background:#ffffff !important; border-color:#cbd5e1 !important; }
+      .research-light main { color:#0f172a; }
       .research-light .text-slate-100,.research-light .text-slate-200,.research-light .text-white { color:#0f172a !important; }
       .research-light .text-slate-300 { color:#334155 !important; }
       .research-light .text-slate-400 { color:#475569 !important; }
-      .research-light .text-slate-500,.research-light .text-slate-600 { color:#64748b !important; }
-      .research-light .bg-slate-950\\/50,.research-light .bg-slate-950\\/30,.research-light .bg-slate-900 { background:#f8fafc !important; }
-      .research-light .bg-\\[\\#0b111c\\] { background:#fff !important; }
+      .research-light .text-slate-500 { color:#64748b !important; }
+      .research-light .text-slate-600 { color:#475569 !important; }
+      .research-light .text-violet-300 { color:#6d28d9 !important; }
+      .research-light .text-violet-400 { color:#7c3aed !important; }
+      .research-light .text-sky-300 { color:#0369a1 !important; }
+      .research-light .text-sky-400 { color:#0284c7 !important; }
+      .research-light .text-emerald-300 { color:#047857 !important; }
+      .research-light .text-emerald-400 { color:#059669 !important; }
+      .research-light .text-amber-300 { color:#b45309 !important; }
+      .research-light .bg-slate-950\/50,.research-light .bg-slate-950\/40,.research-light .bg-slate-950\/30,.research-light .bg-slate-900 { background:#f8fafc !important; }
+      .research-light .bg-\[\#070b12\],.research-light .bg-\[\#0b101b\],.research-light .bg-\[\#090e18\],.research-light .bg-\[\#0b111c\] { background:#ffffff !important; }
       .research-light .border-slate-800,.research-light .border-slate-700 { border-color:#cbd5e1 !important; }
-      .research-light .hover\\:text-white:hover { color:#0f172a !important; }
+      .research-light .border-violet-500\/20 { border-color:#ddd6fe !important; }
+      .research-light .hover\:bg-slate-900:hover { background:#f1f5f9 !important; }
+      .research-light .hover\:text-white:hover { color:#0f172a !important; }
+      .research-light .recharts-cartesian-grid-horizontal line,.research-light .recharts-cartesian-grid-vertical line { stroke:#cbd5e1 !important; }
+      .research-light .recharts-text { fill:#475569 !important; }
     `}</style>
   </div>;
 }
 
+const paperFigures = [
+  {
+    page: 2,
+    number: 3,
+    caption: "MRRT Motorcycle instrumentation details",
+    src: "https://www.researchgate.net/publication/411013459/figure/download/fig3/AS%3A11431282315049032%401785435556028/MRRT-Motorcycle-instrumentation-details.png",
+    note: "Original figure image"
+  },
+  {
+    page: 3,
+    number: 4,
+    caption: "Screenshot of a sample video clip included in the MRSAA",
+    src: "https://www.researchgate.net/publication/411013459/figure/download/fig4/AS%3A11431282315049033%401785435556253/Screenshot-of-a-sample-video-clip-included-in-the-MRSAA.png",
+    note: "Original figure image"
+  },
+  {
+    page: 4,
+    number: 5,
+    caption: "Scores across assessment methods (MRRT, Knowledge, HPT)",
+    src: "https://www.researchgate.net/publication/411013459/figure/download/fig5/AS%3A11431282315224649%401785435556695/Scores-across-assessment-methods-MRRT-Knowledge-HPT.png",
+    note: "Original figure image"
+  },
+  {
+    page: 6,
+    number: 6,
+    caption: "Integrated Motorcycle Safety Empowerment Framework for Malaysia (IMSEF-MY)",
+    src: null,
+    note: "Explore the framework interactively in Framework Lab"
+  }
+] as const;
+
+function PaperCitation({children,onClick}:{children:React.ReactNode;onClick:()=>void}) {
+  return <button type="button" onClick={onClick} title="Jump to full bibliography"
+    className="rounded px-0.5 text-violet-700 underline decoration-violet-300 underline-offset-2 transition hover:bg-violet-50 hover:text-violet-900">
+    {children}
+  </button>;
+}
+
+function PaperText({text,onCitation}:{text:string;onCitation:()=>void}) {
+  const citationPattern = /(\((?=[^()\n]*(?:19|20)\d{2})[^()\n]+\))/g;
+  const isCitation = (part:string) => /^\((?=[^()\n]*(?:19|20)\d{2})[^()\n]+\)$/.test(part);
+  const lines=text.split("\n");
+  return <div className="whitespace-pre-wrap font-serif">
+    {lines.map((line,i)=>{
+      const parts=line.split(citationPattern);
+      return <React.Fragment key={i}>
+        {parts.map((part,j)=>isCitation(part) ? <PaperCitation key={j} onClick={onCitation}>{part}</PaperCitation> : <React.Fragment key={j}>{part}</React.Fragment>)}
+        {i < lines.length-1 ? "\n" : null}
+      </React.Fragment>;
+    })}
+  </div>;
+}
+
+function FigureZoomModal({figure,onClose}:{figure:typeof paperFigures[number];onClose:()=>void}) {
+  const [scale,setScale]=useState(1);
+  const [offset,setOffset]=useState({x:0,y:0});
+  const [dragging,setDragging]=useState(false);
+  const [last,setLast]=useState({x:0,y:0});
+
+  useEffect(()=>{
+    setScale(1);
+    setOffset({x:0,y:0});
+  },[figure.number]);
+
+  useEffect(()=>{
+    const onKey=(e:KeyboardEvent)=>{
+      if(e.key==="Escape") onClose();
+      if(e.key==="+" || e.key==="=") setScale(s=>Math.min(4,s+0.25));
+      if(e.key==="-" || e.key==="_") setScale(s=>Math.max(0.5,s-0.25));
+    };
+    window.addEventListener("keydown",onKey);
+    return ()=>window.removeEventListener("keydown",onKey);
+  },[onClose]);
+
+  const reset=()=>{setScale(1);setOffset({x:0,y:0});};
+
+  return <div className="fixed inset-0 z-[100] bg-slate-950/90 p-4 backdrop-blur-sm md:p-8"
+    onWheel={e=>{e.preventDefault();setScale(s=>Math.min(4,Math.max(0.5,s+(e.deltaY<0?.15:-.15))))}}>
+    <div className="mx-auto flex h-full max-w-[1500px] flex-col overflow-hidden rounded-2xl border border-slate-700 bg-[#0b101b] shadow-2xl">
+      <div className="flex items-center justify-between gap-4 border-b border-slate-800 px-4 py-3">
+        <div>
+          <div className="text-[9px] font-mono uppercase tracking-[.2em] text-violet-400">Figure {figure.number} · Detail view</div>
+          <div className="mt-1 text-sm font-semibold text-white">{figure.caption}</div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={()=>setScale(s=>Math.max(.5,s-.25))} className="rounded-lg border border-slate-700 px-3 py-2 text-xs text-slate-300">−</button>
+          <span className="min-w-[52px] text-center font-mono text-[10px] text-slate-400">{Math.round(scale*100)}%</span>
+          <button onClick={()=>setScale(s=>Math.min(4,s+.25))} className="rounded-lg border border-slate-700 px-3 py-2 text-xs text-slate-300">+</button>
+          <button onClick={reset} className="rounded-lg border border-slate-700 px-3 py-2 text-xs text-slate-300">Reset</button>
+          <button onClick={onClose} aria-label="Close figure" className="rounded-lg border border-slate-700 p-2 text-slate-300 hover:text-white"><X size={16}/></button>
+        </div>
+      </div>
+      <div className="relative min-h-0 flex-1 cursor-grab overflow-hidden bg-[#070b12] active:cursor-grabbing"
+        onPointerDown={e=>{setDragging(true);setLast({x:e.clientX,y:e.clientY});e.currentTarget.setPointerCapture(e.pointerId)}}
+        onPointerMove={e=>{if(!dragging)return;const dx=e.clientX-last.x,dy=e.clientY-last.y;setOffset(o=>({x:o.x+dx,y:o.y+dy}));setLast({x:e.clientX,y:e.clientY})}}
+        onPointerUp={()=>setDragging(false)} onPointerCancel={()=>setDragging(false)}>
+        {figure.src ? (
+          <img src={figure.src} alt={\`Figure \${figure.number}: \${figure.caption}\`} draggable={false}
+            className="absolute left-1/2 top-1/2 max-h-none max-w-none select-none"
+            style={{transform:\`translate(calc(-50% + \${offset.x}px), calc(-50% + \${offset.y}px)) scale(\${scale})\`,transformOrigin:"center center"}} />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center p-8">
+            <div className="max-w-3xl rounded-2xl border border-violet-500/20 bg-violet-500/5 p-8 text-center">
+              <Move className="mx-auto text-violet-300" size={28}/>
+              <h3 className="mt-4 text-xl font-semibold text-white">Figure 6 is now an interactive framework entry point.</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-400">Use the Framework Lab to explore the five action domains rather than treating the framework as a static picture.</p>
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="border-t border-slate-800 px-4 py-2 text-[10px] text-slate-500">
+        <span className="inline-flex items-center gap-1"><ZoomIn size={12}/> Wheel / + / − to zoom</span>
+        <span className="mx-3">·</span>
+        <span className="inline-flex items-center gap-1"><Move size={12}/> Drag to move</span>
+      </div>
+    </div>
+  </div>;
+}
+
+function PaperFigure({figure,onOpen,onFramework}:{figure:typeof paperFigures[number];onOpen:(figure:typeof paperFigures[number])=>void;onFramework:()=>void}) {
+  return <figure className="my-8 rounded-2xl border border-slate-300 bg-white p-3 shadow-sm">
+    <div className="mb-2 flex items-center justify-between px-1">
+      <span className="text-[9px] font-mono uppercase tracking-[.18em] text-slate-500">Figure {figure.number}</span>
+      <span className="text-[9px] font-semibold text-violet-700">{figure.src ? "Click to inspect" : "Open interactive framework"} →</span>
+    </div>
+    {figure.src ? (
+      <button type="button" onClick={()=>onOpen(figure)} className="group block w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+        <img src={figure.src} alt={figure.caption} className="mx-auto max-h-[430px] w-auto max-w-full object-contain transition duration-300 group-hover:scale-[1.015]" />
+      </button>
+    ) : (
+      <button type="button" onClick={onFramework} className="w-full rounded-xl border border-violet-200 bg-violet-50 p-5 text-left transition hover:border-violet-300 hover:bg-violet-100">
+        <div className="grid gap-3 sm:grid-cols-5">
+          {["Pre-Licensing","Licensing","Technology","Exposure Control","Retraining"].map((x,i)=><div key={x} className="rounded-lg border border-violet-200 bg-white p-3 text-center text-[10px] font-semibold text-violet-800"><div className="font-mono text-[9px] text-violet-500">0{i+1}</div>{x}</div>)}
+        </div>
+        <div className="mt-4 text-center text-[10px] text-violet-700">Integrated Motorcycle Safety Empowerment Framework for Malaysia (IMSEF-MY) · interactive view</div>
+      </button>
+    )}
+    <figcaption className="mt-2 px-1 text-[11px] leading-5 text-slate-600">FIGURE {figure.number}. {figure.caption}. <span className="font-semibold text-violet-700">{figure.note}.</span></figcaption>
+  </figure>;
+}
+
 function Paper({onGo}:{onGo:(t:Tab)=>void}){
   const [page,setPage]=useState(0);
+  const [openFigure,setOpenFigure]=useState<typeof paperFigures[number]|null>(null);
+  const [readerPulse,setReaderPulse]=useState(false);
   const total=paperPages.length;
   const current=paperPages[page];
+  const readerRef=React.useRef<HTMLDivElement>(null);
+  const referencesPage=(paperSections.find(s=>s.id==="references")?.page ?? total)-1;
 
   useEffect(()=>{
     const onKey=(e:KeyboardEvent)=>{
@@ -125,7 +284,14 @@ function Paper({onGo}:{onGo:(t:Tab)=>void}){
 
   const jump=(targetPage:number)=>{
     setPage(Math.max(0,Math.min(total-1,targetPage-1)));
-    window.scrollTo({top:0,behavior:"smooth"});
+    requestAnimationFrame(()=>readerRef.current?.scrollIntoView({behavior:"smooth",block:"start"}));
+  };
+
+  const goToReferences=()=>{
+    setPage(referencesPage);
+    setReaderPulse(true);
+    requestAnimationFrame(()=>readerRef.current?.scrollIntoView({behavior:"smooth",block:"start"}));
+    window.setTimeout(()=>setReaderPulse(false),1400);
   };
 
   const evidenceLinks=[
@@ -136,7 +302,19 @@ function Paper({onGo}:{onGo:(t:Tab)=>void}){
     {label:"IMSEF-MY",note:"Framework laboratory",go:"framework" as Tab}
   ];
 
-  return <div className="space-y-5">
+  const figure=paperFigures.find(f=>f.page===page);
+  let before=current;
+  let after="";
+  if(figure){
+    const marker=\`FIGURE \${figure.number}. \${figure.caption}\`;
+    const at=current.indexOf(marker);
+    if(at>=0){
+      before=current.slice(0,at).trimEnd();
+      after=current.slice(at+marker.length).replace(/^\\n\\n/,"");
+    }
+  }
+
+  return <div className="space-y-5" ref={readerRef}>
     <Card className="overflow-hidden">
       <div className="border-b border-slate-800 bg-slate-950/50 p-5 md:p-7">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
@@ -156,13 +334,21 @@ function Paper({onGo}:{onGo:(t:Tab)=>void}){
         <aside className="border-b border-slate-800 bg-[#090e18] p-4 lg:border-b-0 lg:border-r">
           <div className="text-[9px] font-mono uppercase tracking-[.2em] text-slate-600">Jump to section</div>
           <div className="mt-3 space-y-1">
-            {paperSections.map(s=><button key={s.id} onClick={()=>jump(s.page)} className={`w-full rounded-lg px-3 py-2 text-left text-[11px] transition ${page===s.page-1 ? "bg-violet-500/10 text-violet-300" : "text-slate-500 hover:bg-slate-900 hover:text-white"}`}><span className="mr-2 font-mono text-[9px] text-slate-700">{s.page}</span>{s.label}</button>)}
+            {paperSections.map(s=>{
+              const next=paperSections.find(x=>x.page>s.page);
+              const active=page+1>=s.page && (!next || page+1<next.page);
+              return <button key={s.id} onClick={()=>jump(s.page)} className={\`w-full rounded-lg px-3 py-2 text-left text-[11px] transition \${active ? "bg-violet-500/10 text-violet-700" : "text-slate-500 hover:bg-slate-900 hover:text-white"}\`}><span className="mr-2 font-mono text-[9px] text-slate-500">{s.page}</span>{s.label}</button>;
+            })}
           </div>
           <div className="mt-5 border-t border-slate-800 pt-4">
             <div className="text-[9px] font-mono uppercase tracking-[.2em] text-slate-600">Live evidence</div>
             <div className="mt-3 space-y-2">
               {evidenceLinks.map(x=><button key={x.label} onClick={()=>onGo(x.go)} className="w-full rounded-lg border border-slate-800 bg-slate-950/40 p-2.5 text-left hover:border-violet-500/30"><div className="text-[11px] font-semibold text-violet-300">{x.label}</div><div className="mt-0.5 text-[9px] text-slate-600">{x.note} →</div></button>)}
             </div>
+            <button onClick={goToReferences} className="mt-2 w-full rounded-lg border border-dashed border-violet-500/30 bg-violet-500/5 p-2.5 text-left">
+              <div className="text-[11px] font-semibold text-violet-300">Full bibliography</div>
+              <div className="mt-0.5 text-[9px] text-slate-600">Jump to References →</div>
+            </button>
           </div>
         </aside>
 
@@ -172,15 +358,21 @@ function Paper({onGo}:{onGo:(t:Tab)=>void}){
             <div className="hidden text-[10px] font-mono uppercase tracking-[.18em] text-slate-600 sm:block">Use ← → to turn pages</div>
             <button disabled={page===total-1} onClick={()=>setPage(p=>Math.min(total-1,p+1))} className="inline-flex items-center gap-2 rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-xs font-semibold text-violet-300 disabled:opacity-30">Next →</button>
           </div>
-          <div className="h-1 bg-slate-900"><div className="h-full bg-violet-500 transition-all" style={{width:`${((page+1)/total)*100}%`}}/></div>
+          <div className="h-1 bg-slate-900"><div className="h-full bg-violet-500 transition-all" style={{width:\`\${((page+1)/total)*100}%\`}}/></div>
 
-          <article className="mx-auto min-h-[720px] max-w-4xl bg-[#fbfaf6] px-6 py-9 text-[14px] leading-7 text-slate-800 shadow-inner md:px-12 md:py-12 lg:px-16">
+          <article className={\`mx-auto min-h-[720px] max-w-4xl bg-[#fbfaf6] px-6 py-9 text-[14px] leading-7 text-slate-800 shadow-inner md:px-12 md:py-12 lg:px-16 \${readerPulse ? "ring-4 ring-violet-300/60" : ""}\`}>
             <div className="mb-8 flex items-center justify-between border-b border-slate-300 pb-3 text-[9px] font-mono uppercase tracking-[.18em] text-slate-400">
               <span>{paperMeta.journal}</span><span>{1584+page+1}</span>
             </div>
-            <div className="whitespace-pre-wrap font-serif">
-              {current}
-            </div>
+            {figure ? (
+              <>
+                <PaperText text={before} onCitation={goToReferences}/>
+                <PaperFigure figure={figure} onOpen={setOpenFigure} onFramework={()=>onGo("framework")}/>
+                <PaperText text={after} onCitation={goToReferences}/>
+              </>
+            ) : (
+              <PaperText text={current} onCitation={goToReferences}/>
+            )}
           </article>
 
           <div className="flex items-center justify-between border-t border-slate-800 bg-slate-950/50 px-5 py-4 md:px-8">
@@ -193,11 +385,11 @@ function Paper({onGo}:{onGo:(t:Tab)=>void}){
     </Card>
 
     <Card className="border-violet-500/20 bg-violet-500/5 p-5 md:p-6">
-      <div className="flex items-start gap-3"><Sparkles className="mt-0.5 text-violet-300" size={17}/><div><h3 className="font-semibold">The paper is now a gateway, not a dead end.</h3><p className="mt-1 text-sm leading-6 text-slate-400">Read page by page, jump directly to sections, then follow evidence into the interactive Study, Methods, Data and Framework Lab tabs. The reader text is transcribed from the supplied article; interactive outputs remain separately labelled from the published record.</p></div></div>
+      <div className="flex items-start gap-3"><Sparkles className="mt-0.5 text-violet-300" size={17}/><div><h3 className="font-semibold">The paper is now a gateway, not a dead end.</h3><p className="mt-1 text-sm leading-6 text-slate-400">Read page by page, jump directly to sections, inspect the original figures at high zoom, and click an in-text citation to jump to the bibliography. The reader text is transcribed from the supplied article; interactive outputs remain separately labelled from the published record.</p></div></div>
     </Card>
+    {openFigure && <FigureZoomModal figure={openFigure} onClose={()=>setOpenFigure(null)}/>}
   </div>;
 }
-
 function Overview({onGo}:{onGo:(t:Tab)=>void}){
   const exploreCards: Array<{title:string; desc:string; target:Tab; Icon:LucideIcon}> = [
     {title:"Explore the study", desc:"Follow participants, instruments, videos and research questions.", target:"study", Icon:Video},
