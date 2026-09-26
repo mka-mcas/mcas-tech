@@ -125,6 +125,20 @@ export default function ResearchExplorer(){
 
 const paperFigures = [
   {
+    page: 1,
+    number: 1,
+    caption: "Motorcycle fatalities by rider age group (2017–2021)",
+    src: "https://www.researchgate.net/publication/411013459/figure/download/fig1/AS%3A11431282315049030%401785435555525/Motorcycle-fatalities-by-rider-age-group-2017-2021-Source-Authors-analysis-of-Royal.png",
+    note: "Original figure image"
+  },
+  {
+    page: 1,
+    number: 2,
+    caption: "Motorcycle injuries by rider age group (2017–2021)",
+    src: "https://www.researchgate.net/publication/411013459/figure/download/fig2/AS%3A11431282315049031%401785435555838/Motorcycle-injuries-by-rider-age-group-2017-2021-Source-Authors-analysis-of-Royal.png",
+    note: "Original figure image"
+  },
+  {
     page: 2,
     number: 3,
     caption: "MRRT Motorcycle instrumentation details",
@@ -153,7 +167,6 @@ const paperFigures = [
     note: "Explore the framework interactively in Framework Lab"
   }
 ] as const;
-
 function PaperCitation({children,onClick}:{children:React.ReactNode;onClick:()=>void}) {
   return <button type="button" onClick={onClick} title="Jump to full bibliography"
     className="rounded px-0.5 text-violet-700 underline decoration-violet-300 underline-offset-2 transition hover:bg-violet-50 hover:text-violet-900">
@@ -302,17 +315,24 @@ function Paper({onGo}:{onGo:(t:Tab)=>void}){
     {label:"IMSEF-MY",note:"Framework laboratory",go:"framework" as Tab}
   ];
 
-  const figure=paperFigures.find(f=>f.page===page);
-  let before=current;
-  let after="";
-  if(figure){
-    const marker=`FIGURE ${figure.number}. ${figure.caption}`;
-    const at=current.indexOf(marker);
-    if(at>=0){
-      before=current.slice(0,at).trimEnd();
-      after=current.slice(at+marker.length).replace(/^\n\n/,"");
+  const pageFigures=paperFigures.filter(f=>f.page===page);
+  const renderPageContent=()=>{
+    if(!pageFigures.length) return <PaperText text={current} onCitation={goToReferences}/>;
+    const nodes:React.ReactNode[]=[];
+    let cursor=0;
+    for(const fig of pageFigures){
+      const marker=\`FIGURE \${fig.number}. \${fig.caption}\`;
+      const at=current.indexOf(marker,cursor);
+      if(at<0) continue;
+      const before=current.slice(cursor,at).trimEnd();
+      if(before) nodes.push(<PaperText key={\`text-\${fig.number}\`} text={before} onCitation={goToReferences}/>);
+      nodes.push(<PaperFigure key={\`figure-\${fig.number}\`} figure={fig} onOpen={setOpenFigure} onFramework={()=>onGo("framework")}/>);
+      cursor=at+marker.length;
     }
-  }
+    const after=current.slice(cursor).replace(/^\n\n/,"");
+    if(after) nodes.push(<PaperText key="text-final" text={after} onCitation={goToReferences}/>);
+    return <>{nodes}</>;
+  };
 
   return <div className="space-y-5" ref={readerRef}>
     <Card className="overflow-hidden">
@@ -364,15 +384,7 @@ function Paper({onGo}:{onGo:(t:Tab)=>void}){
             <div className="mb-8 flex items-center justify-between border-b border-slate-300 pb-3 text-[9px] font-mono uppercase tracking-[.18em] text-slate-400">
               <span>{paperMeta.journal}</span><span>{1584+page+1}</span>
             </div>
-            {figure ? (
-              <>
-                <PaperText text={before} onCitation={goToReferences}/>
-                <PaperFigure figure={figure} onOpen={setOpenFigure} onFramework={()=>onGo("framework")}/>
-                <PaperText text={after} onCitation={goToReferences}/>
-              </>
-            ) : (
-              <PaperText text={current} onCitation={goToReferences}/>
-            )}
+            {renderPageContent()}
           </article>
 
           <div className="flex items-center justify-between border-t border-slate-800 bg-slate-950/50 px-5 py-4 md:px-8">
