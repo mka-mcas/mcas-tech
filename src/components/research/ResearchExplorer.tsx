@@ -192,28 +192,123 @@ function PaperText({text,onCitation}:{text:string;onCitation:()=>void}) {
 
 type FrameworkDomain = "pre" | "licensing" | "technology" | "exposure" | "retraining";
 
-const frameworkDomains: Array<{id:FrameworkDomain;title:string;items:string[]}> = [
-  {id:"pre",title:"Pre-Licensing",items:["Road Safety Education","Learner Training","Community Program"]},
-  {id:"licensing",title:"Licensing",items:["Risk-Based Training Modules","Mandatory HPT Assessment","Simulator Training","Audit & CQI"]},
-  {id:"technology",title:"Technology",items:["Collision Alert Systems","ABS Mandates","Telematics","ITS"]},
-  {id:"exposure",title:"Exposure Control",items:["Graduated Licensing & Rider Restrictions","Protective Gear Compliance","Speed & Route Limitations"]},
-  {id:"retraining",title:"Retraining",items:["Re-skilling & Up-skilling","Employer-Sponsored Programs","Enforced Retraining for Offenders"]}
+type FrameworkEvidence = {
+  title:string;
+  year:string;
+  kind:"observed"|"derived"|"scenario";
+  finding:string;
+  why:string;
+  href:string;
+};
+
+const frameworkDomains: Array<{id:FrameworkDomain;title:string;items:string[];evidence:FrameworkEvidence[]}> = [
+  {
+    id:"pre",
+    title:"Pre-Licensing",
+    items:["Road Safety Education","Learner Training","Community Program"],
+    evidence:[
+      {title:"Instrumented motorcycle rider-training study",year:"2011",kind:"observed",finding:"A pilot study assessed 105 learner riders graduating from motorcycle training and licensing using an instrumented motorcycle in mixed traffic.",why:"Provides an empirical base for connecting learner training with measurable on-road behaviour.",href:"https://trid.trb.org/View/1112796"},
+      {title:"Safe riding competency assessment",year:"2025",kind:"observed",finding:"A combined knowledge test, hazard-perception test and on-road MRRT differentiated rider skill levels.",why:"Supports bringing higher-order competencies into rider development rather than relying only on basic manoeuvring skills.",href:"https://jsaem.my/index.php/journal/article/view/264"}
+    ]
+  },
+  {
+    id:"licensing",
+    title:"Licensing",
+    items:["Risk-Based Training Modules","Mandatory HPT Assessment","Simulator Training","Audit & CQI"],
+    evidence:[
+      {title:"Safe riding competency assessment",year:"2025",kind:"observed",finding:"The study explicitly proposes more comprehensive competency training and assessment within licensing and post-license safety programmes.",why:"Directly connects the empirical HPT/MRRT findings to licensing reform.",href:"https://jsaem.my/index.php/journal/article/view/264"},
+      {title:"Riding situation awareness assessment",year:"2021",kind:"observed",finding:"MRSAA assessed 264 motorcyclists across perception, comprehension and projection; total SA averaged 23.2%.",why:"The authors recommended training and testing learner motorcyclists for situation-awareness competency.",href:"https://ijrs.my/journal/article/view/29"}
+    ]
+  },
+  {
+    id:"technology",
+    title:"Technology",
+    items:["Collision Alert Systems","ABS Mandates","Telematics","ITS"],
+    evidence:[
+      {title:"Motorcyclist hazard perception & SA study",year:"2026",kind:"scenario",finding:"The IMSEF-MY paper proposes collision-warning technologies and ABS as a layered assistive strategy to compensate for real-time cognitive gaps.",why:"This is a framework proposal, not an intervention-effect estimate. The evidence establishes the problem and rationale; technology effectiveness needs separate evaluation.",href:"https://doi.org/10.17576/jkukm-2026-38(4)-05"},
+      {title:"Courier rider naturalistic hazard study",year:"2018",kind:"observed",finding:"Fifteen courier riders encountered about 30 hazardous events and 5 near misses per hour; rider behaviour contributed to almost 29% of near misses.",why:"Shows why an assistive layer can be relevant when unsafe trajectories develop during real-world riding.",href:"https://jsaem.my/index.php/journal/article/view/84"}
+    ]
+  },
+  {
+    id:"exposure",
+    title:"Exposure Control",
+    items:["Graduated Licensing & Rider Restrictions","Protective Gear Compliance","Speed & Route Limitations"],
+    evidence:[
+      {title:"Riding situation awareness by age and exposure",year:"2021",kind:"observed",finding:"Younger riders had substantially lower SA scores than older riders, while riding exposure was positively associated with total SA and Level 3 performance.",why:"Provides evidence for treating age and exposure as relevant dimensions when designing targeted interventions.",href:"https://ijrs.my/journal/article/view/29"},
+      {title:"Exclusive motorcycle lane safety research",year:"2000",kind:"observed",finding:"A multivariate analysis of Federal Highway Route 2 reported motorcycle accidents reduced by approximately 39% with the exclusive motorcycle lane under the studied conditions.",why:"Shows that exposure to mixed traffic can also be addressed through infrastructure and segregation, not only rider-level measures.",href:"https://wbldb.lievers.net/10085332.html"}
+    ]
+  },
+  {
+    id:"retraining",
+    title:"Retraining",
+    items:["Re-skilling & Up-skilling","Employer-Sponsored Programs","Enforced Retraining for Offenders"],
+    evidence:[
+      {title:"Safe riding competency assessment",year:"2025",kind:"observed",finding:"The study identifies targeted interventions for higher-order riding skills and proposes competency assessment in post-license safety programmes.",why:"Provides a direct research bridge from observed competency gaps to continuing rider development.",href:"https://jsaem.my/index.php/journal/article/view/264"},
+      {title:"Instrumented motorcycle training study",year:"2011",kind:"observed",finding:"On-road behaviours such as signalling, manoeuvring speed and responses at junctions were measured after rider training.",why:"Demonstrates how retraining or refresher programmes could eventually be evaluated using objective riding-performance measures.",href:"https://trid.trb.org/View/1112796"}
+    ]
+  }
 ];
 
 const frameworkPolicies = ["Safe System Approach","Mode Shift","Shared Accountability","Enforcement","Motorcycle Segregation"];
 const frameworkProblems = ["Mixed-Traffic Vulnerability","Unsafe Riding Behaviour","Risk Appraisal Deficiency","Insufficient Riding Competency","Inherent Motorcycle Risks"];
+
+const frameworkPolicyEvidence: FrameworkEvidence[] = [
+  {title:"IMSEF-MY policy architecture",year:"2026",kind:"scenario",finding:"The published IMSEF-MY framework explicitly anchors the proposed action domains in safe-system thinking, mode shift, shared accountability, enforcement and motorcycle segregation.",why:"These are the framework's policy-level principles. The individual pillars should not be read as separately tested effects in the current study.",href:"https://doi.org/10.17576/jkukm-2026-38(4)-05"},
+  {title:"Exclusive motorcycle lane evidence",year:"2000",kind:"observed",finding:"Malaysia-specific crash analysis found a reduction in motorcycle accidents associated with the exclusive motorcycle lane under specified traffic conditions.",why:"Provides direct empirical support for the segregation principle, while leaving the other policy pillars to their own evidence base.",href:"https://wbldb.lievers.net/10085332.html"}
+];
+
+const frameworkProblemEvidence: FrameworkEvidence[] = [
+  {title:"Hazard perception and situation awareness study",year:"2026",kind:"observed",finding:"The study reports low hazard-perception and situation-awareness performance across two experiments, including total SA of 23.2% and HPT mean 49.3%.",why:"These findings form the immediate empirical problem statement behind the framework.",href:"https://doi.org/10.17576/jkukm-2026-38(4)-05"},
+  {title:"Courier rider naturalistic hazard study",year:"2018",kind:"observed",finding:"Naturalistic observations recorded frequent hazardous events and near misses during delivery riding, including rider-instigated near crashes.",why:"Adds real-world behavioural evidence to the laboratory assessment findings.",href:"https://jsaem.my/index.php/journal/article/view/84"}
+];
+
+function FrameworkEvidencePanel({title,items}:{title:string;items:FrameworkEvidence[]}) {
+  return <div className="mt-4 rounded-2xl border border-violet-300 bg-violet-50 p-4 md:p-5">
+    <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+      <div>
+        <div className="text-[9px] font-mono uppercase tracking-[.18em] text-violet-600">Research behind this node</div>
+        <h3 className="mt-1 text-base font-semibold text-slate-900">{title}</h3>
+      </div>
+      <span className="rounded-full border border-violet-200 bg-white px-2.5 py-1 text-[9px] font-mono text-violet-700">{items.length} evidence links</span>
+    </div>
+    <div className="mt-4 grid gap-3 lg:grid-cols-2">
+      {items.map(item=><article key={item.title} className="rounded-xl border border-slate-200 bg-white p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="text-[9px] font-mono text-slate-500">{item.year}</div>
+            <h4 className="mt-1 text-sm font-semibold text-slate-900">{item.title}</h4>
+          </div>
+          <EvidenceBadge kind={item.kind}/>
+        </div>
+        <p className="mt-3 text-xs leading-5 text-slate-600">{item.finding}</p>
+        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <div className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Why it belongs here</div>
+          <p className="mt-1 text-[11px] leading-5 text-slate-700">{item.why}</p>
+        </div>
+        <a href={item.href} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1 text-[10px] font-semibold text-violet-700 hover:text-violet-900">
+          Open research source <ArrowRight size={12}/>
+        </a>
+      </article>)}
+    </div>
+  </div>;
+}
 
 function FrameworkFigure({interactive=false}:{interactive?:boolean}) {
   const [selected,setSelected]=useState<FrameworkDomain|"policy"|"problem"|null>(null);
   const selectedDomain=frameworkDomains.find(d=>d.id===selected);
   const selectedTitle=selectedDomain?.title ?? (selected==="policy" ? "Policy Alignment for Motorcycle Safety Reform" : selected==="problem" ? "Problem: High Motorcycle Fatalities" : null);
   const selectedItems=selectedDomain?.items ?? (selected==="policy" ? frameworkPolicies : selected==="problem" ? frameworkProblems : []);
+  const selectedEvidence=selectedDomain?.evidence ?? (selected==="policy" ? frameworkPolicyEvidence : selected==="problem" ? frameworkProblemEvidence : []);
   const phaseX=[25,263,501,739,977];
   const phaseW=218;
   const phaseY=410;
   const select=(id:FrameworkDomain|"policy"|"problem")=>{if(interactive)setSelected(v=>v===id?null:id);};
 
   return <div className="w-full overflow-x-auto">
+    <div className="mb-2 flex items-center justify-between gap-3 px-1">
+      <div className="text-[9px] font-mono uppercase tracking-[.18em] text-slate-500">Source-derived framework · click a block to reveal the evidence chain</div>
+      {interactive && <div className="rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-[9px] font-semibold text-violet-700">Interactive</div>}
+    </div>
     <svg viewBox="0 0 1220 780" role="img" aria-label="Integrated Motorcycle Safety Empowerment Framework for Malaysia (IMSEF-MY)" className="h-auto min-w-[820px] w-full">
       <defs>
         <filter id="imsef-shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity=".14"/></filter>
@@ -221,21 +316,15 @@ function FrameworkFigure({interactive=false}:{interactive?:boolean}) {
         <marker id="imsef-arrow-red" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#ba0c2f"/></marker>
       </defs>
       <rect x="0" y="0" width="1220" height="780" rx="18" fill="#fff"/>
-      <g filter="url(#imsef-shadow)">
+      <g filter="url(#imsef-shadow)" onClick={()=>select("policy")} className={interactive?"cursor-pointer":""}>
         <rect x="25" y="24" width="1170" height="92" rx="12" fill="#eef7f6" stroke="#00736b" strokeWidth="2"/>
         <text x="610" y="49" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="18" fontWeight="700" fill="#00736b">Policy Alignment for Motorcycle Safety Reform</text>
-        {frameworkPolicies.map((x,i)=><g key={x} onClick={()=>select("policy")} className={interactive?"cursor-pointer":""}>
-          <rect x={45+i*225} y="66" width="205" height="30" rx="15" fill="#fff" stroke="#00736b"/>
-          <text x={147.5+i*225} y="86" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="11" fontWeight="600" fill="#00736b">{x}</text>
-        </g>)}
+        {frameworkPolicies.map((x,i)=><g key={x}><rect x={45+i*225} y="66" width="205" height="30" rx="15" fill="#fff" stroke="#00736b"/><text x={147.5+i*225} y="86" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="11" fontWeight="600" fill="#00736b">{x}</text></g>)}
       </g>
       <g filter="url(#imsef-shadow)" onClick={()=>select("problem")} className={interactive?"cursor-pointer":""}>
         <rect x="25" y="145" width="1170" height="112" rx="12" fill="#fff1f3" stroke="#ba0c2f" strokeWidth="2"/>
         <text x="610" y="172" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="18" fontWeight="700" fill="#ba0c2f">Problem: High Motorcycle Fatalities</text>
-        {frameworkProblems.map((x,i)=><g key={x}>
-          <rect x={42+i*231} y="191" width="215" height="44" rx="8" fill="#fff" stroke="#ba0c2f"/>
-          <text x={149.5+i*231} y="218" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="10.5" fontWeight="600" fill="#ba0c2f">{x}</text>
-        </g>)}
+        {frameworkProblems.map((x,i)=><g key={x}><rect x={42+i*231} y="191" width="215" height="44" rx="8" fill="#fff" stroke="#ba0c2f"/><text x={149.5+i*231} y="218" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="10.5" fontWeight="600" fill="#ba0c2f">{x}</text></g>)}
       </g>
       <text x="25" y="286" fontFamily="Arial,sans-serif" fontSize="12" fontWeight="700" fill="#505050">Empower risk appraisal</text>
       <text x="25" y="304" fontFamily="Arial,sans-serif" fontSize="12" fontWeight="700" fill="#505050">Ensure competency &amp; readiness</text>
@@ -251,10 +340,8 @@ function FrameworkFigure({interactive=false}:{interactive?:boolean}) {
         <rect x={phaseX[i]} y={phaseY} width={phaseW} height="40" rx="12" fill="#005a9c"/>
         <rect x={phaseX[i]} y={phaseY+28} width={phaseW} height="12" fill="#005a9c"/>
         <text x={phaseX[i]+phaseW/2} y={phaseY+25} textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="13" fontWeight="700" fill="#fff">{domain.title}</text>
-        {domain.items.map((item,j)=><g key={item}>
-          <circle cx={phaseX[i]+15} cy={phaseY+60+j*31} r="3" fill="#005a9c"/>
-          <text x={phaseX[i]+25} y={phaseY+64+j*31} fontFamily="Arial,sans-serif" fontSize="10" fontWeight="600" fill="#253746">{item.length>29?item.slice(0,28)+"…":item}</text>
-        </g>)}
+        {domain.items.map((item,j)=><g key={item}><circle cx={phaseX[i]+15} cy={phaseY+60+j*31} r="3" fill="#005a9c"/><text x={phaseX[i]+25} y={phaseY+64+j*31} fontFamily="Arial,sans-serif" fontSize="10" fontWeight="600" fill="#253746">{item.length>29?item.slice(0,28)+"…":item}</text></g>)}
+        <text x={phaseX[i]+phaseW-12} y={phaseY+176} textAnchor="end" fontFamily="Arial,sans-serif" fontSize="9" fontWeight="700" fill="#005a9c">{domain.evidence.length} evidence links</text>
       </g>)}
       <path d="M501 618 H1195" stroke="#505050" strokeWidth="1.5"/>
       <path d="M501 618 V646 H1195 V618" fill="none" stroke="#505050" strokeWidth="1.5"/>
@@ -262,14 +349,7 @@ function FrameworkFigure({interactive=false}:{interactive?:boolean}) {
       <text x="848" y="708" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="11" fill="#505050">Technology → Exposure Control → Retraining</text>
       <text x="610" y="744" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="11" fill="#505050">FIGURE 6 · Integrated Motorcycle Safety Empowerment Framework for Malaysia (IMSEF-MY)</text>
     </svg>
-    {interactive && selected && <div className="mt-3 rounded-xl border border-slate-300 bg-slate-50 p-4">
-      <div className="flex items-start justify-between gap-4">
-        <div><div className="text-[9px] font-mono uppercase tracking-[.18em] text-slate-500">Framework component</div><div className="mt-1 text-sm font-semibold text-slate-900">{selectedTitle}</div></div>
-        <button type="button" onClick={()=>setSelected(null)} className="rounded-lg border border-slate-300 px-2 py-1 text-[10px] text-slate-600">Close</button>
-      </div>
-      <div className="mt-3 grid gap-2 sm:grid-cols-2">{selectedItems.map(item=><div key={item} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700">{item}</div>)}</div>
-      <div className="mt-3 text-[10px] leading-5 text-slate-500">These are framework components reproduced from Figure 6. They are not presented here as independently tested intervention effects.</div>
-    </div>}
+    {interactive && selected && <FrameworkEvidencePanel title={selectedTitle ?? ""} items={selectedEvidence}/>}
   </div>;
 }
 
