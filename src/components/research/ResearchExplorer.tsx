@@ -321,12 +321,12 @@ function Paper({onGo}:{onGo:(t:Tab)=>void}){
     const nodes:React.ReactNode[]=[];
     let cursor=0;
     for(const fig of pageFigures){
-      const marker=\`FIGURE \${fig.number}. \${fig.caption}\`;
+      const marker=`FIGURE ${fig.number}. ${fig.caption}`;
       const at=current.indexOf(marker,cursor);
       if(at<0) continue;
       const before=current.slice(cursor,at).trimEnd();
-      if(before) nodes.push(<PaperText key={\`text-\${fig.number}\`} text={before} onCitation={goToReferences}/>);
-      nodes.push(<PaperFigure key={\`figure-\${fig.number}\`} figure={fig} onOpen={setOpenFigure} onFramework={()=>onGo("framework")}/>);
+      if(before) nodes.push(<PaperText key={`text-${fig.number}`} text={before} onCitation={goToReferences}/>);
+      nodes.push(<PaperFigure key={`figure-${fig.number}`} figure={fig} onOpen={setOpenFigure} onFramework={()=>onGo("framework")}/>);
       cursor=at+marker.length;
     }
     const after=current.slice(cursor).replace(/^\n\n/,"");
