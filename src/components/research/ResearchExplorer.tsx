@@ -164,7 +164,7 @@ const paperFigures = [
     number: 6,
     caption: "Integrated Motorcycle Safety Empowerment Framework for Malaysia (IMSEF-MY)",
     src: null,
-    note: "Explore the framework interactively in Framework Lab"
+    note: "Source-derived vector reconstruction with interactive hotspots"
   }
 ] as const;
 function PaperCitation({children,onClick}:{children:React.ReactNode;onClick:()=>void}) {
@@ -256,10 +256,10 @@ function FrameworkFigure({interactive=false}:{interactive?:boolean}) {
           <text x={phaseX[i]+25} y={phaseY+64+j*31} fontFamily="Arial,sans-serif" fontSize="10" fontWeight="600" fill="#253746">{item.length>29?item.slice(0,28)+"…":item}</text>
         </g>)}
       </g>)}
-      <path d="M25 618 H1195" stroke="#505050" strokeWidth="1.5"/>
-      <path d="M25 618 V646 H1195 V618" fill="none" stroke="#505050" strokeWidth="1.5"/>
-      <text x="610" y="669" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="14" fontWeight="700" fill="#505050">Post-Licensing Continuum</text>
-      <text x="610" y="708" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="11" fill="#505050">Technology → Exposure Control → Retraining</text>
+      <path d="M501 618 H1195" stroke="#505050" strokeWidth="1.5"/>
+      <path d="M501 618 V646 H1195 V618" fill="none" stroke="#505050" strokeWidth="1.5"/>
+      <text x="848" y="669" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="14" fontWeight="700" fill="#505050">Post-Licensing Continuum</text>
+      <text x="848" y="708" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="11" fill="#505050">Technology → Exposure Control → Retraining</text>
       <text x="610" y="744" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="11" fill="#505050">FIGURE 6 · Integrated Motorcycle Safety Empowerment Framework for Malaysia (IMSEF-MY)</text>
     </svg>
     {interactive && selected && <div className="mt-3 rounded-xl border border-slate-300 bg-slate-50 p-4">
@@ -330,11 +330,11 @@ function FigureZoomModal({figure,onClose}:{figure:typeof paperFigures[number];on
   </div>;
 }
 
-function PaperFigure({figure,onOpen,onFramework}:{figure:typeof paperFigures[number];onOpen:(figure:typeof paperFigures[number])=>void;onFramework:()=>void}) {
+function PaperFigure({figure,onOpen}:{figure:typeof paperFigures[number];onOpen:(figure:typeof paperFigures[number])=>void}) {
   return <figure className="my-8 rounded-2xl border border-slate-300 bg-white p-3 shadow-sm">
     <div className="mb-2 flex items-center justify-between px-1">
       <span className="text-[9px] font-mono uppercase tracking-[.18em] text-slate-500">Figure {figure.number}</span>
-      <span className="text-[9px] font-semibold text-violet-700">{figure.src ? "Click to inspect" : "Open interactive framework"} →</span>
+      <span className="text-[9px] font-semibold text-violet-700">{figure.number===6 ? "Click to inspect · interactive hotspots" : "Click to inspect"} →</span>
     </div>
     <button type="button" onClick={()=>onOpen(figure)} className="group block w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2 text-left">
       {figure.number===6 ? <FrameworkFigure/> : <img src={figure.src ?? ""} alt={figure.caption} className="mx-auto max-h-[430px] w-auto max-w-full object-contain transition duration-300 group-hover:scale-[1.015]" />}
@@ -392,7 +392,7 @@ function Paper({onGo}:{onGo:(t:Tab)=>void}){
       if(at<0) continue;
       const before=current.slice(cursor,at).trimEnd();
       if(before) nodes.push(<PaperText key={`text-${fig.number}`} text={before} onCitation={goToReferences}/>);
-      nodes.push(<PaperFigure key={`figure-${fig.number}`} figure={fig} onOpen={setOpenFigure} onFramework={()=>onGo("framework")}/>);
+      nodes.push(<PaperFigure key={`figure-${fig.number}`} figure={fig} onOpen={setOpenFigure}/>);
       cursor=at+marker.length;
     }
     const after=current.slice(cursor).replace(/^\n\n/,"");
