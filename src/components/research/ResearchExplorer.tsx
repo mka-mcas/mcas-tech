@@ -1099,7 +1099,7 @@ function RiskReductionModel(){
           <div className="text-[9px] font-mono uppercase tracking-[.18em] text-slate-500">Conceptual conditional model</div>
           <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-slate-50 p-5 text-center dark:border-slate-800 dark:bg-slate-950/50">
             <div className="min-w-[760px] font-serif text-xl text-slate-900 dark:text-white">N<sub>crash</sub> = N<sub>baseline</sub> × (1 − P<sub>applicable</sub>) × (1 − P<sub>detected</sub>) × (1 − P<sub>responded</sub>) × (1 − P<sub>avoided</sub>)</div>
-            <div className="mt-3 text-[9px] font-mono text-slate-500">LaTeX: <code>N_{\mathrm{crash}}=N_{\mathrm{baseline}}\times(1-P_{\mathrm{applicable}})\times(1-P_{\mathrm{detected}})\times(1-P_{\mathrm{responded}})\times(1-P_{\mathrm{avoided}})</code></div>
+            <div className="mt-3 text-[9px] font-mono text-slate-500">LaTeX: <code>{String.raw`N_{\\mathrm{crash}}=N_{\\mathrm{baseline}}\\times(1-P_{\\mathrm{applicable}})\\times(1-P_{\\mathrm{detected}})\\times(1-P_{\\mathrm{responded}})\\times(1-P_{\\mathrm{avoided}})`}</code></div>
           </div>
           <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-[10px] leading-5 text-slate-600 dark:border-amber-500/20 dark:bg-amber-500/5 dark:text-slate-400"><b className="text-amber-700 dark:text-amber-300">Conceptual model — not an estimated MCAS effect.</b> Each probability represents a conditional transition in the proposed risk-reduction pathway. The Explorer must not populate a probability merely because the formula permits it; a value requires an appropriate empirical estimate or an explicitly labelled external analogue / scenario assumption.</div>
         </div>
