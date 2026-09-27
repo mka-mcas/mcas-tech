@@ -99,23 +99,189 @@ function DownloadButton({label,onClick}:{label:string;onClick:()=>void}){
   return <button type="button" onClick={onClick} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-[10px] font-semibold text-slate-700 transition hover:border-violet-300 hover:text-violet-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:border-violet-500/40"><Download size={12}/>{label}</button>;
 }
 
+
+type GuideMode = "what"|"who"|"when"|"where"|"why"|"how";
+
+const interrogationModes:Record<GuideMode,{label:string;prompt:string;questions:string[]}> = {
+  what:{
+    label:"WHAT",
+    prompt:"Clarify the problem, claim and evidence.",
+    questions:[
+      "What is this section actually trying to establish?",
+      "What is the central finding or idea I should remember?",
+      "What should I avoid inferring from this evidence?"
+    ]
+  },
+  who:{
+    label:"WHO",
+    prompt:"Identify the people, groups and stakeholders behind the evidence.",
+    questions:[
+      "Who is represented by this evidence?",
+      "Who is not represented, or cannot be inferred from it?",
+      "Who might use or be affected by this finding?"
+    ]
+  },
+  when:{
+    label:"WHEN",
+    prompt:"Put the evidence in its time and study sequence.",
+    questions:[
+      "What time period does this evidence refer to?",
+      "When was the evidence collected or assessed?",
+      "When should this finding be treated cautiously?"
+    ]
+  },
+  where:{
+    label:"WHERE",
+    prompt:"Locate the evidence, context and boundary of application.",
+    questions:[
+      "Where does this evidence actually come from?",
+      "Where does the study context matter?",
+      "Where should I be careful about generalising?"
+    ]
+  },
+  why:{
+    label:"WHY",
+    prompt:"Interrogate the rationale and significance.",
+    questions:[
+      "Why is this section important to the paper?",
+      "Why does the chosen evidence or method matter?",
+      "Why might the interpretation still have limits?"
+    ]
+  },
+  how:{
+    label:"HOW",
+    prompt:"Inspect how the evidence was generated and tested.",
+    questions:[
+      "How was the evidence generated or measured?",
+      "How strong is the claim supported by this section?",
+      "How could a researcher challenge or extend it?"
+    ]
+  }
+};
+
+function guideAnswer(mode:GuideMode, questionIndex:number, item:{summary:string;takeaway:string}){
+  const boundary="The Explorer does not treat this as a new empirical finding. The answer stays within the published paper and its stated evidence boundary.";
+  if(mode==="what"){
+    if(questionIndex===0) return item.summary;
+    if(questionIndex===1) return item.takeaway;
+    return "Read the claim at the level the paper supports. A reported association, score, comparison or proposal should not automatically be interpreted as causation, population-level effectiveness or universal applicability.";
+  }
+  if(mode==="who"){
+    if(questionIndex===0) return "Start with the participant and study context described by the paper. The two experiments use different research contexts, so their samples should not be treated as one combined cohort.";
+    if(questionIndex===1) return "The paper's evidence only represents the populations and settings actually studied. Groups, settings or outcomes not measured should be treated as unanswered rather than silently filled in.";
+    return "The findings are relevant to researchers, road-safety practitioners and technology or policy discussions, but the paper does not by itself establish the effect of any intervention on every stakeholder or population.";
+  }
+  if(mode==="when"){
+    if(questionIndex===0) return "Use the dates and study sequence reported in the paper. Historical crash evidence, participant assessments and proposed future interventions are different time layers and should not be collapsed into one.";
+    if(questionIndex===1) return "The methodology and results sections establish when the assessments occurred and what evidence belongs to each experiment. The Explorer keeps those experiment-level records separate.";
+    return "Be cautious whenever a historical observation is treated as current, or when a proposed intervention is treated as if it had already been evaluated. The paper and Explorer keep those boundaries explicit.";
+  }
+  if(mode==="where"){
+    if(questionIndex===0) return "The evidence is grounded in the Malaysian motorcycle-safety context described by Paper 1, including the study participants, assessment settings and the paper's analysis of Malaysian road-safety evidence.";
+    if(questionIndex===1) return "Context is part of the evidence. Controlled assessments, on-road riding assessment and video-based situation-awareness assessment answer related but different questions.";
+    return "Generalisation beyond the studied population, setting or measurement context requires additional evidence. The paper's proposed framework is a programme-level synthesis, not proof that every component will have the same effect elsewhere.";
+  }
+  if(mode==="why"){
+    if(questionIndex===0) return item.takeaway;
+    if(questionIndex===1) return "The paper deliberately connects the research question, measurement approach and safety-system implications. The reason for each layer should be read from the study design rather than assumed from the final recommendation.";
+    return "The paper itself identifies boundaries between observed rider performance, proposed technology and broader safety reform. Those layers should not be interpreted as equivalent evidence.";
+  }
+  if(questionIndex===0) return "Look at the methodology, measurement instruments and assessment sequence associated with this section. The Explorer links these ideas to the Methods and Data tabs so the reader can move from claim to measurement.";
+  if(questionIndex===1) return "Strength depends on what the study actually measured. Reported scores and statistical comparisons are evidence about the assessed outcomes; they do not automatically establish mechanisms, causation or population-level intervention effects.";
+  return "A useful next step is to inspect the underlying measure, sample, comparison, statistical result and provenance trail. The Explorer is designed to make those links visible before moving to simulation or scenario layers.";
+}
+
 function ResearchGuide({sectionId}:{sectionId:string}){
   const item=anchorSummaries[sectionId] ?? anchorSummaries.abstract;
+  const sectionLabel=paperSections.find(s=>s.id===sectionId)?.label ?? "Current section";
+  const [mode,setMode]=useState<GuideMode>("what");
+  const [questionIndex,setQuestionIndex]=useState(0);
+  const active=interrogationModes[mode];
+  const answer=guideAnswer(mode,questionIndex,item);
+
   return <details className="group rounded-2xl border border-violet-200 bg-violet-50/80 p-4 md:p-5">
     <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
       <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-violet-200 bg-white text-violet-700 shadow-sm"><Paperclip size={17}/></div>
-        <div><div className="text-[9px] font-mono uppercase tracking-[.18em] text-violet-600">Research Guide · plain-language companion</div><div className="mt-1 text-sm font-semibold text-slate-900">{item.title}</div></div>
+        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-violet-200 bg-white text-violet-700 shadow-sm">
+          <Paperclip size={18}/>
+          <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-violet-50"/>
+        </div>
+        <div>
+          <div className="text-[9px] font-mono uppercase tracking-[.18em] text-violet-600">Paperclip · research interrogation guide</div>
+          <div className="mt-1 text-sm font-semibold text-slate-900">{item.title}</div>
+          <div className="mt-1 text-[10px] text-slate-500">Current lens: <span className="font-semibold text-violet-700">{sectionLabel}</span></div>
+        </div>
       </div>
-      <span className="rounded-full border border-violet-200 bg-white px-2.5 py-1 text-[9px] font-semibold text-violet-700 group-open:hidden">Explain this section</span>
+      <span className="rounded-full border border-violet-200 bg-white px-2.5 py-1 text-[9px] font-semibold text-violet-700 group-open:hidden">Interrogate this section</span>
     </summary>
-    <div className="mt-4 grid gap-3 md:grid-cols-[1fr_.8fr]">
-      <div className="rounded-xl border border-violet-100 bg-white p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-violet-600">In plain English</div><p className="mt-2 text-xs leading-6 text-slate-700">{item.summary}</p></div>
-      <div className="rounded-xl border border-violet-100 bg-white p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-violet-600">What should I notice?</div><p className="mt-2 text-xs leading-6 text-slate-700">{item.takeaway}</p><div className="mt-3 text-[9px] font-mono text-slate-500">Grounded to the published Paper 1 section · no new empirical claims added.</div></div>
+
+    <div className="mt-5">
+      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Research interrogation lenses">
+        {(Object.keys(interrogationModes) as GuideMode[]).map(key=>{
+          const m=interrogationModes[key];
+          const selected=key===mode;
+          return <button
+            key={key}
+            type="button"
+            role="tab"
+            aria-selected={selected}
+            onClick={()=>{setMode(key);setQuestionIndex(0);}}
+            className={"rounded-xl border px-3 py-2 text-left transition "+(selected ? "border-violet-400 bg-violet-600 text-white shadow-sm" : "border-violet-200 bg-white text-slate-700 hover:border-violet-300 hover:text-violet-700")}
+          >
+            <div className="text-[10px] font-mono font-black tracking-[.16em]">{m.label}</div>
+            <div className={"mt-0.5 text-[9px] "+(selected ? "text-violet-100" : "text-slate-500")}>{m.prompt}</div>
+          </button>;
+        })}
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-[.9fr_1.1fr]">
+        <div className="rounded-xl border border-violet-100 bg-white p-4">
+          <div className="text-[9px] font-mono uppercase tracking-[.18em] text-violet-600">Ask the research question</div>
+          <div className="mt-3 space-y-2">
+            {active.questions.map((q,i)=><button
+              key={q}
+              type="button"
+              onClick={()=>setQuestionIndex(i)}
+              className={"flex w-full items-start gap-3 rounded-xl border p-3 text-left transition "+(questionIndex===i ? "border-violet-300 bg-violet-50" : "border-slate-200 bg-slate-50 hover:border-violet-200 hover:bg-violet-50/60")}
+            >
+              <span className={"mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full font-mono text-[9px] font-bold "+(questionIndex===i ? "bg-violet-600 text-white" : "bg-white text-slate-500 border border-slate-200")}>{i+1}</span>
+              <span className={"text-[11px] leading-5 "+(questionIndex===i ? "font-semibold text-slate-900" : "text-slate-600")}>{q}</span>
+            </button>)}
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-violet-100 bg-white p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <div className="text-[9px] font-mono uppercase tracking-[.18em] text-violet-600">Paperclip's guide response</div>
+              <div className="mt-1 text-[10px] text-slate-500">{active.label} · {sectionLabel}</div>
+            </div>
+            <span className="rounded-full border border-sky-200 bg-sky-50 px-2 py-1 text-[8px] font-mono font-bold uppercase tracking-wider text-sky-700">Paper-grounded</span>
+          </div>
+          <p className="mt-4 text-xs leading-6 text-slate-700">{answer}</p>
+          <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <div className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Explorer route</div>
+            <div className="mt-1 text-[10px] font-semibold text-slate-700">
+              {mode==="what" && "Paper → current section → Results / Study"}
+              {mode==="who" && "Paper → Participants → Study"}
+              {mode==="when" && "Paper → Methodology / historical evidence"}
+              {mode==="where" && "Paper → Introduction / Methods → evidence context"}
+              {mode==="why" && "Paper → Research Guide → Framework / implications"}
+              {mode==="how" && "Methods → Data → Evidence provenance"}
+            </div>
+          </div>
+          <div className="mt-3 flex items-start gap-2 text-[9px] leading-4 text-slate-500"><Info size={12} className="mt-0.5 shrink-0 text-violet-500"/>{boundary}</div>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <div className="rounded-xl border border-sky-200 bg-sky-50 p-3"><div className="text-[8px] font-mono font-bold uppercase tracking-wider text-sky-700">Observed</div><p className="mt-1 text-[9px] leading-4 text-slate-600">Reported in the paper or directly tied to its study evidence.</p></div>
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3"><div className="text-[8px] font-mono font-bold uppercase tracking-wider text-emerald-700">Derived</div><p className="mt-1 text-[9px] leading-4 text-slate-600">Calculated or reorganised from published values; not a new measurement.</p></div>
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3"><div className="text-[8px] font-mono font-bold uppercase tracking-wider text-amber-700">Not yet evidence</div><p className="mt-1 text-[9px] leading-4 text-slate-600">Simulation and scenario outputs remain clearly separated from the paper's empirical record.</p></div>
+      </div>
     </div>
   </details>;
 }
-
 function CommentDock(){
   const options=[
     ["general","General Research Explorer"],
