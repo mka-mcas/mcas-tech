@@ -1,0 +1,1785 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import {
+  Activity, ArrowRight, BarChart3, BookOpen, CheckCircle2, ChevronRight,
+  CircleHelp, Download, FlaskConical, GitBranch, Info, MessageCircle, Paperclip, Play, RotateCcw, ShieldCheck,
+  SlidersHorizontal, Sparkles, Video, X, ZoomIn, Move
+} from "lucide-react";
+import {
+  Bar, BarChart, CartesianGrid, Cell, Line, LineChart, ResponsiveContainer,
+  Tooltip, XAxis, YAxis
+} from "recharts";
+import { evidenceLegend, provenance, studyFacts } from "@/data/research-explorer";
+import { paperMeta, paperPages, paperSections } from "@/data/research-paper";
+import type { LucideIcon } from "lucide-react";
+
+type Tab = "overview" | "paper" | "study" | "methods" | "data" | "simulation" | "framework" | "provenance" | "argument";
+
+const tabItems: Array<[Tab,string,string]> = [
+  ["overview","01","Research"],
+  ["paper","02","Paper"],
+  ["study","03","Study"],
+  ["methods","04","Methods"],
+  ["data","05","Data"],
+  ["provenance","06","Evidence"],
+  ["simulation","07","Monte Carlo"],
+  ["framework","08","Framework Lab"],
+  ["argument","09","Evidence Intelligence"]
+];
+
+function ChartTooltip({active,payload,label}:{active?:boolean;payload?:Array<{value?:number;name?:string}>;label?:string}) {
+  if(!active || !payload?.length) return null;
+  const value=payload[0]?.value;
+  return <div className="rounded-lg border border-slate-300 bg-white px-3 py-2 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+    <div className="text-[10px] font-mono font-semibold text-slate-700 dark:text-slate-200">{label}</div>
+    <div className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">Value: <span className="font-mono font-semibold text-slate-900 dark:text-white">{typeof value==="number" ? value.toFixed(1) : value}</span></div>
+  </div>;
+}
+
+function EvidenceBadge({ kind }: { kind: "observed"|"derived"|"simulated"|"scenario" }) {
+  const map = {
+    observed: ["Observed","bg-sky-500/10 text-sky-300 border-sky-500/20"],
+    derived: ["Derived","bg-emerald-500/10 text-emerald-300 border-emerald-500/20"],
+    simulated: ["Simulated","bg-violet-500/10 text-violet-300 border-violet-500/20"],
+    scenario: ["Scenario","bg-amber-500/10 text-amber-300 border-amber-500/20"]
+  } as const;
+  const [label, cls] = map[kind];
+  return <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[9px] font-mono font-bold uppercase tracking-wider ${cls}`}>{label}</span>;
+}
+
+function Card({children, className=""}:{children:React.ReactNode;className?:string}) {
+  return <section className={`rounded-2xl border border-slate-800 bg-[#0b111c] ${className}`}>{children}</section>;
+}
+
+function Metric({label,value,sub,kind="observed"}:{label:string;value:string;sub:string;kind?:"observed"|"derived"|"simulated"|"scenario"}) {
+  return <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+    <div className="flex items-center justify-between gap-2"><span className="text-[9px] font-mono uppercase tracking-wider text-slate-500">{label}</span><EvidenceBadge kind={kind}/></div>
+    <div className="mt-2 font-mono text-2xl font-semibold text-white">{value}</div>
+    <div className="mt-1 text-[11px] leading-5 text-slate-500">{sub}</div>
+  </div>;
+}
+
+function clamp(v:number,min:number,max:number){return Math.min(max,Math.max(min,v));}
+function normal(rng:()=>number){let u=0,v=0;while(u===0)u=rng();while(v===0)v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function mulberry32(seed:number){return function(){let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};}
+function mean(a:number[]){return a.reduce((x,y)=>x+y,0)/a.length;}
+function variance(a:number[]){const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1);}
+function welchT(a:number[],b:number[]){const ma=mean(a),mb=mean(b),va=variance(a),vb=variance(b);const se=Math.sqrt(va/a.length+vb/b.length);return se?Math.abs(ma-mb)/se:0;}
+function normalPApprox(t:number){return 2*(1-0.5*(1+erf(t/Math.sqrt(2))));}
+function erf(x:number){const sign=x<0?-1:1; x=Math.abs(x); const a1=.254829592,a2=-.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=.3275911; const t=1/(1+p*x); return sign*(1-((((a5*t+a4)*t+a3)*t+a2)*t+a1)*t*Math.exp(-x*x));}
+
+
+const anchorSummaries: Record<string,{title:string;summary:string;takeaway:string}> = {
+  abstract:{title:"The whole study in one minute",summary:"The paper combines two experiments to examine higher-order rider competencies. Experiment 1 compares practical riding, hazard perception and knowledge among 31 courier riders. Experiment 2 measures situational awareness among 264 motorcyclists. Both experiments point to important gaps in recognising, interpreting and anticipating hazards.",takeaway:"The central argument is that conventional riding competence does not fully reveal hazard-perception and situation-awareness deficits."},
+  introduction:{title:"Why the study was needed",summary:"The introduction frames motorcycle safety as a persistent Malaysian problem and focuses on young and newly licensed riders. It argues that closed-circuit training can develop basic manoeuvring without fully exposing riders to complex public-road hazards, creating a need to examine higher-order cognitive competencies.",takeaway:"The research question grows from a gap between basic riding skills and the cognitive demands of real traffic."},
+  methodology:{title:"How the researchers tested it",summary:"Two complementary experiments were used. Experiment 1 combined a knowledge test, a video-based hazard perception test and an instrumented Motorcycle Riding Road Test. Experiment 2 used the Motorcycle Riding Situation Awareness Assessment with SAGAT-style questions covering perception, comprehension and projection.",takeaway:"The design deliberately measures different layers of competency instead of treating safe riding as one score."},
+  "experiment-1":{title:"Experiment 1 · practical skill vs cognitive skill",summary:"Thirty-one courier riders completed MRRT, HPT and knowledge assessments. The MRRT used an instrumented 100 cc motorcycle on a 6.5 km route, while the HPT used 12 clips containing 31 real-road hazards. The comparison tests whether practical riding performance, knowledge and hazard perception reveal the same level of competence.",takeaway:"Hazard perception is tested as a distinct higher-order competency rather than assumed from practical riding performance."},
+  "experiment-2":{title:"Experiment 2 · seeing, understanding and anticipating",summary:"Two hundred and sixty-four motorcyclists completed a video-based situation-awareness assessment. Questions targeted three levels: perception, comprehension and projection. Demographic and riding-exposure information was also collected so SA could be examined against rider characteristics.",takeaway:"The assessment asks not only what a rider sees, but what the situation means and what could happen next."},
+  participants:{title:"Who took part",summary:"Experiment 1 involved 31 consented courier riders aged 19–46. Experiment 2 involved 264 motorcyclists aged 16–57, with the sample predominantly male. The two samples therefore represent different research contexts and should not be treated as one combined cohort.",takeaway:"The two experiments answer related questions using different participant groups."},
+  results:{title:"What Experiment 1 found",summary:"MRRT had the highest reported mean score at 68.1%, followed by knowledge at 54.5% and HPT at 49.3%. The repeated-measures ANOVA was significant, and Bonferroni comparisons showed HPT was lower than both MRRT and knowledge, while MRRT and knowledge did not differ significantly.",takeaway:"The most important result is the separation between practical riding performance and hazard-perception performance."},
+  sa:{title:"What Experiment 2 found",summary:"Mean total situational awareness was 23.2%, with Level 1 perception at 27.5%. Older riders scored higher than younger riders across the three SA levels. Age correlated positively with total SA, while riding exposure showed a weaker positive relationship and was notably associated with Level 3 projection.",takeaway:"The study identifies substantial SA deficits and a consistent age-related difference in performance."},
+  technology:{title:"Why technology enters the discussion",summary:"The paper proposes collision-warning technologies as a layered assistive strategy for situations where human hazard detection or response may be delayed. LiDAR, radar or image processing could provide speed-sensitive warnings before a conflict becomes critical. The paper presents this as a safety rationale, not as a measured population crash-reduction effect.",takeaway:"Technology is proposed as a compensatory safety layer alongside, not instead of, rider development."},
+  framework:{title:"The IMSEF-MY idea",summary:"The Integrated Motorcycle Safety Empowerment Framework translates the paper's findings into five action domains: pre-licensing, licensing, technology, exposure control and retraining. These sit within broader safe-system principles and are intended to connect rider capability, technology and policy into a longer-term safety architecture.",takeaway:"The framework is a programme-level synthesis built from the study's evidence and proposed interventions."},
+  conclusion:{title:"The paper's closing argument",summary:"The conclusion argues that conventional education, enforcement and engineering can take time to produce measurable outcomes, while safety technologies can provide an additional immediate protection layer. It presents IMSEF-MY as a longer-term framework for sustained motorcycle-safety reform.",takeaway:"The paper closes by linking immediate assistive technology with longer-term system reform."},
+  references:{title:"Follow the scholarly trail",summary:"The references page contains the studies, methods and background sources used to build the paper's argument, including work on hazard perception, motorcycle training, situation awareness, work zones and motorcycle dynamics.",takeaway:"Use the bibliography when you want to move from the paper's synthesis back to the underlying literature."}
+};
+
+function downloadCSV(filename:string, rows:Array<Record<string,string|number>>){
+  if(!rows.length) return;
+  const headers=Object.keys(rows[0]);
+  const esc=(v:unknown)=>String(v??"").replace(/"/g,'""');
+  const csv=[headers.map(v=>'"'+esc(v)+'"').join(","),...rows.map(r=>headers.map(h=>'"'+esc(r[h])+'"').join(","))].join("\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function DownloadButton({label,onClick}:{label:string;onClick:()=>void}){
+  return <button type="button" onClick={onClick} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-[10px] font-semibold text-slate-700 transition hover:border-violet-300 hover:text-violet-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:border-violet-500/40"><Download size={12}/>{label}</button>;
+}
+
+function ResearchGuide({sectionId}:{sectionId:string}){
+  const item=anchorSummaries[sectionId] ?? anchorSummaries.abstract;
+  const sectionLabel=paperSections.find(s=>s.id===sectionId)?.label ?? "Current section";
+  const [lens,setLens]=useState<"WHAT"|"WHO"|"WHEN"|"WHERE"|"WHY"|"HOW">("WHAT");
+  const [question,setQuestion]=useState(0);
+
+  const lenses={
+    WHAT:["What is this section actually trying to establish?","What is the central finding I should remember?","What should I avoid inferring from this evidence?"],
+    WHO:["Who is represented by this evidence?","Who is not represented or cannot be inferred?","Who might use or be affected by this finding?"],
+    WHEN:["What time period does this evidence refer to?","When was the evidence collected or assessed?","When should this finding be treated cautiously?"],
+    WHERE:["Where does this evidence actually come from?","Where does the study context matter?","Where should I be careful about generalising?"],
+    WHY:["Why is this section important to the paper?","Why does the chosen method or evidence matter?","Why might the interpretation still have limits?"],
+    HOW:["How was the evidence generated or measured?","How strong is the claim supported by this section?","How could a researcher challenge or extend it?"]
+  } as const;
+
+  const answers={
+    WHAT:[item.summary,item.takeaway,"Read the claim at the level the paper supports. A reported score, comparison or proposal should not automatically be interpreted as causation, population-level effectiveness or universal applicability."],
+    WHO:["Start with the participant and study context described by the paper. The two experiments use different research contexts and should not be treated as one combined cohort.","The evidence only represents the populations and settings actually studied. Unmeasured groups, settings or outcomes remain unanswered.","The findings can inform researchers, road-safety practitioners and technology or policy discussions, but the paper does not establish intervention effects for every stakeholder or population."],
+    WHEN:["Use the dates and study sequence reported in the paper. Historical crash evidence, participant assessments and proposed interventions are different time layers.","The methodology and results establish what evidence belongs to each experiment. The Explorer keeps those experiment-level records separate.","Be cautious when a historical observation is treated as current, or a proposed intervention as though it had already been evaluated."],
+    WHERE:["The evidence is grounded in the Malaysian motorcycle-safety context described by Paper 1, including its participants, assessment settings and Malaysian road-safety evidence.","Controlled assessments, on-road riding assessment and video-based situation-awareness assessment answer related but different questions.","Generalisation beyond the studied population, setting or measurement context requires additional evidence."],
+    WHY:[item.takeaway,"The paper connects the research question, measurement approach and safety-system implications. The rationale should be read from the study design rather than assumed from the recommendation.","Observed rider performance, proposed technology and broader safety reform are different evidence layers and should not be treated as equivalent."],
+    HOW:["Look at the methodology, instruments and assessment sequence associated with this section. The Explorer links these ideas to Methods and Data.","Reported scores and statistical comparisons are evidence about assessed outcomes; they do not automatically establish mechanisms, causation or population-level intervention effects.","Inspect the measure, sample, comparison, statistical result and provenance trail before moving to simulation or scenario layers."]
+  } as const;
+
+  const qs=lenses[lens];
+  const answer=answers[lens][question];
+
+  return <details className="group rounded-2xl border border-violet-200 bg-violet-50/80 p-4 md:p-5">
+    <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
+      <div className="flex items-center gap-3">
+        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-violet-200 bg-white text-violet-700 shadow-sm"><Paperclip size={18}/><span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-violet-50"/></div>
+        <div><div className="text-[9px] font-mono uppercase tracking-[.18em] text-violet-600">Paperclip · research interrogation guide</div><div className="mt-1 text-sm font-semibold text-slate-900">{item.title}</div><div className="mt-1 text-[10px] text-slate-500">Current section: <span className="font-semibold text-violet-700">{sectionLabel}</span></div></div>
+      </div>
+      <span className="rounded-full border border-violet-200 bg-white px-2.5 py-1 text-[9px] font-semibold text-violet-700 group-open:hidden">Interrogate this section</span>
+    </summary>
+
+    <div className="mt-5">
+      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Research interrogation lenses">
+        {(Object.keys(lenses) as Array<keyof typeof lenses>).map(key=>{
+          const selected=key===lens;
+          return <button key={key} type="button" role="tab" aria-selected={selected} onClick={()=>{setLens(key);setQuestion(0)}} className={"rounded-xl border px-3 py-2 text-left transition "+(selected?"border-violet-400 bg-violet-600 text-white shadow-sm":"border-violet-200 bg-white text-slate-700 hover:border-violet-300 hover:text-violet-700")}>
+            <div className="text-[10px] font-mono font-black tracking-[.16em]">{key}</div>
+            <div className={"mt-0.5 text-[9px] "+(selected?"text-violet-100":"text-slate-500")}>Research lens</div>
+          </button>;
+        })}
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-[.9fr_1.1fr]">
+        <div className="rounded-xl border border-violet-100 bg-white p-4">
+          <div className="text-[9px] font-mono uppercase tracking-[.18em] text-violet-600">Ask the research question</div>
+          <div className="mt-3 space-y-2">
+            {qs.map((q,i)=><button key={q} type="button" onClick={()=>setQuestion(i)} className={"flex w-full items-start gap-3 rounded-xl border p-3 text-left transition "+(question===i?"border-violet-300 bg-violet-50":"border-slate-200 bg-slate-50 hover:border-violet-200 hover:bg-violet-50/60")}>
+              <span className={"mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full font-mono text-[9px] font-bold "+(question===i?"bg-violet-600 text-white":"bg-white text-slate-500 border border-slate-200")}>{i+1}</span>
+              <span className={"text-[11px] leading-5 "+(question===i?"font-semibold text-slate-900":"text-slate-600")}>{q}</span>
+            </button>)}
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-violet-100 bg-white p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2"><div><div className="text-[9px] font-mono uppercase tracking-[.18em] text-violet-600">Paperclip's guide response</div><div className="mt-1 text-[10px] text-slate-500">{lens} · {sectionLabel}</div></div><span className="rounded-full border border-sky-200 bg-sky-50 px-2 py-1 text-[8px] font-mono font-bold uppercase tracking-wider text-sky-700">Paper-grounded</span></div>
+          <p className="mt-4 text-xs leading-6 text-slate-700">{answer}</p>
+          <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3"><div className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Research route</div><div className="mt-1 text-[10px] font-semibold text-slate-700">Paper → {sectionLabel} → evidence / interpretation</div></div>
+          <div className="mt-3 flex items-start gap-2 text-[9px] leading-4 text-slate-500"><Info size={12} className="mt-0.5 shrink-0 text-violet-500"/>Paper-grounded companion only · no new empirical findings added.</div>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <div className="rounded-xl border border-sky-200 bg-sky-50 p-3"><div className="text-[8px] font-mono font-bold uppercase tracking-wider text-sky-700">Observed</div><p className="mt-1 text-[9px] leading-4 text-slate-600">Reported in the paper or directly tied to its study evidence.</p></div>
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3"><div className="text-[8px] font-mono font-bold uppercase tracking-wider text-emerald-700">Derived</div><p className="mt-1 text-[9px] leading-4 text-slate-600">Calculated or reorganised from published values; not a new measurement.</p></div>
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3"><div className="text-[8px] font-mono font-bold uppercase tracking-wider text-amber-700">Not yet evidence</div><p className="mt-1 text-[9px] leading-4 text-slate-600">Simulation and scenario outputs remain separated from the empirical record.</p></div>
+      </div>
+    </div>
+  </details>;
+}
+function CommentDock(){
+  const options=[
+    ["general","General Research Explorer"],
+    ...paperSections.filter(s=>s.id!=="references").map(s=>[s.id,"Paper · "+s.label] as [string,string]),
+    ["data","Data"],["methods","Methods"],["simulation","Monte Carlo"],["framework","Framework Lab"]
+  ] as Array<[string,string]>;
+  const [open,setOpen]=useState(false);
+  const [section,setSection]=useState("general");
+  const [comment,setComment]=useState("");
+  const [saved,setSaved]=useState(false);
+  const submit=()=>{
+    const text=comment.trim(); if(!text) return;
+    const existing=JSON.parse(localStorage.getItem("research-explorer-comments")||"[]");
+    existing.push({section,comment:text,createdAt:new Date().toISOString()});
+    localStorage.setItem("research-explorer-comments",JSON.stringify(existing));
+    setComment(""); setSaved(true); setTimeout(()=>setSaved(false),1800);
+  };
+  return <div className="fixed bottom-5 right-5 z-40">
+    {open && <div className="mb-3 w-[min(390px,calc(100vw-2rem))] rounded-2xl border border-slate-300 bg-white p-4 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+      <div className="flex items-center justify-between"><div><div className="text-[9px] font-mono uppercase tracking-[.18em] text-violet-600">Research feedback</div><h3 className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">Leave a comment</h3></div><button onClick={()=>setOpen(false)} className="rounded-lg p-1 text-slate-400 hover:text-slate-700"><X size={15}/></button></div>
+      <label className="mt-4 block"><span className="text-[10px] font-semibold text-slate-600 dark:text-slate-400">What are you commenting on?</span><select value={section} onChange={e=>setSection(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">{options.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label>
+      <textarea value={comment} onChange={e=>setComment(e.target.value)} placeholder="What should be improved, clarified or explored?" className="mt-3 min-h-[110px] w-full resize-y rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs leading-5 text-slate-800 outline-none focus:border-violet-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"/>
+      <div className="mt-3 flex items-center justify-between gap-3"><span className="text-[9px] text-slate-500">{saved ? "Saved on this device ✓" : "Private local note · not sent to a server"}</span><button disabled={!comment.trim()} onClick={submit} className="rounded-lg bg-violet-600 px-3 py-2 text-[10px] font-bold text-white disabled:opacity-40">Save comment</button></div>
+    </div>}
+    <button onClick={()=>setOpen(v=>!v)} className="flex items-center gap-2 rounded-full border border-violet-300 bg-white px-4 py-2.5 text-xs font-bold text-violet-700 shadow-lg hover:border-violet-500 dark:border-violet-500/40 dark:bg-slate-900 dark:text-violet-300"><MessageCircle size={15}/>{open ? "Close" : "Comment"}</button>
+  </div>;
+}
+
+export default function ResearchExplorer(){
+  const [tab,setTab]=useState<Tab>("overview");
+  const [light,setLight]=useState(true);
+  return <div className={light ? "research-light min-h-screen bg-slate-50 text-slate-900" : "min-h-screen bg-[#070b12] text-slate-100"}>
+    <header className="border-b border-slate-800/80 bg-[#0b101b]/95">
+      <div className="mx-auto max-w-[1550px] px-5 pb-6 pt-28 md:px-8">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-4xl">
+            <div className="mb-3 flex items-center gap-2 text-[11px] font-mono uppercase tracking-[.25em] text-violet-400"><FlaskConical size={14}/> Interactive Research Article</div>
+            <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">Research Explorer</h1>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400 md:text-base">An interactive research companion connecting the question, study, evidence, measurement, analysis, simulation and safety-system implications.</p>
+          </div>
+          <button onClick={()=>setLight(!light)} className="self-start rounded-full border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-300 hover:border-slate-500">{light ? "Dark mode" : "Daylight mode"}</button>
+        </div>
+        <div className="mt-6 grid grid-cols-2 gap-2 md:grid-cols-4">
+          <Metric label="Experiment 1" value="N = 31" sub="Courier riders · MRRT + HPT + knowledge"/>
+          <Metric label="Experiment 2" value="N = 264" sub="Motorcyclists · MRSAA / SA"/>
+          <Metric label="Total SA" value="23.2%" sub="Reported mean score"/>
+          <Metric label="Framework" value="5 domains" sub="IMSEF-MY action architecture"/>
+        </div>
+      </div>
+    </header>
+
+    <main className="mx-auto max-w-[1550px] px-5 py-6 md:px-8">
+      <div className="mb-5 flex gap-2 overflow-x-auto pb-1">
+        {tabItems.map(([id,num,label])=><button key={id} onClick={()=>setTab(id)} className={`shrink-0 rounded-full border px-4 py-2 text-xs font-semibold transition ${tab===id ? "border-violet-400/50 bg-violet-400/10 text-violet-300" : "border-slate-800 bg-slate-900 text-slate-400 hover:text-white"}`}><span className="mr-2 font-mono text-[9px] text-slate-600">{num}</span>{label}</button>)}
+      </div>
+      {tab==="overview" && <Overview onGo={setTab}/>}
+      {tab==="paper" && <Paper onGo={setTab}/>}
+      {tab==="study" && <Study/>}
+      {tab==="methods" && <Methods/>}
+      {tab==="data" && <DataExplorer/>}
+      {tab==="simulation" && <MonteCarlo/>}
+      {tab==="framework" && <FrameworkLab/>}
+      {tab==="argument" && <EvidenceIntelligence/>}
+      {tab==="provenance" && <Provenance onGo={setTab}/>} 
+    </main>
+    <CommentDock/>
+    <style jsx global>{`
+      .research-light { color-scheme: light; background:#f1f5f9 !important; color:#0f172a !important; }
+      .research-light header { background:#ffffff !important; border-color:#cbd5e1 !important; }
+      .research-light main { color:#0f172a; }
+      .research-light .text-slate-100,.research-light .text-slate-200,.research-light .text-white { color:#0f172a !important; }
+      .research-light .text-slate-300 { color:#334155 !important; }
+      .research-light .text-slate-400 { color:#475569 !important; }
+      .research-light .text-slate-500 { color:#64748b !important; }
+      .research-light .text-slate-600 { color:#475569 !important; }
+      .research-light .text-violet-300 { color:#6d28d9 !important; }
+      .research-light .text-violet-400 { color:#7c3aed !important; }
+      .research-light .text-sky-300 { color:#0369a1 !important; }
+      .research-light .text-sky-400 { color:#0284c7 !important; }
+      .research-light .text-emerald-300 { color:#047857 !important; }
+      .research-light .text-emerald-400 { color:#059669 !important; }
+      .research-light .text-amber-300 { color:#b45309 !important; }
+      .research-light .bg-slate-950\/50,.research-light .bg-slate-950\/40,.research-light .bg-slate-950\/30,.research-light .bg-slate-900 { background:#f8fafc !important; }
+      .research-light .bg-\[\#070b12\],.research-light .bg-\[\#0b101b\],.research-light .bg-\[\#090e18\],.research-light .bg-\[\#0b111c\] { background:#ffffff !important; }
+      .research-light .border-slate-800,.research-light .border-slate-700 { border-color:#cbd5e1 !important; }
+      .research-light .border-violet-500\/20 { border-color:#ddd6fe !important; }
+      .research-light .hover\:bg-slate-900:hover { background:#f1f5f9 !important; }
+      .research-light .hover\:text-white:hover { color:#0f172a !important; }
+      .research-light .recharts-cartesian-grid-horizontal line,.research-light .recharts-cartesian-grid-vertical line { stroke:#cbd5e1 !important; }
+      .research-light .recharts-text { fill:#475569 !important; }
+    `}</style>
+  </div>;
+}
+
+const paperFigures = [
+  {
+    page: 1,
+    number: 1,
+    caption: "Motorcycle fatalities by rider age group (2017–2021)",
+    src: "https://raw.githubusercontent.com/mka-mcas/mcas-tech/main/public/images/JKej_Fig1_mcas.png",
+    note: "Original published figure · Paper 1, Figure 1 · p. 1586"
+  },
+  {
+    page: 1,
+    number: 2,
+    caption: "Motorcycle injuries by rider age group (2017–2021)",
+    src: "https://raw.githubusercontent.com/mka-mcas/mcas-tech/main/public/images/JKej_Fig2_mcas.png",
+    note: "Original published figure · Paper 1, Figure 2 · p. 1586"
+  },
+  {
+    page: 2,
+    number: 3,
+    caption: "MRRT Motorcycle instrumentation details",
+    src: "https://raw.githubusercontent.com/mka-mcas/mcas-tech/main/public/images/JKej_Fig3_mcas.png",
+    note: "Original published figure · Paper 1, Figure 3 · p. 1587"
+  },
+  {
+    page: 3,
+    number: 4,
+    caption: "Screenshot of a sample video clip included in the MRSAA",
+    src: "https://www.researchgate.net/publication/411013459/figure/download/fig4/AS%3A11431282315049033%401785435556253/Screenshot-of-a-sample-video-clip-included-in-the-MRSAA.png",
+    note: "Original figure image"
+  },
+  {
+    page: 4,
+    number: 5,
+    caption: "Scores across assessment methods (MRRT, Knowledge, HPT)",
+    src: "https://raw.githubusercontent.com/mka-mcas/mcas-tech/main/public/images/JKej_Fig5_mcas.png",
+    note: "Original published figure · Paper 1, Figure 5 · p. 1589"
+  },
+  {
+    page: 6,
+    number: 6,
+    caption: "Integrated Motorcycle Safety Empowerment Framework for Malaysia (IMSEF-MY)",
+    src: "/images/IMSEF.png",
+    note: "Original published figure · interactive evidence layer added by the Explorer"
+  }
+] as const;
+function PaperCitation({children,onClick}:{children:React.ReactNode;onClick:()=>void}) {
+  return <button type="button" onClick={onClick} title="Jump to full bibliography"
+    className="rounded px-0.5 text-violet-700 underline decoration-violet-300 underline-offset-2 transition hover:bg-violet-50 hover:text-violet-900">
+    {children}
+  </button>;
+}
+
+function PaperText({text,onCitation}:{text:string;onCitation:()=>void}) {
+  const citationPattern = /(\((?=[^()\n]*(?:19|20)\d{2})[^()\n]+\))/g;
+  const isCitation = (part:string) => /^\((?=[^()\n]*(?:19|20)\d{2})[^()\n]+\)$/.test(part);
+  const lines=text.split("\n");
+  return <div className="whitespace-pre-wrap font-serif">
+    {lines.map((line,i)=>{
+      const parts=line.split(citationPattern);
+      return <React.Fragment key={i}>
+        {parts.map((part,j)=>isCitation(part) ? <PaperCitation key={j} onClick={onCitation}>{part}</PaperCitation> : <React.Fragment key={j}>{part}</React.Fragment>)}
+        {i < lines.length-1 ? "\n" : null}
+      </React.Fragment>;
+    })}
+  </div>;
+}
+
+
+type FrameworkDomain = "pre" | "licensing" | "technology" | "exposure" | "retraining";
+
+type FrameworkEvidence = {
+  title:string;
+  year:string;
+  kind:"observed"|"derived"|"scenario";
+  finding:string;
+  why:string;
+  href:string;
+};
+
+const frameworkDomains: Array<{id:FrameworkDomain;title:string;items:string[];evidence:FrameworkEvidence[]}> = [
+  {
+    id:"pre",
+    title:"Pre-Licensing",
+    items:["Road Safety Education","Learner Training","Community Program"],
+    evidence:[
+      {title:"Instrumented motorcycle rider-training study",year:"2011",kind:"observed",finding:"A pilot study assessed 105 learner riders graduating from motorcycle training and licensing using an instrumented motorcycle in mixed traffic.",why:"Provides an empirical base for connecting learner training with measurable on-road behaviour.",href:"https://trid.trb.org/View/1112796"},
+      {title:"Safe riding competency assessment",year:"2025",kind:"observed",finding:"A combined knowledge test, hazard-perception test and on-road MRRT differentiated rider skill levels.",why:"Supports bringing higher-order competencies into rider development rather than relying only on basic manoeuvring skills.",href:"https://jsaem.my/index.php/journal/article/view/264"}
+    ]
+  },
+  {
+    id:"licensing",
+    title:"Licensing",
+    items:["Risk-Based Training Modules","Mandatory HPT Assessment","Simulator Training","Audit & CQI"],
+    evidence:[
+      {title:"Safe riding competency assessment",year:"2025",kind:"observed",finding:"The study explicitly proposes more comprehensive competency training and assessment within licensing and post-license safety programmes.",why:"Directly connects the empirical HPT/MRRT findings to licensing reform.",href:"https://jsaem.my/index.php/journal/article/view/264"},
+      {title:"Riding situation awareness assessment",year:"2021",kind:"observed",finding:"MRSAA assessed 264 motorcyclists across perception, comprehension and projection; total SA averaged 23.2%.",why:"The authors recommended training and testing learner motorcyclists for situation-awareness competency.",href:"https://ijrs.my/journal/article/view/29"}
+    ]
+  },
+  {
+    id:"technology",
+    title:"Technology",
+    items:["Collision Alert Systems","ABS Mandates","Telematics","ITS"],
+    evidence:[
+      {title:"Motorcyclist hazard perception & SA study",year:"2026",kind:"scenario",finding:"The IMSEF-MY paper proposes collision-warning technologies and ABS as a layered assistive strategy to compensate for real-time cognitive gaps.",why:"This is a framework proposal, not an intervention-effect estimate. The evidence establishes the problem and rationale; technology effectiveness needs separate evaluation.",href:"https://doi.org/10.17576/jkukm-2026-38(4)-05"},
+      {title:"Courier rider naturalistic hazard study",year:"2018",kind:"observed",finding:"Fifteen courier riders encountered about 30 hazardous events and 5 near misses per hour; rider behaviour contributed to almost 29% of near misses.",why:"Shows why an assistive layer can be relevant when unsafe trajectories develop during real-world riding.",href:"https://jsaem.my/index.php/journal/article/view/84"}
+    ]
+  },
+  {
+    id:"exposure",
+    title:"Exposure Control",
+    items:["Graduated Licensing & Rider Restrictions","Protective Gear Compliance","Speed & Route Limitations"],
+    evidence:[
+      {title:"Riding situation awareness by age and exposure",year:"2021",kind:"observed",finding:"Younger riders had substantially lower SA scores than older riders, while riding exposure was positively associated with total SA and Level 3 performance.",why:"Provides evidence for treating age and exposure as relevant dimensions when designing targeted interventions.",href:"https://ijrs.my/journal/article/view/29"},
+      {title:"Exclusive motorcycle lane safety research",year:"2000",kind:"observed",finding:"A multivariate analysis of Federal Highway Route 2 reported motorcycle accidents reduced by approximately 39% with the exclusive motorcycle lane under the studied conditions.",why:"Shows that exposure to mixed traffic can also be addressed through infrastructure and segregation, not only rider-level measures.",href:"https://wbldb.lievers.net/10085332.html"}
+    ]
+  },
+  {
+    id:"retraining",
+    title:"Retraining",
+    items:["Re-skilling & Up-skilling","Employer-Sponsored Programs","Enforced Retraining for Offenders"],
+    evidence:[
+      {title:"Safe riding competency assessment",year:"2025",kind:"observed",finding:"The study identifies targeted interventions for higher-order riding skills and proposes competency assessment in post-license safety programmes.",why:"Provides a direct research bridge from observed competency gaps to continuing rider development.",href:"https://jsaem.my/index.php/journal/article/view/264"},
+      {title:"Instrumented motorcycle training study",year:"2011",kind:"observed",finding:"On-road behaviours such as signalling, manoeuvring speed and responses at junctions were measured after rider training.",why:"Demonstrates how retraining or refresher programmes could eventually be evaluated using objective riding-performance measures.",href:"https://trid.trb.org/View/1112796"}
+    ]
+  }
+];
+
+const frameworkPolicies = ["Safe System Approach","Mode Shift","Shared Accountability","Enforcement","Motorcycle Segregation"];
+const frameworkProblems = ["Mixed-Traffic Vulnerability","Unsafe Riding Behaviour","Risk Appraisal Deficiency","Insufficient Riding Competency","Inherent Motorcycle Risks"];
+
+const frameworkPolicyEvidence: FrameworkEvidence[] = [
+  {title:"IMSEF-MY policy architecture",year:"2026",kind:"scenario",finding:"The published IMSEF-MY framework explicitly anchors the proposed action domains in safe-system thinking, mode shift, shared accountability, enforcement and motorcycle segregation.",why:"These are the framework's policy-level principles. The individual pillars should not be read as separately tested effects in the current study.",href:"https://doi.org/10.17576/jkukm-2026-38(4)-05"},
+  {title:"Exclusive motorcycle lane evidence",year:"2000",kind:"observed",finding:"Malaysia-specific crash analysis found a reduction in motorcycle accidents associated with the exclusive motorcycle lane under specified traffic conditions.",why:"Provides direct empirical support for the segregation principle, while leaving the other policy pillars to their own evidence base.",href:"https://wbldb.lievers.net/10085332.html"}
+];
+
+const frameworkProblemEvidence: FrameworkEvidence[] = [
+  {title:"Hazard perception and situation awareness study",year:"2026",kind:"observed",finding:"The study reports low hazard-perception and situation-awareness performance across two experiments, including total SA of 23.2% and HPT mean 49.3%.",why:"These findings form the immediate empirical problem statement behind the framework.",href:"https://doi.org/10.17576/jkukm-2026-38(4)-05"},
+  {title:"Courier rider naturalistic hazard study",year:"2018",kind:"observed",finding:"Naturalistic observations recorded frequent hazardous events and near misses during delivery riding, including rider-instigated near crashes.",why:"Adds real-world behavioural evidence to the laboratory assessment findings.",href:"https://jsaem.my/index.php/journal/article/view/84"}
+];
+
+function FrameworkEvidencePanel({title,items}:{title:string;items:FrameworkEvidence[]}) {
+  return <div className="mt-4 rounded-2xl border border-violet-300 bg-violet-50 p-4 md:p-5">
+    <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+      <div>
+        <div className="text-[9px] font-mono uppercase tracking-[.18em] text-violet-600">Research behind this node</div>
+        <h3 className="mt-1 text-base font-semibold text-slate-900">{title}</h3>
+      </div>
+      <span className="rounded-full border border-violet-200 bg-white px-2.5 py-1 text-[9px] font-mono text-violet-700">{items.length} evidence links</span>
+    </div>
+    <div className="mt-4 grid gap-3 lg:grid-cols-2">
+      {items.map(item=><article key={item.title} className="rounded-xl border border-slate-200 bg-white p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="text-[9px] font-mono text-slate-500">{item.year}</div>
+            <h4 className="mt-1 text-sm font-semibold text-slate-900">{item.title}</h4>
+          </div>
+          <EvidenceBadge kind={item.kind}/>
+        </div>
+        <p className="mt-3 text-xs leading-5 text-slate-600">{item.finding}</p>
+        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <div className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Why it belongs here</div>
+          <p className="mt-1 text-[11px] leading-5 text-slate-700">{item.why}</p>
+        </div>
+        <a href={item.href} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1 text-[10px] font-semibold text-violet-700 hover:text-violet-900">
+          Open research source <ArrowRight size={12}/>
+        </a>
+      </article>)}
+    </div>
+  </div>;
+}
+
+function FrameworkFigure({interactive=false}:{interactive?:boolean}) {
+  const [selected,setSelected]=useState<FrameworkDomain|"policy"|"problem"|null>(null);
+  const selectedDomain=frameworkDomains.find(d=>d.id===selected);
+  const selectedTitle=selectedDomain?.title ?? (selected==="policy" ? "Policy Alignment for Motorcycle Safety Reform" : selected==="problem" ? "Problem: High Motorcycle Fatalities" : null);
+  const selectedEvidence=selectedDomain?.evidence ?? (selected==="policy" ? frameworkPolicyEvidence : selected==="problem" ? frameworkProblemEvidence : []);
+
+  const select=(id:FrameworkDomain|"policy"|"problem")=>{
+    if(interactive) setSelected(v=>v===id?null:id);
+  };
+
+  const hotspots = [
+    {id:"policy" as const, label:"Policy alignment", x:3.3, y:6.5, w:93.5, h:12.2},
+    {id:"problem" as const, label:"High motorcycle fatalities", x:3.3, y:22.0, w:93.5, h:15.0},
+    {id:"pre" as const, label:"Pre-Licensing", x:3.3, y:56.6, w:17.0, h:25.0},
+    {id:"licensing" as const, label:"Licensing", x:21.8, y:56.6, w:17.1, h:25.0},
+    {id:"technology" as const, label:"Technology", x:40.3, y:56.6, w:17.1, h:25.0},
+    {id:"exposure" as const, label:"Exposure Control", x:58.8, y:56.6, w:17.1, h:25.0},
+    {id:"retraining" as const, label:"Retraining", x:77.2, y:56.6, w:17.2, h:25.0}
+  ];
+
+  return <div className="w-full">
+    <div className="mb-2 flex items-center justify-between gap-3 px-1">
+      <div className="text-[9px] font-mono uppercase tracking-[.18em] text-slate-500">Original published Figure 6 · click a section to reveal the evidence chain</div>
+      {interactive && <div className="rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-[9px] font-semibold text-violet-700">Interactive</div>}
+    </div>
+    <div className="relative mx-auto w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <img src="/images/IMSEF.png" alt="Integrated Motorcycle Safety Empowerment Framework for Malaysia (IMSEF-MY)" draggable={false} className="block h-auto w-full select-none" />
+      {interactive && hotspots.map(h=><button
+        key={h.id}
+        type="button"
+        aria-label={`Explore ${h.label}`}
+        title={`Explore ${h.label}`}
+        onClick={()=>select(h.id)}
+        className={`absolute rounded-lg border-2 transition ${selected===h.id ? "border-violet-500 bg-violet-500/10 shadow-[0_0_0_3px_rgba(139,92,246,.12)]" : "border-transparent hover:border-violet-400/60 hover:bg-violet-500/5"}`}
+        style={{left:`${h.x}%`,top:`${h.y}%`,width:`${h.w}%`,height:`${h.h}%`}}
+      />)}
+    </div>
+    {interactive && selected && <FrameworkEvidencePanel title={selectedTitle ?? ""} items={selectedEvidence}/>}
+  </div>;
+}
+
+function FigureZoomModal({figure,onClose}:{figure:typeof paperFigures[number];onClose:()=>void}) {
+  const [scale,setScale]=useState(1);
+  const [offset,setOffset]=useState({x:0,y:0});
+  const [dragging,setDragging]=useState(false);
+  const [last,setLast]=useState({x:0,y:0});
+
+  useEffect(()=>{
+    setScale(1);
+    setOffset({x:0,y:0});
+  },[figure.number]);
+
+  useEffect(()=>{
+    const onKey=(e:KeyboardEvent)=>{
+      if(e.key==="Escape") onClose();
+      if(e.key==="+" || e.key==="=") setScale(s=>Math.min(4,s+0.25));
+      if(e.key==="-" || e.key==="_") setScale(s=>Math.max(0.5,s-0.25));
+    };
+    window.addEventListener("keydown",onKey);
+    return ()=>window.removeEventListener("keydown",onKey);
+  },[onClose]);
+
+  const reset=()=>{setScale(1);setOffset({x:0,y:0});};
+
+  return <div className="fixed inset-0 z-[100] bg-slate-950/90 p-4 backdrop-blur-sm md:p-8"
+    onWheel={e=>{e.preventDefault();setScale(s=>Math.min(4,Math.max(0.5,s+(e.deltaY<0?.15:-.15))))}}>
+    <div className="mx-auto flex h-full max-w-[1500px] flex-col overflow-hidden rounded-2xl border border-slate-700 bg-[#0b101b] shadow-2xl">
+      <div className="flex items-center justify-between gap-4 border-b border-slate-800 px-4 py-3">
+        <div>
+          <div className="text-[9px] font-mono uppercase tracking-[.2em] text-violet-400">Figure {figure.number} · Detail view</div>
+          <div className="mt-1 text-sm font-semibold text-white">{figure.caption}</div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={()=>setScale(s=>Math.max(.5,s-.25))} className="rounded-lg border border-slate-700 px-3 py-2 text-xs text-slate-300">−</button>
+          <span className="min-w-[52px] text-center font-mono text-[10px] text-slate-400">{Math.round(scale*100)}%</span>
+          <button onClick={()=>setScale(s=>Math.min(4,s+.25))} className="rounded-lg border border-slate-700 px-3 py-2 text-xs text-slate-300">+</button>
+          <button onClick={reset} className="rounded-lg border border-slate-700 px-3 py-2 text-xs text-slate-300">Reset</button>
+          <button onClick={onClose} aria-label="Close figure" className="rounded-lg border border-slate-700 p-2 text-slate-300 hover:text-white"><X size={16}/></button>
+        </div>
+      </div>
+      <div className="relative min-h-0 flex-1 cursor-grab overflow-hidden bg-[#070b12] active:cursor-grabbing"
+        onPointerDown={e=>{setDragging(true);setLast({x:e.clientX,y:e.clientY});e.currentTarget.setPointerCapture(e.pointerId)}}
+        onPointerMove={e=>{if(!dragging)return;const dx=e.clientX-last.x,dy=e.clientY-last.y;setOffset(o=>({x:o.x+dx,y:o.y+dy}));setLast({x:e.clientX,y:e.clientY})}}
+        onPointerUp={()=>setDragging(false)} onPointerCancel={()=>setDragging(false)}>
+        <div className="absolute left-1/2 top-1/2 w-[min(1120px,94vw)]"
+          style={{transform:`translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px)) scale(${scale})`,transformOrigin:"center center"}}>
+          {figure.number===6 ? <FrameworkFigure interactive/> : <img src={figure.src ?? ""} alt={`Figure ${figure.number}: ${figure.caption}`} draggable={false} className="max-h-[82vh] max-w-[92vw] select-none object-contain" />}
+        </div>
+      </div>
+      {figure.number===1 && <div className="border-t border-violet-200 bg-violet-50 px-4 py-4 text-slate-700">
+        <div className="text-[9px] font-mono uppercase tracking-[.18em] text-violet-700">Figure 1 · Research notes</div>
+        <div className="mt-2 grid gap-3 md:grid-cols-3">
+          <div><div className="text-[10px] font-semibold text-slate-900">2017–2021</div><p className="mt-1 text-[10px] leading-4 text-slate-600">The paper examines motorcycle fatalities by rider age group across this five-year period.</p></div>
+          <div><div className="text-[10px] font-semibold text-slate-900">16–25 years</div><p className="mt-1 text-[10px] leading-4 text-slate-600">The paper reports that this age range accounted for over one-third of motorcycle fatalities and injuries.</p></div>
+          <div><div className="text-[10px] font-semibold text-slate-900">16–20 years</div><p className="mt-1 text-[10px] leading-4 text-slate-600">More than half of the combined 16–25 fatalities and injuries each year were concentrated in the 16–20 group.</p></div>
+        </div>
+        <div className="mt-3 rounded-lg border border-violet-200 bg-white px-3 py-2 text-[10px] leading-4 text-slate-600"><b className="text-violet-700">Source:</b> Paper 1, Figure 1 and the accompanying text on p. 1586. Data source stated in the paper: authors’ analysis of Royal Malaysia Police (PDRM) data.</div>
+      </div>}
+      <div className="border-t border-slate-800 px-4 py-2 text-[10px] text-slate-500">
+        <span className="inline-flex items-center gap-1"><ZoomIn size={12}/> Wheel / + / − to zoom</span>
+        <span className="mx-3">·</span>
+        <span className="inline-flex items-center gap-1"><Move size={12}/> Drag to move</span>
+      </div>
+    </div>
+  </div>;
+}
+
+function PaperFigure({figure,onOpen}:{figure:typeof paperFigures[number];onOpen:(figure:typeof paperFigures[number])=>void}) {
+  return <figure className="my-8 rounded-2xl border border-slate-300 bg-white p-3 shadow-sm">
+    <div className="mb-2 flex items-center justify-between px-1">
+      <span className="text-[9px] font-mono uppercase tracking-[.18em] text-slate-500">Figure {figure.number}</span>
+      <span className="text-[9px] font-semibold text-violet-700">{figure.number===6 ? "Click to inspect · interactive hotspots" : "Click to inspect"} →</span>
+    </div>
+    <button type="button" onClick={()=>onOpen(figure)} className="group block w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2 text-left">
+      {figure.number===6 ? <FrameworkFigure/> : <img src={figure.src ?? ""} alt={figure.caption} className="mx-auto max-h-[430px] w-auto max-w-full object-contain transition duration-300 group-hover:scale-[1.015]" />}
+    </button>
+    <figcaption className="mt-2 px-1 text-[11px] leading-5 text-slate-600">FIGURE {figure.number}. {figure.caption}. <span className="font-semibold text-violet-700">{figure.note}.</span></figcaption>
+  </figure>;
+}
+
+function Paper({onGo}:{onGo:(t:Tab)=>void}){
+  const [page,setPage]=useState(0);
+  const [openFigure,setOpenFigure]=useState<typeof paperFigures[number]|null>(null);
+  const [readerPulse,setReaderPulse]=useState(false);
+  const total=paperPages.length;
+  const current=paperPages[page];
+  const readerRef=React.useRef<HTMLDivElement>(null);
+  const referencesPage=(paperSections.find(s=>s.id==="references")?.page ?? total)-1;
+
+  useEffect(()=>{
+    const onKey=(e:KeyboardEvent)=>{
+      if(e.key==="ArrowRight") setPage(p=>Math.min(total-1,p+1));
+      if(e.key==="ArrowLeft") setPage(p=>Math.max(0,p-1));
+    };
+    window.addEventListener("keydown",onKey);
+    return ()=>window.removeEventListener("keydown",onKey);
+  },[total]);
+
+  const jump=(targetPage:number)=>{
+    setPage(Math.max(0,Math.min(total-1,targetPage-1)));
+    requestAnimationFrame(()=>readerRef.current?.scrollIntoView({behavior:"smooth",block:"start"}));
+  };
+
+  const goToReferences=()=>{
+    setPage(referencesPage);
+    setReaderPulse(true);
+    requestAnimationFrame(()=>readerRef.current?.scrollIntoView({behavior:"smooth",block:"start"}));
+    window.setTimeout(()=>setReaderPulse(false),1400);
+  };
+
+  const evidenceLinks=[
+    {label:"23.2% total SA",note:"Observed result",go:"data" as Tab},
+    {label:"HPT 49.3%",note:"Observed competency result",go:"data" as Tab},
+    {label:"MRSAA / SAGAT",note:"Measurement method",go:"methods" as Tab},
+    {label:"Table 3",note:"Cohort comparison",go:"data" as Tab},
+    {label:"IMSEF-MY",note:"Framework laboratory",go:"framework" as Tab}
+  ];
+
+  const pageFigures=paperFigures.filter(f=>f.page===page);
+  const renderPageContent=()=>{
+    if(!pageFigures.length) return <PaperText text={current} onCitation={goToReferences}/>;
+    const nodes:React.ReactNode[]=[];
+    let cursor=0;
+    for(const fig of pageFigures){
+      const marker=fig.number===1 ? "FIGURE 1. Motorcycle fatalities by rider age group" : fig.number===2 ? "FIGURE 2. Motorcycle injuries by rider age group" : `FIGURE ${fig.number}. ${fig.caption}`;
+      const at=current.indexOf(marker,cursor);
+      if(at<0) continue;
+      const before=current.slice(cursor,at).trimEnd();
+      if(before) nodes.push(<PaperText key={`text-${fig.number}`} text={before} onCitation={goToReferences}/>);
+      nodes.push(<PaperFigure key={`figure-${fig.number}`} figure={fig} onOpen={setOpenFigure}/>);
+      cursor=at+marker.length;
+    }
+    const after=current.slice(cursor).replace(/^\n\n/,"");
+    if(after) nodes.push(<PaperText key="text-final" text={after} onCitation={goToReferences}/>);
+    return <>{nodes}</>;
+  };
+
+  const activeSection=paperSections.slice().reverse().find(s=>page+1>=s.page)?.id ?? "abstract";
+
+  return <div className="space-y-5" ref={readerRef}>
+    <ResearchGuide sectionId={activeSection}/>
+    <Card className="overflow-hidden">
+      <div className="border-b border-slate-800 bg-slate-950/50 p-5 md:p-7">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-4xl">
+            <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[.2em] text-violet-400"><BookOpen size={14}/> Living paper reader</div>
+            <h2 className="mt-2 text-2xl font-semibold leading-tight md:text-3xl">{paperMeta.title}</h2>
+            <p className="mt-3 text-xs text-slate-500">{paperMeta.journal} · pp. {paperMeta.pages} · DOI {paperMeta.doi}</p>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <span className="rounded-full border border-violet-500/20 bg-violet-500/5 px-3 py-1.5 text-violet-300">Original paper</span>
+            <span>Page {page+1} of {total}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="border-b border-slate-200 bg-white p-5 md:p-7">
+        <div className="flex items-start gap-3">
+          <div className="mt-0.5 rounded-lg bg-violet-100 p-2 text-violet-700"><BookOpen size={16}/></div>
+          <div>
+            <div className="text-[9px] font-mono uppercase tracking-[.2em] text-violet-600">Paper 1 · At a glance</div>
+            <h3 className="mt-1 text-lg font-semibold text-slate-900">What this paper asked, found, and proposes</h3>
+            <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-600">The paper examines whether hazard perception and situational awareness reveal competency gaps that conventional motorcycle training and assessment may not fully capture. It uses two controlled experiments and then connects the findings to collision-warning technology and the proposed Integrated Motorcycle Safety Empowerment Framework for Malaysia (IMSEF-MY).</p>
+          </div>
+        </div>
+        <div className="mt-5 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-sky-600">Experiment 1</div><div className="mt-1 text-sm font-semibold text-slate-900">31 courier motorcyclists</div><p className="mt-1 text-[11px] leading-5 text-slate-600">MRRT + HPT + theory test.</p></div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-sky-600">Experiment 2</div><div className="mt-1 text-sm font-semibold text-slate-900">264 riders</div><p className="mt-1 text-[11px] leading-5 text-slate-600">MRSAA using perception, comprehension and projection.</p></div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-amber-600">Key finding</div><div className="mt-1 text-sm font-semibold text-slate-900">Total SA = 23.2%</div><p className="mt-1 text-[11px] leading-5 text-slate-600">Level 1 perception = 27.5%; older riders scored 17.4% higher than younger riders.</p></div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-emerald-600">Implication</div><div className="mt-1 text-sm font-semibold text-slate-900">Beyond basic skills</div><p className="mt-1 text-[11px] leading-5 text-slate-600">The paper proposes collision-warning technology and IMSEF-MY as longer-term safety responses.</p></div>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button type="button" onClick={()=>jump(1)} className="rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-[10px] font-semibold text-violet-700 hover:border-violet-400">Read from Abstract →</button>
+          <button type="button" onClick={()=>jump(3)} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-semibold text-slate-600 hover:border-violet-300 hover:text-violet-700">Go to Methodology →</button>
+          <button type="button" onClick={()=>jump(4)} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-semibold text-slate-600 hover:border-violet-300 hover:text-violet-700">Go to Results →</button>
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-[220px_1fr]">
+        <aside className="border-b border-slate-800 bg-[#090e18] p-4 lg:border-b-0 lg:border-r">
+          <div className="text-[9px] font-mono uppercase tracking-[.2em] text-slate-600">Jump to section</div>
+          <div className="mt-3 space-y-1">
+            {paperSections.map(s=>{
+              const next=paperSections.find(x=>x.page>s.page);
+              const active=page+1>=s.page && (!next || page+1<next.page);
+              return <button key={s.id} onClick={()=>jump(s.page)} className={`w-full rounded-lg px-3 py-2 text-left text-[11px] transition ${active ? "bg-violet-500/10 text-violet-700" : "text-slate-500 hover:bg-slate-900 hover:text-white"}`}><span className="mr-2 font-mono text-[9px] text-slate-500">{s.page}</span>{s.label}</button>;
+            })}
+          </div>
+          <div className="mt-5 border-t border-slate-800 pt-4">
+            <div className="text-[9px] font-mono uppercase tracking-[.2em] text-slate-600">Live evidence</div>
+            <div className="mt-3 space-y-2">
+              {evidenceLinks.map(x=><button key={x.label} onClick={()=>onGo(x.go)} className="w-full rounded-lg border border-slate-800 bg-slate-950/40 p-2.5 text-left hover:border-violet-500/30"><div className="text-[11px] font-semibold text-violet-300">{x.label}</div><div className="mt-0.5 text-[9px] text-slate-600">{x.note} →</div></button>)}
+            </div>
+            <button onClick={goToReferences} className="mt-2 w-full rounded-lg border border-dashed border-violet-500/30 bg-violet-500/5 p-2.5 text-left">
+              <div className="text-[11px] font-semibold text-violet-300">Full bibliography</div>
+              <div className="mt-0.5 text-[9px] text-slate-600">Jump to References →</div>
+            </button>
+          </div>
+        </aside>
+
+        <div className="min-w-0">
+          <div className="flex items-center justify-between border-b border-slate-800 px-5 py-3 md:px-8">
+            <button disabled={page===0} onClick={()=>setPage(p=>Math.max(0,p-1))} className="inline-flex items-center gap-2 rounded-lg border border-slate-800 px-3 py-2 text-xs font-semibold text-slate-400 disabled:opacity-30 hover:text-white">← Previous</button>
+            <div className="hidden text-[10px] font-mono uppercase tracking-[.18em] text-slate-600 sm:block">Use ← → to turn pages</div>
+            <button disabled={page===total-1} onClick={()=>setPage(p=>Math.min(total-1,p+1))} className="inline-flex items-center gap-2 rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-xs font-semibold text-violet-300 disabled:opacity-30">Next →</button>
+          </div>
+          <div className="h-1 bg-slate-900"><div className="h-full bg-violet-500 transition-all" style={{width:`${((page+1)/total)*100}%`}}/></div>
+
+          <article className={`mx-auto min-h-[720px] max-w-4xl bg-[#fbfaf6] px-6 py-9 text-[14px] leading-7 text-slate-800 shadow-inner md:px-12 md:py-12 lg:px-16 ${readerPulse ? "ring-4 ring-violet-300/60" : ""}`}>
+            <div className="mb-8 flex items-center justify-between border-b border-slate-300 pb-3 text-[9px] font-mono uppercase tracking-[.18em] text-slate-400">
+              <span>{paperMeta.journal}</span><span>{1584+page+1}</span>
+            </div>
+            {renderPageContent()}
+          </article>
+
+          <div className="flex items-center justify-between border-t border-slate-800 bg-slate-950/50 px-5 py-4 md:px-8">
+            <button disabled={page===0} onClick={()=>setPage(p=>Math.max(0,p-1))} className="text-xs text-slate-500 hover:text-white disabled:opacity-30">← Previous page</button>
+            <span className="font-mono text-[10px] text-slate-600">{page+1} / {total}</span>
+            <button disabled={page===total-1} onClick={()=>setPage(p=>Math.min(total-1,p+1))} className="text-xs text-violet-300 hover:text-violet-200 disabled:opacity-30">Next page →</button>
+          </div>
+        </div>
+      </div>
+    </Card>
+
+    <Card className="border-violet-500/20 bg-violet-500/5 p-5 md:p-6">
+      <div className="flex items-start gap-3"><Sparkles className="mt-0.5 text-violet-300" size={17}/><div><h3 className="font-semibold">The paper is now a gateway, not a dead end.</h3><p className="mt-1 text-sm leading-6 text-slate-400">Read page by page, jump directly to sections, inspect the original figures at high zoom, and click an in-text citation to jump to the bibliography. The reader text is transcribed from the supplied article; interactive outputs remain separately labelled from the published record.</p></div></div>
+    </Card>
+    {openFigure && <FigureZoomModal figure={openFigure} onClose={()=>setOpenFigure(null)}/>}
+  </div>;
+}
+function ResearchProgrammeMap(){
+  return <Card className="overflow-hidden border-violet-500/20 bg-violet-500/5 p-6 md:p-8">
+    <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+      <div>
+        <div className="text-[10px] font-mono uppercase tracking-[.2em] text-violet-500">The bigger picture</div>
+        <h2 className="mt-2 text-2xl font-semibold md:text-3xl">From rider capability to a safety system.</h2>
+        <p className="mt-3 max-w-4xl text-sm leading-7 text-slate-600">A working conceptual map of how the research threads fit together. The layout makes the intended direction explicit: capability → perception → awareness → risk expression → crash risk → safety layers.</p>
+      </div>
+      <span className="shrink-0 rounded-full border border-violet-200 bg-white px-3 py-1.5 text-[9px] font-mono uppercase tracking-wider text-violet-700">Working conceptual map</span>
+    </div>
+
+    <div className="mt-7 overflow-x-auto">
+      <div className="mx-auto min-w-[760px] max-w-5xl">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-7">
+          <div className="text-center">
+            <div className="mx-auto max-w-md rounded-xl border-2 border-sky-200 bg-sky-50 px-5 py-4">
+              <div className="text-[9px] font-mono uppercase tracking-[.18em] text-sky-600">Layer 1 · Capability</div>
+              <div className="mt-1 text-base font-semibold text-slate-900">Training</div>
+            </div>
+
+            <div className="mx-auto flex h-10 w-8 flex-col items-center justify-center">
+              <div className="h-6 w-px bg-violet-300"></div>
+              <div className="text-lg leading-none text-violet-500">▼</div>
+            </div>
+
+            <div className="mx-auto max-w-md rounded-xl border-2 border-sky-200 bg-sky-50 px-5 py-4">
+              <div className="text-[9px] font-mono uppercase tracking-[.18em] text-sky-600">Layer 2 · Perception</div>
+              <div className="mt-1 text-base font-semibold text-slate-900">Hazard Perception</div>
+            </div>
+
+            <div className="mx-auto flex h-10 w-8 flex-col items-center justify-center">
+              <div className="h-6 w-px bg-violet-300"></div>
+              <div className="text-lg leading-none text-violet-500">▼</div>
+            </div>
+
+            <div className="mx-auto max-w-md rounded-xl border-2 border-sky-200 bg-sky-50 px-5 py-4">
+              <div className="text-[9px] font-mono uppercase tracking-[.18em] text-sky-600">Layer 3 · Awareness</div>
+              <div className="mt-1 text-base font-semibold text-slate-900">Situational Awareness</div>
+            </div>
+
+            <div className="relative mx-auto h-16 max-w-3xl">
+              <div className="absolute left-1/2 top-0 h-5 w-px -translate-x-1/2 bg-violet-300"></div>
+              <div className="absolute left-1/4 right-1/4 top-5 h-px bg-violet-300"></div>
+              <div className="absolute left-1/4 top-5 h-5 w-px bg-violet-300"></div>
+              <div className="absolute right-1/4 top-5 h-5 w-px bg-violet-300"></div>
+              <div className="absolute left-[25%] top-8 -translate-x-1/2 text-lg leading-none text-violet-500">▼</div>
+              <div className="absolute right-[25%] top-8 translate-x-1/2 text-lg leading-none text-violet-500">▼</div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-5">
+              <div className="rounded-xl border-2 border-amber-200 bg-amber-50 px-5 py-4">
+                <div className="text-[9px] font-mono uppercase tracking-[.18em] text-amber-600">Risk expression</div>
+                <div className="mt-1 text-base font-semibold text-slate-900">Fatigue</div>
+                <div className="mt-2 text-[10px] leading-4 text-slate-500">A rider-state dimension that can shape how capability is expressed.</div>
+              </div>
+              <div className="rounded-xl border-2 border-amber-200 bg-amber-50 px-5 py-4">
+                <div className="text-[9px] font-mono uppercase tracking-[.18em] text-amber-600">Risk expression</div>
+                <div className="mt-1 text-base font-semibold text-slate-900">Riding Behaviour</div>
+                <div className="mt-2 text-[10px] leading-4 text-slate-500">Observed riding behaviour through which risk may become expressed.</div>
+              </div>
+            </div>
+
+            <div className="relative mx-auto h-20 max-w-3xl">
+              <div className="absolute left-1/4 top-0 h-6 w-px bg-violet-300"></div>
+              <div className="absolute right-1/4 top-0 h-6 w-px bg-violet-300"></div>
+              <div className="absolute left-1/4 right-1/4 top-6 h-px bg-violet-300"></div>
+              <div className="absolute left-1/2 top-6 h-7 w-px bg-violet-300"></div>
+              <div className="absolute left-1/2 top-11 -translate-x-1/2 text-lg leading-none text-violet-500">▼</div>
+            </div>
+
+            <div className="rounded-xl border-2 border-violet-300 bg-violet-50 px-5 py-5 shadow-sm">
+              <div className="text-[9px] font-mono uppercase tracking-[.18em] text-violet-600">Outcome layer</div>
+              <div className="mt-1 text-lg font-semibold text-slate-900">Crash Risk</div>
+              <div className="mx-auto mt-2 max-w-xl text-[10px] leading-4 text-slate-500">The common outcome layer used to connect rider-level risk expression with downstream safety interventions.</div>
+            </div>
+
+            <div className="relative mx-auto h-20 max-w-3xl">
+              <div className="absolute left-1/2 top-0 h-6 w-px bg-violet-300"></div>
+              <div className="absolute left-1/4 right-1/4 top-6 h-px bg-violet-300"></div>
+              <div className="absolute left-1/4 top-6 h-6 w-px bg-violet-300"></div>
+              <div className="absolute right-1/4 top-6 h-6 w-px bg-violet-300"></div>
+              <div className="absolute left-[25%] top-11 -translate-x-1/2 text-lg leading-none text-violet-500">▼</div>
+              <div className="absolute right-[25%] top-11 translate-x-1/2 text-lg leading-none text-violet-500">▼</div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-5">
+              <div className="rounded-xl border-2 border-emerald-200 bg-emerald-50 px-5 py-4">
+                <div className="text-[9px] font-mono uppercase tracking-[.18em] text-emerald-600">Safety layer</div>
+                <div className="mt-1 text-base font-semibold text-slate-900">Technology</div>
+                <div className="mt-2 text-[10px] leading-4 text-slate-500">Assistive and engineering measures that can add another protection layer.</div>
+              </div>
+              <div className="rounded-xl border-2 border-emerald-200 bg-emerald-50 px-5 py-4">
+                <div className="text-[9px] font-mono uppercase tracking-[.18em] text-emerald-600">Safety layer</div>
+                <div className="mt-1 text-base font-semibold text-slate-900">Exposure</div>
+                <div className="mt-2 text-[10px] leading-4 text-slate-500">Controls that can reduce or reshape exposure to high-risk riding conditions.</div>
+              </div>
+            </div>
+
+            <div className="relative mx-auto h-16 max-w-3xl">
+              <div className="absolute left-1/4 top-0 h-5 w-px bg-violet-300"></div>
+              <div className="absolute right-1/4 top-0 h-5 w-px bg-violet-300"></div>
+              <div className="absolute left-1/4 right-1/4 top-5 h-px bg-violet-300"></div>
+              <div className="absolute left-1/2 top-5 h-5 w-px bg-violet-300"></div>
+              <div className="absolute left-1/2 top-8 -translate-x-1/2 text-lg leading-none text-violet-500">▼</div>
+            </div>
+
+            <div className="mx-auto max-w-md rounded-xl border-2 border-emerald-300 bg-emerald-50 px-5 py-4 shadow-sm">
+              <div className="text-[9px] font-mono uppercase tracking-[.18em] text-emerald-600">System outcome</div>
+              <div className="mt-1 text-base font-semibold text-slate-900">Safety System</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div className="mt-5 grid gap-3 md:grid-cols-3">
+      <div className="rounded-xl border border-sky-200 bg-sky-50 p-4">
+        <div className="text-[9px] font-mono uppercase tracking-wider text-sky-700">01 · Capability</div>
+        <p className="mt-2 text-[11px] leading-5 text-slate-600">Training, hazard perception and situational awareness form the cognitive-capability thread.</p>
+      </div>
+      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+        <div className="text-[9px] font-mono uppercase tracking-wider text-amber-700">02 · Risk expression</div>
+        <p className="mt-2 text-[11px] leading-5 text-slate-600">Fatigue and riding behaviour are shown as risk-expression dimensions before the crash-risk outcome.</p>
+      </div>
+      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+        <div className="text-[9px] font-mono uppercase tracking-wider text-emerald-700">03 · Safety layers</div>
+        <p className="mt-2 text-[11px] leading-5 text-slate-600">Technology and exposure are shown as downstream protection/control layers that converge on the wider safety system.</p>
+      </div>
+    </div>
+
+    <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4 text-[11px] leading-5 text-slate-600">
+      <b className="text-slate-800">Scientific boundary:</b> this is a programme-level conceptual synthesis, not a single tested causal model. The arrows communicate the working research logic and should not be read as estimated path coefficients or confirmed causal effects.
+    </div>
+  </Card>;
+}
+
+function ResearchLibrary({onGo}:{onGo:(t:Tab)=>void}){
+  const sources=[
+    {id:"Paper 1",title:"Motorcyclist Hazard Perception & Situational Awareness",detail:"Current working paper · full interactive reader available",status:"LIVE",target:"paper" as Tab},
+    {id:"Paper 2",title:"Future paper / study",detail:"Reserved slot for the next publication or manuscript",status:"PLANNED"},
+    {id:"Slide 1",title:"Future presentation / conference deck",detail:"Reserved slot for the first slide-based research story",status:"PLANNED"}
+  ];
+  return <Card className="p-6 md:p-8">
+    <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+      <div>
+        <div className="text-[10px] font-mono uppercase tracking-[.2em] text-slate-500">Research library</div>
+        <h2 className="mt-2 text-2xl font-semibold">One Explorer, many research artefacts.</h2>
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">The architecture is intentionally expandable. Today we are working on Paper 1; later, Paper 2, Slide 1, a thesis chapter, a dataset or a training package can become another evidence-connected object without rewriting the whole Explorer.</p>
+      </div>
+      <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[9px] font-mono text-slate-500">SOURCE INDEX · v0.1</div>
+    </div>
+    <div className="mt-5 grid gap-3 md:grid-cols-3">
+      {sources.map(source=>{
+        const live=source.status==="LIVE";
+        return <button key={source.id} type="button" disabled={!live} onClick={()=>live && source.target && onGo(source.target)} className={`rounded-2xl border p-5 text-left transition ${live ? "border-violet-200 bg-violet-50 hover:border-violet-400 hover:shadow-sm" : "border-dashed border-slate-300 bg-slate-50 opacity-80"}`}>
+          <div className="flex items-center justify-between gap-3"><span className={`text-[9px] font-mono font-bold tracking-[.18em] ${live ? "text-violet-700" : "text-slate-500"}`}>{source.id}</span><span className={`rounded-full px-2 py-1 text-[8px] font-mono font-bold ${live ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-500"}`}>{source.status}</span></div>
+          <h3 className="mt-3 text-sm font-semibold text-slate-800">{source.title}</h3>
+          <p className="mt-2 text-[11px] leading-5 text-slate-600">{source.detail}</p>
+          {live && <span className="mt-4 inline-flex items-center gap-1 text-[10px] font-semibold text-violet-700">Open Paper 1 <ChevronRight size={12}/></span>}
+        </button>;
+      })}
+    </div>
+  </Card>;
+}
+
+function Overview({onGo}:{onGo:(t:Tab)=>void}){
+  const exploreCards: Array<{title:string; desc:string; target:Tab; Icon:LucideIcon}> = [
+    {title:"Read Paper 1", desc:"Turn the current publication into a page-by-page evidence reader with live links into the study.", target:"paper", Icon:BookOpen},
+    {title:"Explore the study", desc:"Follow participants, instruments, videos and research questions behind the publication.", target:"study", Icon:Video},
+    {title:"Interrogate the evidence", desc:"Move from reported statistics to distributions and cohort comparisons.", target:"data", Icon:BarChart3},
+    {title:"Test assumptions", desc:"Change sample size, effect, noise and intervention assumptions in controlled simulations.", target:"simulation", Icon:FlaskConical}
+  ];
+  return <div className="space-y-5">
+    <Card className="border-violet-500/20 bg-violet-500/5 p-6 md:p-8">
+      <div className="grid gap-8 lg:grid-cols-[1.2fr_.8fr]">
+        <div>
+          <div className="text-[10px] font-mono uppercase tracking-[.2em] text-violet-600">Welcome to the research layer</div>
+          <h2 className="mt-2 text-2xl font-semibold md:text-3xl">This is where the research stops being a PDF.</h2>
+          <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600">We are building an interactive companion around the research programme: the paper, the experiments, the measurement logic, the reported data, the framework and the controlled simulations all live in one place. The purpose is not to replace the publication, but to let a reader move from <b>question → evidence → measurement → analysis → interpretation → next research question</b>.</p>
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">The current anchor is <b>Paper 1</b>. Future papers, slides and research materials can be added as separate objects and connected to the same evidence architecture.</p>
+        </div>
+        <div className="rounded-2xl border border-violet-200 bg-white p-5">
+          <div className="flex items-center gap-2 text-violet-700"><CircleHelp size={16}/><span className="text-xs font-semibold">How to use this Explorer</span></div>
+          <ol className="mt-4 space-y-3 text-[11px] leading-5 text-slate-600">
+            <li><b className="text-slate-800">1. Start with Research.</b> Get the big picture and choose the research artefact.</li>
+            <li><b className="text-slate-800">2. Open Paper 1.</b> Read page by page; jump to sections, figures and references.</li>
+            <li><b className="text-slate-800">3. Follow the evidence.</b> Move into Study, Methods and Data to see how claims are measured and reported.</li>
+            <li><b className="text-slate-800">4. Experiment carefully.</b> Monte Carlo and Framework Lab are clearly marked as simulated/scenario layers.</li>
+            <li><b className="text-slate-800">5. Return to Framework Lab.</b> Explore how the research can connect to a wider safety-system architecture.</li>
+          </ol>
+        </div>
+      </div>
+      <div className="mt-6 flex flex-wrap gap-2">{evidenceLegend.map(x=><div key={x.key} className="rounded-xl border border-slate-200 bg-white p-3"><EvidenceBadge kind={x.key}/><div className="mt-2 max-w-[180px] text-[11px] leading-5 text-slate-500">{x.note}</div></div>)}</div>
+    </Card>
+
+    <ResearchProgrammeMap/>
+    <ResearchLibrary onGo={onGo}/>
+
+    <div className="grid gap-5 md:grid-cols-2">
+      <Card className="p-6">
+        <div className="flex items-center gap-2 text-violet-700"><CircleHelp size={16}/><span className="text-xs font-semibold">Scientific boundary</span></div>
+        <p className="mt-3 text-sm leading-6 text-slate-600">The Explorer never changes a published p-value. Instead, it changes the assumptions that generate a new simulated result. Simulation is labelled separately from empirical evidence.</p>
+        <button onClick={()=>onGo("simulation")} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-violet-700">Open Monte Carlo Lab <ArrowRight size={14}/></button>
+      </Card>
+      <Card className="p-6">
+        <div className="flex items-center gap-2 text-emerald-700"><GitBranch size={16}/><span className="text-xs font-semibold">Built to grow</span></div>
+        <p className="mt-3 text-sm leading-6 text-slate-600">A future Paper 2 or Slide 1 can be added to the source index, then linked to its own figures, evidence, methods and datasets. The goal is a living research archive rather than a collection of disconnected pages.</p>
+      </Card>
+    </div>
+
+    <div className="grid gap-5 md:grid-cols-4">
+      {exploreCards.map(({title, desc, target, Icon}) => (
+        <button key={target} onClick={()=>onGo(target)} className="rounded-2xl border border-slate-200 bg-white p-5 text-left hover:border-violet-300 hover:shadow-sm">
+          <Icon className="text-violet-600" size={20}/>
+          <h3 className="mt-4 font-semibold text-slate-800">{title}</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-600">{desc}</p>
+          <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-violet-700">Open <ChevronRight size={13}/></span>
+        </button>
+      ))}
+    </div>
+  </div>;
+}
+
+function Study(){
+  const measures=[
+    {title:"Experiment 1",n:"31",items:["MRRT","Hazard Perception Test","Knowledge test"],detail:"The HPT used 12 video clips displaying 31 real-road motorcycle hazards. MRRT used an instrumented 100 cc Honda Wave over a 6.5 km predefined route."},
+    {title:"Experiment 2",n:"264",items:["MRSAA","SA Level 1 · Perception","SA Level 2 · Comprehension","SA Level 3 · Projection"],detail:"Participants viewed rider-perspective clips and answered questions at freeze-frame moments using the SAGAT framework."}
+  ];
+  return <div className="space-y-5">
+    <Card className="p-6 md:p-8">
+      <div className="text-[10px] font-mono uppercase tracking-[.2em] text-sky-400">01 · Research design</div>
+      <h2 className="mt-2 text-2xl font-semibold">Two experiments. Different windows into rider competency.</h2>
+      <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-400">The study combines practical riding performance, hazard perception, theoretical knowledge and situation awareness rather than treating safe riding as a single competency.</p>
+    </Card>
+    <div className="grid gap-5 md:grid-cols-2">
+      {measures.map((m,i)=><Card key={m.title} className="p-6"><div className="flex items-start justify-between"><div><EvidenceBadge kind="observed"/><h3 className="mt-3 text-xl font-semibold">{m.title}</h3></div><div className="font-mono text-3xl text-sky-300">N={m.n}</div></div><div className="mt-5 space-y-2">{m.items.map(x=><div key={x} className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2 text-sm text-slate-300"><CheckCircle2 size={14} className="text-emerald-400"/>{x}</div>)}</div><p className="mt-5 text-sm leading-6 text-slate-500">{m.detail}</p></Card>)}
+    </div>
+    <Card className="p-6">
+      <div className="flex items-center gap-2 text-violet-300"><Video size={17}/><h3 className="font-semibold">Original research materials — ready for the next layer</h3></div>
+      <p className="mt-2 text-sm leading-6 text-slate-500">The architecture reserves space for the actual HPT/MRSAA clips, participant instructions, questionnaires, scoring sheets and forms. Public access should follow the original consent, ethics, copyright and data-governance conditions.</p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{["HPT videos","MRSAA videos","Questionnaires","Scoring / forms"].map(x=><div key={x} className="rounded-xl border border-dashed border-slate-700 p-4 text-xs text-slate-500"><span className="font-semibold text-slate-300">{x}</span><br/>Material slot · access policy to be defined</div>)}</div>
+    </Card>
+  </div>;
+}
+
+function Methods(){
+  const levels=[
+    ["Level 1","Perception","What did you see?","Taxi / road sign recognition"],
+    ["Level 2","Comprehension","What does it mean?","Speed / relationship interpretation"],
+    ["Level 3","Projection","What happens next?","Potential collision timing"]
+  ];
+  return <div className="space-y-5">
+    <Card className="p-6 md:p-8"><div className="text-[10px] font-mono uppercase tracking-[.2em] text-emerald-400">02 · Measurement</div><h2 className="mt-2 text-2xl font-semibold">Let the reader experience the measurement logic.</h2><p className="mt-3 max-w-4xl text-sm leading-6 text-slate-400">The original paper uses the HPT and MRSAA to access higher-order competencies that conventional knowledge or basic riding tests may not fully reveal.</p></Card>
+    <div className="grid gap-4 md:grid-cols-3">{levels.map((x,i)=><div key={x[0]} className="rounded-2xl border border-slate-800 bg-[#0b111c] p-5"><div className="font-mono text-[10px] text-emerald-400">{x[0]}</div><h3 className="mt-2 text-lg font-semibold">{x[1]}</h3><div className="mt-4 rounded-xl border border-slate-800 bg-slate-950/50 p-4"><div className="text-sm font-semibold text-slate-200">“{x[2]}”</div><div className="mt-2 text-xs leading-5 text-slate-500">{x[3]}</div></div><div className="mt-4 text-[10px] uppercase tracking-wider text-slate-600">Instrument layer</div></div>)}</div>
+    <Card className="p-6"><div className="flex items-center gap-2"><ShieldCheck size={17} className="text-emerald-400"/><h3 className="font-semibold">Methodological guardrail</h3></div><p className="mt-2 text-sm leading-6 text-slate-500">An interactive recreation can demonstrate the measurement concept. It should not be described as a validated re-administration of the original instrument unless the original scoring, stimuli and protocol are reproduced under the required conditions.</p></Card>
+  </div>;
+}
+
+function DataExplorer(){
+  const rows=[
+    {name:"MRRT",value:68.1,sd:21.7},
+    {name:"HPT",value:49.3,sd:13.3},
+    {name:"Knowledge",value:54.5,sd:14.2}
+  ];
+  const sa=[{name:"Younger",value:17.9,n:184},{name:"Older",value:35.3,n:79}];
+  return <div className="space-y-5">
+    <Card className="p-6"><div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"><div><div className="text-[10px] font-mono uppercase tracking-[.2em] text-sky-400">03 · Reported results</div><h2 className="mt-2 text-2xl font-semibold">Explore the reported numbers before touching simulation.</h2></div><div className="flex items-center gap-2"><EvidenceBadge kind="observed"/><DownloadButton label="Download CSV" onClick={()=>downloadCSV("research-explorer-reported-results.csv",[...rows.map(x=>({experiment:"Experiment 1",measure:x.name,mean_percent:x.value,sd_percent:x.sd})),...sa.map(x=>({experiment:"Experiment 2",measure:"Total SA · "+x.name,mean_percent:x.value,n:x.n}))])}/></div></div></Card>
+    <div className="grid gap-5 xl:grid-cols-2">
+      <Card className="p-5"><h3 className="font-semibold">Experiment 1 · competency scores</h3><p className="mt-1 text-xs text-slate-500">Means with reported SD.</p><div className="mt-5 h-64"><ResponsiveContainer width="100%" height="100%"><BarChart data={rows}><CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/><XAxis dataKey="name" tick={{fill:"#94a3b8",fontSize:11}}/><YAxis domain={[0,80]} tick={{fill:"#64748b",fontSize:10}}/><Tooltip content={<ChartTooltip/>} cursor={{fill:"rgba(148,163,184,0.10)"}}/><Bar dataKey="value" radius={[6,6,0,0]}>{rows.map((_,i)=><Cell key={i} fill={["#38bdf8","#a78bfa","#34d399"][i]}/>)}</Bar></BarChart></ResponsiveContainer></div></Card>
+      <Card className="p-5"><h3 className="font-semibold">Experiment 2 · total SA by cohort</h3><p className="mt-1 text-xs text-slate-500">Reported group means.</p><div className="mt-5 h-64"><ResponsiveContainer width="100%" height="100%"><BarChart data={sa}><CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/><XAxis dataKey="name" tick={{fill:"#94a3b8",fontSize:11}}/><YAxis domain={[0,45]} tick={{fill:"#64748b",fontSize:10}}/><Tooltip content={<ChartTooltip/>} cursor={{fill:"rgba(148,163,184,0.10)"}}/><Bar dataKey="value" radius={[6,6,0,0]} fill="#38bdf8"/></BarChart></ResponsiveContainer></div></Card>
+    </div>
+    <div className="grid gap-3 md:grid-cols-4">
+      <Metric label="Age effect" value="17.4 pp" sub="Older minus younger mean SA" kind="derived"/>
+      <Metric label="t statistic" value="5.93" sub="Reported group comparison"/>
+      <Metric label="Age correlation" value="r = .40" sub="Total SA, p < .001"/>
+      <Metric label="Exposure correlation" value="r = .13" sub="Total SA, p = .036"/>
+    </div>
+  </div>;
+}
+
+function MonteCarlo(){
+  const [n,setN]=useState(100);
+  const [effect,setEffect]=useState(1);
+  const [noise,setNoise]=useState(1);
+  const [runs,setRuns]=useState(5000);
+  const [cohort,setCohort]=useState("observed");
+  const [result,setResult]=useState<{hist:{bin:string,count:number}[];power:number;median:number;mean:number;values:number[]}|null>(null);
+  const run=()=>{
+    const rng=mulberry32(20260926+n+Math.round(effect*100)+Math.round(noise*10));
+    const m1=17.9;
+    const m2=17.9+(35.3-17.9)*effect;
+    const sd1=16.4*noise,sd2=23.8*noise;
+    const total=Math.max(40,n);
+    const youngerShare=cohort==="balanced" ? .5 : cohort==="younger-heavy" ? .7 : 184/(184+79);
+    const nYounger=Math.max(20,Math.round(total*youngerShare));
+    const nOlder=Math.max(20,total-nYounger);
+    const values:number[]=[];let sig=0;
+    for(let r=0;r<runs;r++){
+      const a:number[]=[],b:number[]=[];
+      for(let i=0;i<nYounger;i++){a.push(clamp(m1+normal(rng)*sd1,0,100));}
+      for(let i=0;i<nOlder;i++){b.push(clamp(m2+normal(rng)*sd2,0,100));}
+      const t=welchT(a,b);const p=normalPApprox(t);const diff=mean(b)-mean(a);
+      values.push(diff);if(p<.05)sig++;
+    }
+    const sorted=[...values].sort((a,b)=>a-b);const meanV=mean(values);
+    const bins=12;const min=Math.min(...values),max=Math.max(...values);const width=(max-min||1)/bins;
+    const counts=Array.from({length:bins},()=>0);
+    values.forEach(v=>counts[Math.min(bins-1,Math.floor((v-min)/width))]++);
+    setResult({hist:counts.map((c,i)=>({bin:(min+(i+.5)*width).toFixed(1),count:c})),power:sig/runs*100,median:sorted[Math.floor(sorted.length/2)],mean:meanV,values});
+  };
+  return <div className="space-y-5">
+    <Card className="p-6 md:p-8"><div className="flex items-start justify-between gap-5"><div><div className="text-[10px] font-mono uppercase tracking-[.2em] text-violet-400">04 · Monte Carlo laboratory</div><h2 className="mt-2 text-2xl font-semibold">Repeat a synthetic version of the cohort comparison.</h2><p className="mt-3 max-w-4xl text-sm leading-6 text-slate-400">The original study reported a 17.4-point difference between older and younger riders. This lab does not alter that result. It generates synthetic studies under your selected assumptions and recomputes an approximate two-group test.</p></div><EvidenceBadge kind="simulated"/></div></Card>
+    <div className="grid gap-5 xl:grid-cols-[360px_1fr]">
+      <Card className="p-5"><div className="flex items-center gap-2 text-violet-300"><SlidersHorizontal size={16}/><h3 className="font-semibold">Simulation controls</h3></div>
+        <div className="mt-5 space-y-5">
+          <label className="block"><div className="flex justify-between text-xs"><span>Total sample size</span><b className="font-mono">{n}</b></div><input type="range" min="20" max="500" value={n} onChange={e=>setN(Number(e.target.value))} className="mt-2 w-full"/></label>
+          <label className="block"><div className="flex justify-between text-xs"><span>Assumed effect multiplier</span><b className="font-mono">{effect.toFixed(2)}×</b></div><input type="range" min=".25" max="1.5" step=".05" value={effect} onChange={e=>setEffect(Number(e.target.value))} className="mt-2 w-full"/></label>
+          <label className="block"><div className="flex justify-between text-xs"><span>Noise multiplier</span><b className="font-mono">{noise.toFixed(2)}×</b></div><input type="range" min=".5" max="2" step=".05" value={noise} onChange={e=>setNoise(Number(e.target.value))} className="mt-2 w-full"/></label>
+          <label className="block"><div className="flex justify-between text-xs"><span>Simulation runs</span><b className="font-mono">{runs.toLocaleString()}</b></div><select value={runs} onChange={e=>setRuns(Number(e.target.value))} className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-xs"><option value="1000">1,000</option><option value="5000">5,000</option><option value="10000">10,000</option></select></label>
+          <label className="block"><span className="text-xs">Cohort assumption</span><select value={cohort} onChange={e=>setCohort(e.target.value)} className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-xs"><option value="observed">Observed means</option><option value="balanced">Balanced conceptual cohort</option><option value="younger-heavy">Younger-heavy conceptual cohort</option></select></label>
+          <button onClick={run} className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-500 px-4 py-3 text-xs font-bold text-white hover:bg-violet-400"><Play size={14}/> Run {runs.toLocaleString()} synthetic studies</button>
+        </div>
+      </Card>
+      <Card className="p-5">
+        {!result ? <div className="flex min-h-[430px] flex-col items-center justify-center text-center"><Activity size={36} className="text-slate-700"/><h3 className="mt-4 font-semibold">No simulation yet</h3><p className="mt-2 max-w-md text-sm leading-6 text-slate-500">Change an assumption and run the lab. The resulting distribution will be clearly labelled as simulated.</p></div> :
+        <div>
+          <div className="mb-3 flex justify-end"><DownloadButton label="Download simulation CSV" onClick={()=>downloadCSV("research-explorer-monte-carlo.csv",result.values.map((v,i)=>({simulation:i+1,older_minus_younger:v,total_sample:n,effect_multiplier:effect,noise_multiplier:noise,cohort_assumption:cohort})))} /></div><div className="grid gap-3 sm:grid-cols-3"><Metric label="Median difference" value={result.median.toFixed(1)} sub="Synthetic older − younger" kind="simulated"/><Metric label="Mean difference" value={result.mean.toFixed(1)} sub="Across simulated studies" kind="simulated"/><Metric label="p < .05 frequency" value={result.power.toFixed(1)+"%"} sub="Approximate detection frequency" kind="simulated"/></div>
+          <div className="mt-5 h-72"><ResponsiveContainer width="100%" height="100%"><BarChart data={result.hist}><CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/><XAxis dataKey="bin" tick={{fill:"#64748b",fontSize:9}}/><YAxis tick={{fill:"#64748b",fontSize:9}}/><Tooltip content={<ChartTooltip/>} cursor={{fill:"rgba(148,163,184,0.10)"}}/><Bar dataKey="count" fill="#a78bfa"/></BarChart></ResponsiveContainer></div>
+          <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 text-xs leading-5 text-slate-500"><b className="text-amber-300">Simulation note:</b> these are synthetic studies generated from reported group means/SDs with an approximate normal-tail p calculation. They are not replications of the original experiment and should not be presented as new empirical evidence.</div>
+        </div>}
+      </Card>
+    </div>
+  </div>;
+}
+
+
+type RiskEvidenceStatus = "observed" | "published" | "assumption" | "gap";
+
+function RiskEvidencePill({status}:{status:RiskEvidenceStatus}) {
+  const cfg = {
+    observed:{label:"Observed",cls:"border-sky-200 bg-sky-50 text-sky-700"},
+    published:{label:"Published evidence",cls:"border-violet-200 bg-violet-50 text-violet-700"},
+    assumption:{label:"Model assumption",cls:"border-amber-200 bg-amber-50 text-amber-700"},
+    gap:{label:"Evidence gap",cls:"border-rose-200 bg-rose-50 text-rose-700"}
+  }[status];
+  return <span className={"inline-flex items-center rounded-full border px-2 py-1 text-[8px] font-mono font-bold uppercase tracking-wider "+cfg.cls}>{cfg.label}</span>;
+}
+
+function RiskReductionModel(){
+  const [selected,setSelected]=useState<"haddon"|"pathway"|"economics">("haddon");
+  const haddon = [
+    {phase:"Pre-crash",human:"Training · fatigue · hazard perception",vehicle:"MCAS · warning · braking",environment:"Speed · road · traffic",active:true},
+    {phase:"Crash",human:"Rider protection · response",vehicle:"Protective equipment · vehicle safety",environment:"Crash environment",active:false},
+    {phase:"Post-crash",human:"First response · care",vehicle:"Emergency notification",environment:"Emergency access · response",active:false}
+  ];
+  const pathway = [
+    {key:"applicable",title:"Applicable",detail:"Does the intervention address the relevant crash / hazard configuration?",status:"published" as RiskEvidenceStatus},
+    {key:"detected",title:"Detected",detail:"Is the relevant hazard detected by the intervention?",status:"observed" as RiskEvidenceStatus},
+    {key:"responded",title:"Responded",detail:"Does the rider respond appropriately to the warning?",status:"gap" as RiskEvidenceStatus},
+    {key:"avoided",title:"Avoided",detail:"Does the response prevent the SCE / crash?",status:"gap" as RiskEvidenceStatus}
+  ];
+
+  return <div className="space-y-5">
+    <Card className="border-violet-500/20 bg-violet-500/5 p-6 md:p-8">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="max-w-4xl">
+          <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[.2em] text-violet-600 dark:text-violet-300"><GitBranch size={15}/> Safety-system model</div>
+          <h2 className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white md:text-3xl">From intervention location to measurable risk reduction.</h2>
+          <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-400">This layer combines an established Haddon-style intervention map with a conditional risk pathway and a cost-benefit layer. Haddon locates the intervention; it does not supply an effect size. The quantitative links remain evidence-dependent.</p>
+        </div>
+        <div className="flex rounded-xl border border-violet-200 bg-white p-1 dark:border-violet-500/20 dark:bg-slate-950/40">
+          {[["haddon","Haddon"],["pathway","Risk pathway"],["economics","Investment"]].map(([id,label])=><button key={id} type="button" onClick={()=>setSelected(id as "haddon"|"pathway"|"economics")} className={"rounded-lg px-3 py-2 text-[9px] font-mono font-bold "+(selected===id?"bg-violet-600 text-white":"text-slate-500 hover:text-violet-700")}>{label}</button>)}
+        </div>
+      </div>
+
+      {selected==="haddon" && <div className="mt-6">
+        <div className="grid gap-2 md:grid-cols-[130px_1fr_1fr_1fr]">
+          {["Haddon phase","Human","Vehicle / equipment","Environment"].map(x=><div key={x} className="hidden rounded-xl border border-slate-200 bg-white p-3 text-[8px] font-mono font-bold uppercase tracking-wider text-slate-500 md:block">{x}</div>)}
+          {haddon.map(row=><React.Fragment key={row.phase}>
+            <div className={"rounded-xl border p-3 "+(row.active?"border-violet-300 bg-violet-50":"border-slate-200 bg-slate-50")}><div className="text-[9px] font-mono font-bold uppercase tracking-wider text-violet-700">{row.phase}</div>{row.active && <div className="mt-1 text-[8px] text-violet-600">MCAS pathway</div>}</div>
+            {[row.human,row.vehicle,row.environment].map((value,i)=><div key={i} className={"rounded-xl border p-3 "+(row.active&&i===1?"border-violet-200 bg-violet-50/70":"border-slate-200 bg-white")}><div className="text-[10px] leading-5 text-slate-700">{value}</div></div>)}
+          </React.Fragment>)}
+        </div>
+        <div className="mt-4 rounded-xl border border-violet-200 bg-white p-4 text-[10px] leading-5 text-slate-600 dark:border-violet-500/20 dark:bg-slate-950/40 dark:text-slate-400"><b className="text-violet-700 dark:text-violet-300">How to read this:</b> Haddon provides an intervention architecture across pre-crash, crash and post-crash phases and human, vehicle/equipment and environmental factors. It is a planning framework, not a crash-reduction equation.</div>
+      </div>}
+
+      {selected==="pathway" && <div className="mt-6">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950/30">
+          <div className="text-[9px] font-mono uppercase tracking-[.18em] text-slate-500">Conceptual conditional model</div>
+          <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-slate-50 p-5 text-center dark:border-slate-800 dark:bg-slate-950/50">
+            <div className="min-w-[760px] font-serif text-xl text-slate-900 dark:text-white">N<sub>crash</sub> = N<sub>baseline</sub> × (1 − P<sub>applicable</sub>) × (1 − P<sub>detected</sub>) × (1 − P<sub>responded</sub>) × (1 − P<sub>avoided</sub>)</div>
+            <div className="mt-3 text-[9px] font-mono text-slate-500">LaTeX: <code>{String.raw`N_{\\mathrm{crash}}=N_{\\mathrm{baseline}}\\times(1-P_{\\mathrm{applicable}})\\times(1-P_{\\mathrm{detected}})\\times(1-P_{\\mathrm{responded}})\\times(1-P_{\\mathrm{avoided}})`}</code></div>
+          </div>
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-[10px] leading-5 text-slate-600 dark:border-amber-500/20 dark:bg-amber-500/5 dark:text-slate-400"><b className="text-amber-700 dark:text-amber-300">Conceptual model — not an estimated MCAS effect.</b> Each probability represents a conditional transition in the proposed risk-reduction pathway. The Explorer must not populate a probability merely because the formula permits it; a value requires an appropriate empirical estimate or an explicitly labelled external analogue / scenario assumption.</div>
+        </div>
+
+        <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+          {pathway.map(x=><div key={x.key} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/30">
+            <div className="flex items-center justify-between gap-2"><span className="font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500">P<sub>{x.key}</sub></span><RiskEvidencePill status={x.status}/></div>
+            <h3 className="mt-3 text-sm font-semibold text-slate-900 dark:text-white">{x.title}</h3>
+            <p className="mt-2 text-[10px] leading-5 text-slate-500">{x.detail}</p>
+            <div className="mt-3 rounded-lg border border-dashed border-slate-200 px-3 py-2 text-[9px] font-mono text-slate-500 dark:border-slate-700">Parameter: not populated</div>
+          </div>)}
+        </div>
+
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <div className="rounded-xl border border-sky-200 bg-sky-50 p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-sky-700">Observed MCAS evidence</div><p className="mt-2 text-[11px] leading-5 text-slate-600">Prototype evidence can anchor detection, warning and observed SCE-response steps. It does not automatically provide a population-level crash-reduction probability.</p></div>
+          <div className="rounded-xl border border-rose-200 bg-rose-50 p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-rose-700">Current evidence gap</div><p className="mt-2 text-[11px] leading-5 text-slate-600">MCAS-specific probabilities linking rider response to population crash or fatality reduction remain to be estimated in field evaluation.</p></div>
+        </div>
+      </div>}
+
+      {selected==="economics" && <div className="mt-6">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950/30"><div className="text-[9px] font-mono uppercase tracking-[.18em] text-emerald-700">Safety benefit</div><div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-center dark:border-slate-800 dark:bg-slate-950/50"><div className="font-serif text-xl text-slate-900 dark:text-white">N<sub>avoided</sub> = N<sub>baseline</sub> − N<sub>intervention</sub></div><div className="mt-2 font-serif text-lg text-slate-700 dark:text-slate-300">Reduction rate = (N<sub>baseline</sub> − N<sub>intervention</sub>) / N<sub>baseline</sub></div></div></div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950/30"><div className="text-[9px] font-mono uppercase tracking-[.18em] text-emerald-700">Investment case</div><div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-center dark:border-slate-800 dark:bg-slate-950/50"><div className="font-serif text-xl text-slate-900 dark:text-white">BCR = Monetised safety benefits / Programme cost</div><div className="mt-2 font-serif text-lg text-slate-700 dark:text-slate-300">ROI = (Benefits − Cost) / Cost</div></div></div>
+        </div>
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-[10px] leading-5 text-slate-600 dark:border-amber-500/20 dark:bg-amber-500/5 dark:text-slate-400"><b className="text-amber-700 dark:text-amber-300">Economic boundary:</b> BCR or ROI inherits the uncertainty of the safety-effect estimate. If crash reduction is a scenario assumption, the resulting economic output is also a scenario result — not observed programme ROI.</div>
+      </div>}
+
+      <details className="mt-5 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/30">
+        <summary className="cursor-pointer text-[10px] font-semibold text-slate-700 dark:text-slate-300">Model logic · why the pathway is conditional</summary>
+        <div className="mt-3 grid gap-3 md:grid-cols-3">
+          <div><div className="text-[9px] font-mono uppercase tracking-wider text-slate-500">1 · Locate</div><p className="mt-1 text-[10px] leading-5 text-slate-500">Haddon identifies where an intervention acts. It does not tell us how large its effect is.</p></div>
+          <div><div className="text-[9px] font-mono uppercase tracking-wider text-slate-500">2 · Estimate</div><p className="mt-1 text-[10px] leading-5 text-slate-500">Each conditional probability needs a defensible estimate from the relevant population, crash type, technology and outcome.</p></div>
+          <div><div className="text-[9px] font-mono uppercase tracking-wider text-slate-500">3 · Propagate</div><p className="mt-1 text-[10px] leading-5 text-slate-500">Only populated, evidence-qualified parameters should propagate into crash, injury, fatality or economic outputs.</p></div>
+        </div>
+      </details>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        <a href="https://iris.who.int/bitstream/10665/326543/1/9789289013796-eng.pdf" target="_blank" rel="noreferrer" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[9px] font-semibold text-slate-600 hover:border-violet-300 hover:text-violet-700">WHO · Haddon Matrix</a>
+        <a href="https://www.who.int/publications/i/item/9789240027437" target="_blank" rel="noreferrer" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[9px] font-semibold text-slate-600 hover:border-violet-300 hover:text-violet-700">WHO · Safe System</a>
+        <a href="https://toolkit.irap.org/management/crash-costing/" target="_blank" rel="noreferrer" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[9px] font-semibold text-slate-600 hover:border-violet-300 hover:text-violet-700">iRAP · Crash costing</a>
+        <a href="https://pubmed.ncbi.nlm.nih.gov/37572423/" target="_blank" rel="noreferrer" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[9px] font-semibold text-slate-600 hover:border-violet-300 hover:text-violet-700">PTW collision-warning simulation</a>
+      </div>
+    </Card>
+  </div>;
+}
+
+function FrameworkLab(){
+  const [training,setTraining]=useState(10);
+  const [technology,setTechnology]=useState(10);
+  const [exposure,setExposure]=useState(5);
+  const [retraining,setRetraining]=useState(5);
+  const [sceEffectiveness,setSceEffectiveness]=useState(25);
+  const [targetRiders,setTargetRiders]=useState(10000);
+  const [baselineSCE,setBaselineSCE]=useState(0);
+  const [baselineCrashes,setBaselineCrashes]=useState(0);
+  const [unitCost,setUnitCost]=useState(2500);
+  const [result,setResult]=useState<{hpt:number;sa:number;coverage:number;exposureReduction:number;sceMitigated:number;crashesMitigated:number;cost:number}|null>(null);
+  // Projection sandbox: simulated until empirical baseline data are supplied.
+  const [projectionMetric,setProjectionMetric]=useState<"risk"|"sces"|"crashes"|"deaths">("risk");
+  const [userDataMode,setUserDataMode]=useState(false);
+  const [userYear,setUserYear]=useState(2026);
+  const [userCrashes,setUserCrashes]=useState(0);
+  const [userDeaths,setUserDeaths]=useState(0);
+  const [userSeriousInjuries,setUserSeriousInjuries]=useState(0);
+  const [projectionHorizon,setProjectionHorizon]=useState(2030);
+  const [baselineRiskIndex,setBaselineRiskIndex]=useState(100);
+  const [annualRiskGrowth,setAnnualRiskGrowth]=useState(4);
+  const [projectionEffectiveness,setProjectionEffectiveness]=useState(25);
+  const [interventionStart,setInterventionStart]=useState(2027);
+  const [projectionRun,setProjectionRun]=useState<{metric:"risk"|"crashes"|"deaths";year:number;crashes:number;deaths:number;risk:number;horizon:number;growth:number;effectiveness:number;start:number;coverage:number}>({metric:"risk",year:2026,crashes:0,deaths:0,risk:100,horizon:2030,growth:4,effectiveness:25,start:2027,coverage:clamp(technology/30,0,1)});
+
+  const runProjection=()=>setProjectionRun({
+    metric:projectionMetric==="sces"?"crashes":projectionMetric,
+    year:userDataMode?userYear:2026,
+    crashes:userDataMode?userCrashes:baselineCrashes,
+    deaths:userDataMode?userDeaths:0,
+    risk:baselineRiskIndex,
+    horizon:Math.max(projectionHorizon,userDataMode?userYear+1:2027),
+    growth:annualRiskGrowth,
+    effectiveness:projectionEffectiveness,
+    start:interventionStart,
+    coverage:result?.coverage ?? clamp(technology/30,0,1)
+  });
+
+  const run=()=>{
+    const hpt=clamp(49.3+training,0,100);
+    // Only capability-oriented interventions move the illustrative HPT/SA indicators.
+    // Technology is modelled as a compensatory safety layer, not as an SA improvement.
+    const sa=clamp(23.2+training*.35+retraining*.10,0,100);
+    const coverage=clamp(technology/30,0,1);
+    const exposureReduction=clamp(exposure/100,0,0.30);
+    const sceMitigated=baselineSCE*coverage*(sceEffectiveness/100);
+    const crashesMitigated=baselineCrashes*coverage*(sceEffectiveness/100);
+    const cost=Math.round(targetRiders*coverage*unitCost);
+    setResult({hpt,sa,coverage,exposureReduction,sceMitigated,crashesMitigated,cost});
+  };
+
+  const controls=[
+    ["Hazard-perception training",training,setTraining],
+    ["MCAS / collision-warning coverage",technology,setTechnology],
+    ["Exposure control",exposure,setExposure],
+    ["Retraining",retraining,setRetraining]
+  ] as const;
+
+  const money=(n:number)=>"RM "+n.toLocaleString("en-MY",{maximumFractionDigits:0});
+
+  const applied=projectionRun;
+  const projectionBase = applied.metric==="risk" ? applied.risk : applied.metric==="crashes" ? applied.crashes : applied.deaths;
+  const projectionData = Array.from({length:Math.max(1,applied.horizon-applied.year+1)},(_,i)=>{
+    const year=applied.year+i;
+    const bau=projectionBase*Math.pow(1+applied.growth/100,i);
+    const effect=applied.effectiveness/100*applied.coverage;
+    const ramp=year<applied.start ? 0 : Math.min(1,(year-applied.start+1)/3);
+    const intervention=bau*(1-effect*ramp);
+    return {year,bau:Number(bau.toFixed(2)),intervention:Number(intervention.toFixed(2)),gap:Number((bau-intervention).toFixed(2))};
+  });
+  const finalProjection=projectionData[projectionData.length-1];
+
+  const evidenceCards=[
+    {
+      level:"01",
+      label:"Direct MCAS evidence",
+      kind:"observed" as const,
+      title:"LiDAR-based Motorcycle Collision Alert System",
+      finding:"Four prototype units were installed on 100–150 cc motorcycles. Across controlled and on-road testing, LiDAR, GPS, visual and auditory alert components showed high operational performance; four Safety-Critical Events were examined and timely alerts with collision-avoidance responses were observed.",
+      number:"4 SCEs analysed · 164,286 data points",
+      href:"https://jsaem.my/index.php/journal/article/view/241"
+    },
+    {
+      level:"02",
+      label:"Closest technology analogue",
+      kind:"observed" as const,
+      title:"Motorcycle Forward Collision Warning / Crash Warning",
+      finding:"An on-road study evaluated motorcycle crash-warning interfaces for forward collision warning, intersection movement assist and lane-departure warning. Auditory, visual and haptic warning modalities were tested with 39 licensed riders.",
+      number:"39 riders · on-road evaluation",
+      href:"https://www.sciencedirect.com/science/article/abs/pii/S0968090X16302170"
+    },
+    {
+      level:"03",
+      label:"Crash-applicability evidence",
+      kind:"derived" as const,
+      title:"Advanced Rider Assistance Systems",
+      finding:"An analysis of 390 real PTW crashes linked crash situations to 14 rider-assistance systems. At the French national weighting stage, an anti-collision warning system was estimated to have an influence on 29.8% of crashes. This is an applicability estimate, not a measured crash-reduction rate.",
+      number:"390 crashes · 29.8% estimated applicability",
+      href:"https://pmc.ncbi.nlm.nih.gov/articles/PMC10875574/"
+    },
+    {
+      level:"04",
+      label:"Population simulation",
+      kind:"simulated" as const,
+      title:"PTW collision-warning market-penetration model",
+      finding:"A hybrid traffic-system simulation modelled a motorcycle collision-warning system for rear-end conflicts. At 100% market penetration, the model estimated about a 29.5% reduction in PTW rear-end collisions and an associated reduction in economic crash costs.",
+      number:"29.5% simulated reduction at 100% penetration",
+      href:"https://pubmed.ncbi.nlm.nih.gov/37572423/"
+    },
+    {
+      level:"05",
+      label:"Research landscape",
+      kind:"derived" as const,
+      title:"Systematic review of PTW active safety",
+      finding:"A systematic review identified 62 studies covering PTW active-safety technologies including collision avoidance, collision warning, AEB, intersection support, ITS, curve warning and human-machine interfaces. The review found development maturity varied substantially and called for more structured safety-impact evaluation.",
+      number:"62 studies · 22 early-stage system studies",
+      href:"https://pubmed.ncbi.nlm.nih.gov/31914321/"
+    }
+  ];
+
+  const policyCards=[
+    {
+      title:"Mandatory Hazard Perception Test for learner / novice riders",
+      jurisdiction:"Queensland, Australia · Western Australia · United Kingdom",
+      mechanism:"Capability verification",
+      detail:"Queensland requires the motorcycle Hazard Perception Test before progressing from the learner stage; Western Australia requires the HPT before the practical driving assessment; the UK motorcycle theory test includes a hazard-perception component.",
+      href:"https://www.qld.gov.au/transport/licensing/getting/hazard/motorcycle-hazard-perception-test"
+    },
+    {
+      title:"Mandatory night-riding restriction",
+      jurisdiction:"New Zealand",
+      mechanism:"Exposure control",
+      detail:"Motorcycle learner-licence holders are prohibited from riding between 10 pm and 5 am, reducing exposure to higher-risk conditions while riding experience is developing.",
+      href:"https://nzta.govt.nz/driver-licences/other-licence-classes-and-endorsements/motorcycles/learner-licence"
+    },
+    {
+      title:"Mandatory pillion / passenger restriction for novice riders",
+      jurisdiction:"New Zealand · Queensland · Victoria · New South Wales",
+      mechanism:"Exposure control",
+      detail:"Multiple jurisdictions restrict passenger carriage during novice licensing stages, limiting an additional riding task while experience and competency are still developing.",
+      href:"https://www.nzta.govt.nz/driver-licences/other-licence-classes-and-endorsements/motorcycles/learner-licence"
+    },
+    {
+      title:"Mandatory supervised riding / driving hours",
+      jurisdiction:"Western Australia · New South Wales · Victoria",
+      mechanism:"Structured exposure",
+      detail:"Western Australia requires learner motorcycle riders to record supervised riding experience, including night riding; Australian car GDL systems also use substantial supervised-hour requirements to build experience before independent driving.",
+      href:"https://www.transport.wa.gov.au/licensing/drivers-licence/get-a-licence/restricted-motorcycle/learn-to-ride"
+    },
+    {
+      title:"Motorcycle performance / power restriction",
+      jurisdiction:"New Zealand · Victoria",
+      mechanism:"Exposure control",
+      detail:"Learner and restricted riders are limited to approved motorcycle classes under LAMS-style schemes, reducing novice exposure to higher-performance motorcycles.",
+      href:"https://nzta.govt.nz/driver-licences/other-licence-classes-and-endorsements/motorcycles/learner-licence"
+    },
+    {
+      title:"Demerit-point and licence-consequence systems",
+      jurisdiction:"Australia · New Zealand",
+      mechanism:"Enforcement & compliance",
+      detail:"Demerit systems attach licence consequences to offences and breaches of novice conditions. This belongs to enforcement rather than exposure control.",
+      href:"https://www.nzta.govt.nz/driver-licences/other-licence-classes-and-endorsements/motorcycles/learner-licence"
+    },
+    {
+      title:"Mandatory advanced braking requirements",
+      jurisdiction:"European Union",
+      mechanism:"Engineering protection",
+      detail:"EU type-approval rules introduced advanced braking requirements for relevant L-category motorcycle classes, providing an engineering safety layer rather than a rider-capability intervention.",
+      href:"https://eur-lex.europa.eu/eli/reg/2013/168/2016-01-01/eng"
+    }
+  ];
+
+  return <div className="space-y-5">
+    <RiskReductionModel/>
+    <Card className="border-amber-500/20 bg-amber-500/5 p-6 md:p-8">
+      <div className="flex items-start justify-between gap-5">
+        <div>
+          <div className="text-[10px] font-mono uppercase tracking-[.2em] text-amber-500">05 · Safety impact & evidence laboratory</div>
+          <h2 className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">From evidence to a testable safety intervention</h2>
+          <p className="mt-3 max-w-5xl text-sm leading-6 text-slate-600 dark:text-slate-400">
+            Explore how training, technology, exposure control and retraining act through different safety pathways. The laboratory separates observed findings, external evidence, simulations and user-defined scenarios.
+          </p>
+        </div>
+        <EvidenceBadge kind="scenario"/>
+      </div>
+    </Card>
+
+    <Card className="p-5 md:p-6">
+      <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+        <div>
+          <div className="text-[9px] font-mono uppercase tracking-[.2em] text-violet-600 dark:text-violet-300">Technology evidence ladder</div>
+          <h3 className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">Why motorcycle collision-warning technology is a credible research direction</h3>
+          <p className="mt-2 max-w-4xl text-xs leading-5 text-slate-500">
+            The evidence gets progressively more indirect. MCAS has direct prototype evidence; external studies provide context for the potential of the broader collision-warning technology class. External effect estimates are not transferred to MCAS.
+          </p>
+        </div>
+        <div className="rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-[9px] font-mono font-semibold text-violet-700">MCAS · evidence-gathering stage</div>
+      </div>
+
+      <div className="mt-5 grid gap-3 xl:grid-cols-5">
+        {evidenceCards.map(card=><article key={card.level} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/40">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[9px] font-mono font-bold text-slate-400">{card.level}</span>
+            <EvidenceBadge kind={card.kind}/>
+          </div>
+          <div className="mt-3 text-[9px] font-mono uppercase tracking-wider text-violet-600 dark:text-violet-300">{card.label}</div>
+          <h4 className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">{card.title}</h4>
+          <p className="mt-2 text-[11px] leading-5 text-slate-600 dark:text-slate-400">{card.finding}</p>
+          <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-[9px] font-mono text-slate-600 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-400">{card.number}</div>
+          <a href={card.href} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1 text-[10px] font-semibold text-violet-700 hover:text-violet-900 dark:text-violet-300 dark:hover:text-violet-200">Open source <ArrowRight size={11}/></a>
+        </article>)}
+      </div>
+
+      <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_1fr]">
+        <div className="rounded-2xl border border-violet-200 bg-violet-50 p-5">
+          <div className="text-[9px] font-mono uppercase tracking-[.18em] text-violet-700">What the evidence supports</div>
+          <p className="mt-2 text-sm font-semibold leading-6 text-slate-900">Collision-warning technology is a credible active-safety research pathway for PTWs.</p>
+          <p className="mt-2 text-[11px] leading-5 text-slate-600">The evidence supports feasibility, rider-interface research, crash-scenario applicability and simulated population benefit. It does not establish a validated crash-reduction effect for MCAS.</p>
+        </div>
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+          <div className="text-[9px] font-mono uppercase tracking-[.18em] text-amber-700">What still needs to be measured</div>
+          <p className="mt-2 text-sm font-semibold leading-6 text-slate-900">MCAS → warning → rider response → SCE mitigation → crash outcome.</p>
+          <p className="mt-2 text-[11px] leading-5 text-slate-600">The next field phase should quantify detection reliability, warning timing, rider response, SCE frequency and eventual crash outcomes under naturalistic Malaysian riding conditions.</p>
+        </div>
+      </div>
+    </Card>
+
+    <Card className="p-5 md:p-6">
+      <div className="flex items-center gap-2">
+        <ShieldCheck size={17} className="text-emerald-500"/>
+        <div>
+          <div className="text-[9px] font-mono uppercase tracking-[.18em] text-emerald-600 dark:text-emerald-300">Compensatory safety pathway</div>
+          <h3 className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">MCAS does not need to improve SA to provide a safety benefit</h3>
+        </div>
+      </div>
+      <div className="mt-5 grid gap-2 md:grid-cols-5">
+        {[
+          ["1","Human limitation","SA / attention may be insufficient"],
+          ["2","Hazard","Forward conflict develops"],
+          ["3","MCAS","Detect → warn"],
+          ["4","Rider response","Brake / slow / change trajectory"],
+          ["5","Safety outcome","SCE potentially mitigated"]
+        ].map(([n,title,detail],i)=><React.Fragment key={n}>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/40">
+            <div className="text-[9px] font-mono text-violet-600 dark:text-violet-300">{n}</div>
+            <div className="mt-1 text-xs font-semibold text-slate-900 dark:text-white">{title}</div>
+            <div className="mt-1 text-[10px] leading-4 text-slate-500">{detail}</div>
+          </div>
+          {i<4 && <div className="hidden items-center justify-center md:flex"><ArrowRight size={15} className="text-slate-400"/></div>}
+        </React.Fragment>)}
+      </div>
+      <div className="mt-4 rounded-xl border border-sky-200 bg-sky-50 p-4 text-[11px] leading-5 text-slate-600">
+        <b className="text-sky-700">Interpretation:</b> technology is modelled as a compensatory safety layer. Training and retraining can be linked to capability measures; collision warning is not assumed to increase the rider's SA score.
+      </div>
+    </Card>
+
+    <Card className="p-5">
+      <div className="flex items-center gap-2 text-amber-600 dark:text-amber-300"><SlidersHorizontal size={16}/><h3 className="font-semibold text-slate-900 dark:text-white">Build a transparent intervention scenario</h3></div>
+      <p className="mt-2 text-[11px] leading-5 text-slate-500">Scenario levers are deliberately separated from observed and published effects.</p>
+      <div className="mt-5 grid gap-5 xl:grid-cols-[430px_1fr]">
+        <div className="space-y-5">
+          {controls.map(([label,value,set])=><label key={label} className="block">
+            <div className="flex justify-between gap-3 text-xs text-slate-700 dark:text-slate-300"><span>{label}</span><b className="font-mono">{value}%</b></div>
+            <input aria-label={label} type="range" min="0" max="30" value={value} onChange={e=>set(Number(e.target.value))} className="mt-2 w-full"/>
+          </label>)}
+
+          <label className="block">
+            <div className="flex justify-between text-xs text-slate-700 dark:text-slate-300">
+              <span title="User-controlled planning assumption for the proportion of eligible SCEs that the intervention could potentially mitigate.">Assumed SCE mitigation effectiveness ⓘ</span>
+              <b className="font-mono">{sceEffectiveness}%</b>
+            </div>
+            <input aria-label="Assumed SCE mitigation effectiveness" type="range" min="0" max="100" value={sceEffectiveness} onChange={e=>setSceEffectiveness(Number(e.target.value))} className="mt-2 w-full"/>
+            <div className="mt-1 text-[9px] text-slate-500">Planning assumption only — not an observed MCAS effect.</div>
+          </label>
+
+          <div className="border-t border-slate-200 pt-5 dark:border-slate-800">
+            <div className="mb-3 text-[9px] font-mono uppercase tracking-[.18em] text-slate-500">Scale & economics</div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label><span className="text-[10px] text-slate-600 dark:text-slate-400">Target riders</span><input type="number" min="0" value={targetRiders} onChange={e=>setTargetRiders(Math.max(0,Number(e.target.value)||0))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"/></label>
+              <label><span title="Observed annual safety-critical events for the target population. Do not enter crashes here unless your outcome definition is explicitly crash-based.">Baseline SCEs / year ⓘ</span><input type="number" min="0" value={baselineSCE} onChange={e=>setBaselineSCE(Math.max(0,Number(e.target.value)||0))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"/></label>
+              <label><span title="Observed annual crashes for the target population. The simulator does not derive this from the research study.">Baseline crashes / year ⓘ</span><input type="number" min="0" value={baselineCrashes} onChange={e=>setBaselineCrashes(Math.max(0,Number(e.target.value)||0))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"/></label>
+              <label><span className="text-[10px] text-slate-600 dark:text-slate-400">MCAS unit cost (RM)</span><input type="number" min="0" value={unitCost} onChange={e=>setUnitCost(Math.max(0,Number(e.target.value)||0))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"/></label>
+            </div>
+          </div>
+
+          <button onClick={run} className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-3 text-xs font-bold text-slate-950 hover:bg-amber-400"><Sparkles size={14}/> Run evidence-bounded scenario</button>
+          <button onClick={()=>{setTraining(10);setTechnology(10);setExposure(5);setRetraining(5);setSceEffectiveness(25);setTargetRiders(10000);setBaselineSCE(0);setBaselineCrashes(0);setUnitCost(2500);setUserDataMode(false);setUserYear(2026);setUserCrashes(0);setUserDeaths(0);setUserSeriousInjuries(0);setProjectionMetric("risk");setProjectionHorizon(2030);setProjectionRun({metric:"risk",year:2026,crashes:0,deaths:0,risk:100,horizon:2030,growth:4,effectiveness:25,start:2027,coverage:clamp(technology/30,0,1)});setResult(null)}} className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-3 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-400"><RotateCcw size={14}/> Reset</button>
+        </div>
+
+        <div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Metric label="Observed HPT" value="49.3%" sub="Experiment 1 reported mean" kind="observed"/>
+            <Metric label="Observed SA" value="23.2%" sub="Experiment 2 reported total mean" kind="observed"/>
+            <Metric label="Technology coverage" value={result ? Math.round(result.coverage*100)+"%" : "—"} sub="Scenario share of target riders receiving MCAS" kind="scenario"/>
+            <Metric label="Assumed SCE mitigation" value={sceEffectiveness+"%"} sub="User-defined planning assumption" kind="scenario"/>
+          </div>
+
+          {result ? <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+            <Metric label="Scenario HPT" value={result.hpt.toFixed(1)+"%"} sub="Illustrative capability pathway: training + retraining" kind="scenario"/>
+            <Metric label="Scenario SA" value={result.sa.toFixed(1)+"%"} sub="Illustrative capability pathway only; technology does not add SA" kind="scenario"/>
+            <Metric label="Potential SCEs mitigated" value={baselineSCE>0 ? result.sceMitigated.toFixed(1) : "Enter SCE baseline"} sub={baselineSCE>0 ? "Baseline SCEs × technology coverage × assumed mitigation" : "Requires a user-supplied SCE baseline"} kind="scenario"/>
+            <Metric label="Scenario-estimated crashes mitigated" value={baselineCrashes>0 ? result.crashesMitigated.toFixed(1) : "Enter crash baseline"} sub={baselineCrashes>0 ? "Baseline crashes × technology coverage × assumed mitigation" : "Requires a user-supplied crash baseline"} kind="scenario"/>
+          </div> : <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-center dark:border-slate-800 dark:bg-slate-950/40"><div className="text-sm font-semibold text-slate-900 dark:text-white">No scenario calculated yet</div><p className="mt-1 text-[11px] text-slate-500">Change the intervention assumptions and run the laboratory. No crash or SCE estimate is invented when a baseline is missing.</p></div>}
+
+          {result && <div className="mb-4 flex justify-end"><DownloadButton label="Download scenario CSV" onClick={()=>downloadCSV("research-explorer-framework-scenario.csv",[{target_riders:targetRiders,technology_coverage_percent:Math.round(result.coverage*100),training_assumption:training,retraining_assumption:retraining,exposure_control:exposure,assumed_sce_mitigation_percent:sceEffectiveness,baseline_sces:baselineSCE,baseline_crashes:baselineCrashes,unit_cost_rm:unitCost,scenario_hpt:result.hpt,scenario_sa:result.sa,potential_sces_mitigated:result.sceMitigated,potential_crashes_prevented:result.crashesMitigated,programme_cost_rm:result.cost}])}/></div>}{result && <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <Metric label="Programme cost" value={money(result.cost)} sub="Target riders × technology coverage × unit cost" kind="scenario"/>
+            <Metric label="Capability change" value={(result.sa-23.2).toFixed(1)+" pp"} sub="Illustrative change in SA from training/retraining only" kind="scenario"/>
+          </div>}
+
+          <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5 dark:border-emerald-500/20 dark:bg-emerald-500/5">
+            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div>
+                <div className="text-[9px] font-mono uppercase tracking-[.2em] text-emerald-700 dark:text-emerald-300">Counterfactual projection · simulation mode</div>
+                <h3 className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">What if we do nothing additional — versus intervene?</h3>
+                <p className="mt-2 max-w-3xl text-[11px] leading-5 text-slate-600 dark:text-slate-400">This first version uses simulated data so the projection architecture can be tested before empirical baseline data are supplied. “BAU” means business-as-usual / no additional intervention, not literally zero safety activity.</p>
+              </div>
+              <EvidenceBadge kind="simulated"/>
+            </div>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+              <label><span className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Projection metric</span><select value={projectionMetric} onChange={e=>setProjectionMetric(e.target.value as "risk"|"crashes"|"deaths")} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-[10px] text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"><option value="risk">Risk index (simulated)</option><option value="crashes">Crashes / year</option><option value="deaths">Deaths / year</option></select></label>
+              <label><span className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Annual BAU growth</span><select value={annualRiskGrowth} onChange={e=>setAnnualRiskGrowth(Number(e.target.value))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-[10px] text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"><option value="0">0%</option><option value="2">2%</option><option value="4">4%</option><option value="6">6%</option><option value="8">8%</option></select></label>
+              <label><span className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Intervention starts</span><select value={interventionStart} onChange={e=>setInterventionStart(Number(e.target.value))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-[10px] text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"><option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option></select></label>
+              <label><span className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Projection effectiveness</span><select value={projectionEffectiveness} onChange={e=>setProjectionEffectiveness(Number(e.target.value))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-[10px] text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"><option value="10">10%</option><option value="25">25%</option><option value="50">50%</option><option value="75">75%</option></select></label>
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-sky-200 bg-sky-50/70 p-4 dark:border-sky-500/20 dark:bg-sky-500/5">
+              <div className="flex flex-wrap items-center justify-between gap-3"><div><div className="text-[9px] font-mono uppercase tracking-[.2em] text-sky-700 dark:text-sky-300">Bring your own crash data</div><div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">Use a real baseline when you have one.</div></div><label className="flex items-center gap-2 text-[10px] font-semibold text-slate-700 dark:text-slate-300"><input type="checkbox" checked={userDataMode} onChange={e=>{const checked=e.target.checked;setUserDataMode(checked);if(checked){setProjectionMetric("crashes");if(projectionHorizon<=userYear)setProjectionHorizon(userYear+4)}}}/> Use user-supplied data</label></div>
+              <p className="mt-2 text-[10px] leading-5 text-slate-600 dark:text-slate-400">Enter a single observed year first. The Explorer uses it as a starting level; it does not infer a trend or causal effect from one year.</p>
+              {userDataMode && <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <label><span className="text-[9px] text-slate-500">Baseline year</span><input type="number" min="2000" max="2100" value={userYear} onChange={e=>{const y=Number(e.target.value)||2026;setUserYear(y);if(projectionHorizon<=y)setProjectionHorizon(y+4)}} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"/></label>
+                <label><span className="text-[9px] text-slate-500">Motorcycle crashes</span><input type="number" min="0" value={userCrashes} onChange={e=>setUserCrashes(Math.max(0,Number(e.target.value)||0))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"/></label>
+                <label><span className="text-[9px] text-slate-500">Deaths</span><input type="number" min="0" value={userDeaths} onChange={e=>setUserDeaths(Math.max(0,Number(e.target.value)||0))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"/></label>
+                <label><span className="text-[9px] text-slate-500">Serious injuries (optional)</span><input type="number" min="0" value={userSeriousInjuries} onChange={e=>setUserSeriousInjuries(Math.max(0,Number(e.target.value)||0))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"/></label>
+              </div>}
+              {userDataMode && <div className="mt-3 rounded-lg border border-sky-200 bg-white p-3 text-[10px] leading-5 text-slate-600 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-400"><b className="text-sky-700 dark:text-sky-300">Baseline snapshot:</b> {userCrashes.toLocaleString()} crashes · {userDeaths.toLocaleString()} deaths · {userSeriousInjuries.toLocaleString()} serious injuries. {userCrashes>0 ? (userDeaths/userCrashes*100).toFixed(1)+" deaths per 100 recorded crashes — descriptive only, not a probability of death unless the definitions support that interpretation." : "Enter crash count to calculate a descriptive ratio."}</div>}
+            </div>
+
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-violet-200 bg-violet-50 p-3 dark:border-violet-500/20 dark:bg-violet-500/5">
+              <div><div className="text-[10px] font-semibold text-slate-900 dark:text-white">Projection is calculated on demand</div><div className="text-[9px] leading-4 text-slate-500">Change the baseline or assumptions, then run the projection to refresh the two curves.</div></div>
+              <button onClick={runProjection} className="inline-flex items-center justify-center gap-2 rounded-lg bg-violet-600 px-4 py-2.5 text-[10px] font-bold text-white hover:bg-violet-700"><Play size={13}/> Run projection</button>
+            </div>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              <label className="block rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950/40"><div className="flex justify-between text-[10px]"><span>Simulated baseline risk index</span><b className="font-mono">{baselineRiskIndex}</b></div><input type="range" min="50" max="150" value={baselineRiskIndex} onChange={e=>setBaselineRiskIndex(Number(e.target.value))} className="mt-2 w-full"/></label>
+              <label className="block rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950/40"><div className="flex justify-between text-[10px]"><span>Projection horizon</span><b className="font-mono">{projectionHorizon}</b></div><input type="range" min={userDataMode?userYear+1:2027} max={userDataMode?userYear+9:2035} value={projectionHorizon} onChange={e=>setProjectionHorizon(Number(e.target.value))} className="mt-2 w-full"/></label>
+            </div>
+
+            <div className="mt-5 h-80 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950/30">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={projectionData} margin={{top:8,right:12,left:0,bottom:4}}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1"/>
+                  <XAxis dataKey="year" tick={{fill:"#64748b",fontSize:9}}/>
+                  <YAxis tick={{fill:"#64748b",fontSize:9}}/>
+                  <Tooltip content={<ChartTooltip/>}/>
+                  <Line type="monotone" dataKey="bau" name="BAU / no additional intervention" stroke="#64748b" strokeWidth={2} strokeDasharray="6 4" dot={{r:2}}/>
+                  <Line type="monotone" dataKey="intervention" name="Intervention scenario" stroke="#10b981" strokeWidth={2.5} dot={{r:2}}/>
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+              <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950/40"><div className="text-[9px] font-mono uppercase tracking-wider text-slate-500">BAU at {projectionHorizon}</div><div className="mt-1 font-mono text-lg font-semibold text-slate-900 dark:text-white">{finalProjection ? finalProjection.bau.toFixed(1) : "—"}</div></div>
+              <div className="rounded-xl border border-emerald-200 bg-white p-3 dark:border-emerald-500/20 dark:bg-slate-950/40"><div className="text-[9px] font-mono uppercase tracking-wider text-emerald-600 dark:text-emerald-300">Intervention at {projectionHorizon}</div><div className="mt-1 font-mono text-lg font-semibold text-slate-900 dark:text-white">{finalProjection ? finalProjection.intervention.toFixed(1) : "—"}</div></div>
+              <div className="rounded-xl border border-violet-200 bg-white p-3 dark:border-violet-500/20 dark:bg-slate-950/40"><div className="text-[9px] font-mono uppercase tracking-wider text-violet-600 dark:text-violet-300">Scenario gap</div><div className="mt-1 font-mono text-lg font-semibold text-slate-900 dark:text-white">{finalProjection ? finalProjection.gap.toFixed(1) : "—"}</div></div>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-[10px] leading-5 text-slate-600 dark:border-amber-500/20 dark:bg-amber-500/5 dark:text-slate-400"><b className="text-amber-700 dark:text-amber-300">Model boundary:</b> the projection curve is illustrative. The BAU trend, intervention ramp and effectiveness are assumptions, not estimates from the published paper. When real historical crash/SCE/exposure data are supplied, this layer should be replaced with an empirical baseline and a defensible counterfactual model.</div>
+          </div>
+
+          <div className="mt-4 rounded-2xl border border-violet-200 bg-violet-50/70 p-5 dark:border-violet-500/20 dark:bg-violet-500/5">
+            <div className="flex items-center gap-2"><CircleHelp size={15} className="text-violet-600 dark:text-violet-300"/><h3 className="font-semibold text-slate-900 dark:text-white">How each scenario value is calculated</h3></div>
+            <div className="mt-3 grid gap-2 md:grid-cols-2">
+              <div className="rounded-xl border border-white bg-white p-3 dark:border-slate-800 dark:bg-slate-950/40"><b className="text-[10px] text-slate-900 dark:text-white">Scenario HPT</b><p className="mt-1 text-[10px] leading-4 text-slate-500">49.3% observed baseline + training assumption. The slider represents an illustrative capability change; it is not an observed intervention effect.</p></div>
+              <div className="rounded-xl border border-white bg-white p-3 dark:border-slate-800 dark:bg-slate-950/40"><b className="text-[10px] text-slate-900 dark:text-white">Scenario SA</b><p className="mt-1 text-[10px] leading-4 text-slate-500">23.2% observed baseline + (training × 0.35) + (retraining × 0.10). These coefficients are scenario assumptions.</p></div>
+              <div className="rounded-xl border border-white bg-white p-3 dark:border-slate-800 dark:bg-slate-950/40"><b className="text-[10px] text-slate-900 dark:text-white">Technology coverage</b><p className="mt-1 text-[10px] leading-4 text-slate-500">Technology slider ÷ 30. A slider value of 15 therefore represents 50% illustrative coverage.</p></div>
+              <div className="rounded-xl border border-white bg-white p-3 dark:border-slate-800 dark:bg-slate-950/40"><b className="text-[10px] text-slate-900 dark:text-white">SCEs / crashes mitigated</b><p className="mt-1 text-[10px] leading-4 text-slate-500">Baseline × technology coverage × assumed mitigation effectiveness. No baseline means no invented impact estimate.</p></div>
+              <div className="rounded-xl border border-white bg-white p-3 dark:border-slate-800 dark:bg-slate-950/40"><b className="text-[10px] text-slate-900 dark:text-white">Programme cost</b><p className="mt-1 text-[10px] leading-4 text-slate-500">Target riders × technology coverage × unit cost.</p></div>
+              <div className="rounded-xl border border-white bg-white p-3 dark:border-slate-800 dark:bg-slate-950/40"><b className="text-[10px] text-slate-900 dark:text-white">pp = percentage points</b><p className="mt-1 text-[10px] leading-4 text-slate-500">23.2% → 27.2% is +4.0 percentage points, not a 4% relative increase.</p></div>
+            </div>
+          </div>
+
+          <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950/30">
+            <h3 className="font-semibold text-slate-900 dark:text-white">How to read the result</h3>
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+              <div className="rounded-xl border border-sky-200 bg-sky-50 p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-sky-700">Observed</div><p className="mt-2 text-[11px] leading-5 text-slate-600">Study results are fixed evidence: HPT 49.3% and total SA 23.2%.</p></div>
+              <div className="rounded-xl border border-violet-200 bg-violet-50 p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-violet-700">External evidence</div><p className="mt-2 text-[11px] leading-5 text-slate-600">Collision-warning studies provide context and benchmark ranges, but their effect sizes are not assigned to MCAS.</p></div>
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-amber-700">Scenario</div><p className="mt-2 text-[11px] leading-5 text-slate-600">SCE/crash outputs are conditional calculations from user-supplied baselines, coverage and assumed mitigation.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Card>
+
+    <Card className="p-5 md:p-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="text-[9px] font-mono uppercase tracking-[.2em] text-emerald-600 dark:text-emerald-300">Policy change</div>
+          <h3 className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">Implemented policy precedent outside LMIC settings</h3>
+          <p className="mt-2 max-w-5xl text-xs leading-5 text-slate-500">
+            These are documented policy measures already used in high-income / developed-country jurisdictions. They are shown as implementation precedent, not as claims that the same policy will produce the same effect in Malaysia.
+          </p>
+        </div>
+        <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[9px] font-mono font-semibold text-emerald-700">IMPLEMENTED</span>
+      </div>
+      <div className="mt-5 grid gap-3 lg:grid-cols-2">
+        {policyCards.map(card=><article key={card.title} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/30">
+          <div className="flex items-start justify-between gap-3">
+            <div><h4 className="text-sm font-semibold text-slate-900 dark:text-white">{card.title}</h4><div className="mt-1 text-[9px] font-mono uppercase tracking-wider text-slate-500">{card.jurisdiction}</div></div>
+            <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[8px] font-mono font-bold uppercase text-emerald-700">{card.mechanism}</span>
+          </div>
+          <p className="mt-3 text-[11px] leading-5 text-slate-600 dark:text-slate-400">{card.detail}</p>
+          <a href={card.href} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">Open policy source <ArrowRight size={11}/></a>
+        </article>)}
+      </div>
+    </Card>
+
+    <div className="rounded-2xl border border-violet-200 bg-violet-50 p-5 text-xs leading-5 text-slate-600">
+      <div className="mb-3 flex flex-wrap items-center gap-2"><span className="rounded-full border border-violet-200 bg-white px-2.5 py-1 text-[9px] font-mono font-bold uppercase tracking-wider text-violet-700">MKA Ibrahim (2026) · Evidence basis</span><span className="text-[9px] text-slate-500">{paperMeta.journal} · {paperMeta.doi}</span></div>
+      <p className="mb-3 text-[10px] leading-5 text-slate-500">The observed HPT and SA baselines in this laboratory are drawn from Paper 1. The scenario and projection layers are Explorer-generated and are not presented as additional findings of MKA Ibrahim (2026).</p>
+      <b className="text-violet-700">Evidence boundary:</b> MCAS currently has prototype-level evidence of detection, warning and observed SCE responses. External collision-warning research supports the plausibility and research relevance of this technology class. Population-level crash reduction for MCAS remains an empirical question for the next field-evidence phase.
+    </div>
+  </div>;
+}
+
+
+type ArgumentClaim = {
+  id:string;
+  title:string;
+  status:"supported"|"qualified"|"gap";
+  verdict:string;
+  evidence:string;
+  limitation:string;
+  sources:Array<{label:string;href:string}>;
+};
+
+const argumentClaims:ArgumentClaim[] = [
+  {
+    id:"A",
+    title:"Motorcycle risk is associated with rider-level and behavioural factors.",
+    status:"supported",
+    verdict:"Supported by systematic-review evidence, with the strongest associations reported for factors such as young age, speeding, mobile-phone use, risky riding behaviour and long working hours among commercial motorcycle drivers.",
+    evidence:"A 2024 systematic review included 20 higher-quality studies involving 7,852 commercial motorcycle drivers. Most studies were observational, so association should not be read as proof of causation.",
+    limitation:"The evidence base is geographically uneven and predominantly cross-sectional; it is not a Malaysia-specific causal estimate.",
+    sources:[{label:"Kiwango et al. (2024)",href:"https://pubmed.ncbi.nlm.nih.gov/38385344/"}]
+  },
+  {
+    id:"B",
+    title:"Hazard-perception capability can be improved through training.",
+    status:"qualified",
+    verdict:"Supported at the capability level, but with an important qualification: the 2024 meta-analysis found a small effect for motorcyclists (g = 0.42) and only three motorcyclist studies.",
+    evidence:"Across 57 studies, hazard-perception training improved hazard-perception skill. The review also found substantial heterogeneity and explicitly called for research on whether early-stage gains translate into on-road responses and persist over time.",
+    limitation:"Improved hazard-perception scores are not the same as demonstrated crash or fatality reduction.",
+    sources:[{label:"Prabhakharan et al. (2024)",href:"https://pubmed.ncbi.nlm.nih.gov/38701558/"}]
+  },
+  {
+    id:"C",
+    title:"PTW active-safety technologies can address multiple crash configurations.",
+    status:"supported",
+    verdict:"Supported as a technology-landscape proposition. A systematic review identified collision avoidance, collision warning, AEB, intersection support, ITS, curve warning, HMI and other PTW active-safety systems.",
+    evidence:"The review included 62 studies and found a wide range of systems and development stages, including early-stage prototypes and studies evaluating system effectiveness.",
+    limitation:"Technology coverage and development maturity vary substantially; the review does not establish a single population-level effect for MCAS or every system.",
+    sources:[{label:"Savino et al. (2020)",href:"https://pubmed.ncbi.nlm.nih.gov/31914321/"}]
+  },
+  {
+    id:"D",
+    title:"Exposure and work-related factors contribute to commercial-motorcycle risk.",
+    status:"qualified",
+    verdict:"Supported for several exposure-related factors, but context-dependent. Long working hours were among factors consistently associated with crashes/injuries in the 2024 systematic review.",
+    evidence:"The review found consistent associations for several factors, while evidence for driver training and work schedules themselves was inconclusive.",
+    limitation:"Most included studies were cross-sectional and almost half came from sub-Saharan Africa; the finding should not be converted directly into a Malaysian effect size.",
+    sources:[{label:"Kiwango et al. (2024)",href:"https://pubmed.ncbi.nlm.nih.gov/38385344/"}]
+  },
+  {
+    id:"E",
+    title:"Combining training, technology and exposure management will reduce Malaysian motorcycle fatalities by a specific percentage.",
+    status:"gap",
+    verdict:"Not established by the retrieved evidence.",
+    evidence:"The evidence base supports individual links at different stages — capability improvement, risk-factor association and technology plausibility — but does not establish a combined causal effect or a Malaysia-specific fatality-reduction magnitude.",
+    limitation:"A numerical reduction should therefore be treated as a hypothesis or scenario assumption until evaluated with an appropriate intervention design and outcome data.",
+    sources:[]
+  }
+];
+
+function EvidenceStatus({status}:{status:ArgumentClaim["status"]}) {
+  const cfg = {
+    supported:{label:"Supported",cls:"border-emerald-200 bg-emerald-50 text-emerald-700",dot:"bg-emerald-500"},
+    qualified:{label:"Supported · qualified",cls:"border-amber-200 bg-amber-50 text-amber-700",dot:"bg-amber-500"},
+    gap:{label:"Evidence gap",cls:"border-rose-200 bg-rose-50 text-rose-700",dot:"bg-rose-500"}
+  }[status];
+  return <span className={"inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-mono font-bold uppercase tracking-wider "+cfg.cls}><span className={"h-1.5 w-1.5 rounded-full "+cfg.dot}/>{cfg.label}</span>;
+}
+
+function EvidenceIntelligence(){
+  const defaultArgument="Motorcycle safety policy should move from a rider-only model toward a multi-layered system approach combining training, technology and exposure management.";
+  const [argument,setArgument]=useState(defaultArgument);
+  const [activeArgument,setActiveArgument]=useState(defaultArgument);
+  const [interrogated,setInterrogated]=useState(true);
+
+  const lower=activeArgument.toLowerCase();
+  const selectedClaims = argumentClaims.filter(c=>{
+    if(c.id==="A") return true;
+    if(c.id==="B") return /training|hazard|rider|competenc/.test(lower);
+    if(c.id==="C") return /technology|collision|warning|active.?safety|mcas/.test(lower);
+    if(c.id==="D") return /exposure|work|hours|delivery|commercial|system/.test(lower);
+    if(c.id==="E") return /reduce|reduction|fatalit|crash|percent|%|combining|combined|system/.test(lower);
+    return true;
+  });
+
+  const gap = selectedClaims.find(c=>c.status==="gap") ?? selectedClaims.find(c=>c.status==="qualified") ?? selectedClaims[selectedClaims.length-1];
+  const statusCount = selectedClaims.reduce((a,c)=>({...a,[c.status]:a[c.status]+1}),{supported:0,qualified:0,gap:0} as Record<ArgumentClaim["status"],number>);
+
+  return <div className="space-y-5">
+    <Card className="border-violet-500/20 bg-violet-500/5 p-6 md:p-8">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+        <div className="max-w-4xl">
+          <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[.2em] text-violet-600 dark:text-violet-300"><Sparkles size={15}/> 09 · Evidence intelligence · prototype</div>
+          <h2 className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white md:text-3xl">Support this argument.</h2>
+          <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-400">Enter a research or policy proposition. This prototype decomposes a bounded motorcycle-safety argument into claims and interrogates each claim against a curated evidence set. It does not write a literature review or invent evidence.</p>
+        </div>
+        <div className="rounded-xl border border-violet-200 bg-white px-3 py-2 text-[9px] font-mono text-violet-700 dark:border-violet-500/20 dark:bg-slate-950/40 dark:text-violet-300">Evidence synthesis · not empirical finding</div>
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-violet-200 bg-white p-4 dark:border-violet-500/20 dark:bg-slate-950/40">
+        <label className="text-[9px] font-mono uppercase tracking-[.18em] text-violet-600 dark:text-violet-300">Your argument</label>
+        <textarea value={argument} onChange={e=>setArgument(e.target.value)} rows={4} className="mt-2 w-full resize-y rounded-xl border border-slate-300 bg-white p-4 text-sm leading-6 text-slate-800 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:ring-violet-500/10"/>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="text-[9px] leading-4 text-slate-500">Current prototype: bounded claim decomposition around training, technology, exposure and safety outcomes.</div>
+          <button type="button" onClick={()=>{setActiveArgument(argument.trim()||defaultArgument);setInterrogated(true)}} className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2.5 text-[10px] font-bold text-white hover:bg-violet-700"><Play size={12}/> Interrogate argument</button>
+        </div>
+      </div>
+    </Card>
+
+    {interrogated && <React.Fragment>
+      <Card className="p-5 md:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div className="text-[9px] font-mono uppercase tracking-[.18em] text-slate-500">Argument under interrogation</div>
+            <p className="mt-2 max-w-5xl text-base font-semibold leading-7 text-slate-900 dark:text-white">“{activeArgument}”</p>
+          </div>
+          <div className="flex gap-2">
+            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[9px] font-mono text-emerald-700">{statusCount.supported} supported</span>
+            <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[9px] font-mono text-amber-700">{statusCount.qualified} qualified</span>
+            <span className="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[9px] font-mono text-rose-700">{statusCount.gap} gap</span>
+          </div>
+        </div>
+
+        <div className="mt-6 space-y-3">
+          {selectedClaims.map(claim=><article key={claim.id} className={"rounded-2xl border p-5 "+(claim.status==="gap"?"border-rose-200 bg-rose-50/60":"border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950/30")}>
+            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div className="flex gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 font-mono text-[10px] font-bold text-white dark:bg-white dark:text-slate-900">{claim.id}</div>
+                <div><h3 className="text-sm font-semibold text-slate-900 dark:text-white">{claim.title}</h3><div className="mt-2"><EvidenceStatus status={claim.status}/></div></div>
+              </div>
+            </div>
+            <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_1fr]">
+              <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/40"><div className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Evidence interrogation</div><p className="mt-2 text-[11px] leading-5 text-slate-600 dark:text-slate-400">{claim.verdict}</p><p className="mt-2 text-[11px] leading-5 text-slate-600 dark:text-slate-400">{claim.evidence}</p></div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/20"><div className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Boundary / what is not established</div><p className="mt-2 text-[11px] leading-5 text-slate-600 dark:text-slate-400">{claim.limitation}</p>{claim.sources.length>0 && <div className="mt-3 flex flex-wrap gap-2">{claim.sources.map(src=><a key={src.href} href={src.href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-lg border border-violet-200 bg-violet-50 px-2.5 py-1.5 text-[9px] font-semibold text-violet-700 hover:border-violet-400">{src.label} <ArrowRight size={10}/></a>)}</div>}</div>
+            </div>
+          </article>)}
+        </div>
+      </Card>
+
+      <Card className="p-5 md:p-6">
+        <div className="flex items-start gap-3">
+          <div className="rounded-xl bg-rose-100 p-2 text-rose-700"><GitBranch size={17}/></div>
+          <div><div className="text-[9px] font-mono uppercase tracking-[.18em] text-rose-600">Gap detector</div><h2 className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">What evidence link is still missing?</h2><p className="mt-2 text-xs leading-5 text-slate-500">The prototype prioritises the weakest link in the argument rather than filling it with an invented effect size.</p></div>
+        </div>
+        <div className="mt-5 grid gap-3 lg:grid-cols-[1.1fr_.9fr]">
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5">
+            <div className="text-[9px] font-mono uppercase tracking-wider text-rose-600">Largest unresolved claim</div>
+            <h3 className="mt-2 text-base font-semibold text-slate-900">{gap?.title ?? "No claim selected"}</h3>
+            <p className="mt-3 text-[11px] leading-5 text-slate-600">{gap?.verdict}</p>
+            <div className="mt-4 flex items-center gap-2"><EvidenceStatus status={gap?.status ?? "gap"}/><span className="text-[9px] text-slate-500">No causal magnitude is assigned by this Explorer.</span></div>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950/30">
+            <div className="text-[9px] font-mono uppercase tracking-wider text-violet-600 dark:text-violet-300">Evidence pathway</div>
+            <div className="mt-4 space-y-2">
+              {[
+                ["HPT measurement","supported"],
+                ["SA measurement","supported"],
+                ["Intervention plausibility","supported"],
+                ["Behavioural translation","qualified"],
+                ["Crash / fatality outcome","gap"]
+              ].map(([label,status])=><div key={label} className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-800"><span className="text-[10px] font-semibold text-slate-700 dark:text-slate-300">{label}</span><span className={"text-[9px] font-mono font-bold "+(status==="supported"?"text-emerald-600":status==="qualified"?"text-amber-600":"text-rose-600")}>{status==="supported"?"● supported":status==="qualified"?"● qualified":"● gap"}</span></div>)}
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="border-emerald-200 bg-emerald-50/70 p-5 md:p-6">
+        <div className="flex items-center gap-2"><FlaskConical size={17} className="text-emerald-700"/><div className="text-[9px] font-mono uppercase tracking-[.18em] text-emerald-700">Study design generator · bounded proposal</div></div>
+        <h2 className="mt-2 text-xl font-semibold text-slate-900">What study would close the largest gap?</h2>
+        <p className="mt-2 max-w-4xl text-xs leading-5 text-slate-600">A candidate next study should target the weakest unsupported link rather than simply repeat an already-supported measurement.</p>
+        <div className="mt-5 grid gap-3 md:grid-cols-4">
+          {[
+            ["Population","Malaysian motorcycle workers"],
+            ["Design","Longitudinal intervention + comparison groups"],
+            ["Measures","HPT → SA → riding behaviour → SCE / crash outcomes"],
+            ["Question","Do capability gains translate into real-world safety outcomes?"]
+          ].map(([label,value])=><div key={label} className="rounded-xl border border-emerald-200 bg-white p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-emerald-700">{label}</div><div className="mt-2 text-[11px] font-semibold leading-5 text-slate-800">{value}</div></div>)}
+        </div>
+        <div className="mt-4 rounded-xl border border-emerald-200 bg-white p-4 text-[10px] leading-5 text-slate-600"><b className="text-emerald-700">Why this closes the gap:</b> the current evidence is stronger for measurement, capability and intervention plausibility than for downstream crash outcomes. A longitudinal design can test whether changes propagate along the proposed pathway rather than assuming that they do.</div>
+      </Card>
+
+      <div className="rounded-2xl border border-slate-300 bg-slate-50 p-5 text-[10px] leading-5 text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
+        <b className="text-slate-800 dark:text-slate-200">Scholarly boundary:</b> this page is an Explorer-generated evidence synthesis. Paper 1 remains the primary empirical anchor; external literature is labelled separately; the gap and study proposal are synthesis/inference, not findings reported by the cited studies.
+      </div>
+    </React.Fragment>}
+  </div>;
+}
+
+function Provenance({onGo}:{onGo:(t:Tab)=>void}){
+  const refs:Record<string,string>={
+    e1:"Paper 1 · Experiment 1 · pp. 1587–1589",
+    e2:"Paper 1 · Experiment 2 · pp. 1588–1590",
+    m1:"Paper 1 · Methodology / HPT · p. 1587",
+    m2:"Paper 1 · Methodology / MRSAA · pp. 1587–1588",
+    f1:"Paper 1 · IMSEF-MY / Figure 6 · p. 1591",
+    s1:"Explorer-generated · not part of the published paper"
+  };
+  return <div className="space-y-5">
+    <Card className="border-emerald-500/20 bg-emerald-500/5 p-6 md:p-8">
+      <div className="flex items-center gap-2 text-emerald-300"><GitBranch size={17}/><span className="text-[10px] font-mono uppercase tracking-[.2em]">06 · Evidence provenance</span></div>
+      <h2 className="mt-2 text-2xl font-semibold">Every number should tell you where it came from.</h2>
+      <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-400">This is the provenance layer for the interactive companion. The observed evidence below is anchored directly to <b className="text-slate-200">{paperMeta.title}</b>, the published Paper 1. Calculations, simulations and scenario outputs generated by the Explorer are explicitly separated from that scholarly record.</p>
+      <div className="mt-5 rounded-2xl border border-emerald-200 bg-white p-4 dark:border-emerald-500/20 dark:bg-slate-950/40">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div><div className="text-[9px] font-mono uppercase tracking-[.18em] text-emerald-600">Primary source · Paper 1</div><div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">{paperMeta.journal} · pp. {paperMeta.pages}</div><div className="mt-1 text-[10px] text-slate-500">DOI {paperMeta.doi}</div></div>
+          <button type="button" onClick={()=>onGo("paper")} className="rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-[10px] font-semibold text-violet-700 hover:border-violet-400">Open Paper 1 →</button>
+        </div>
+      </div>
+    </Card>
+    <div className="grid gap-3 md:grid-cols-2">{provenance.map(p=><div key={p.id} className="rounded-2xl border border-slate-800 bg-[#0b111c] p-5"><div className="flex items-center justify-between gap-3"><h3 className="font-semibold">{p.title}</h3><EvidenceBadge kind={p.status}/></div><p className="mt-3 text-sm leading-6 text-slate-500">{p.detail}</p><div className="mt-4 flex items-center gap-2 text-[10px] font-mono text-slate-600"><Info size={12}/> {refs[p.id]}</div></div>)}</div>
+    <Card className="p-5"><div className="flex items-center gap-2"><BookOpen size={16} className="text-sky-400"/><h3 className="font-semibold">Publication boundary</h3></div><p className="mt-2 text-sm leading-6 text-slate-500">The published article remains the scholarly record. The Explorer adds navigation, visualisation and clearly labelled derived, simulated and scenario layers around it; those additions should not be read as new empirical findings.</p></Card>
+  </div>;
+}
