@@ -1053,7 +1053,12 @@ function FrameworkLab(){
   const [unitCost,setUnitCost]=useState(2500);
   const [result,setResult]=useState<{hpt:number;sa:number;coverage:number;exposureReduction:number;sceMitigated:number;crashesMitigated:number;cost:number}|null>(null);
   // Projection sandbox: simulated until empirical baseline data are supplied.
-  const [projectionMetric,setProjectionMetric]=useState<"risk"|"sces"|"crashes">("risk");
+  const [projectionMetric,setProjectionMetric]=useState<"risk"|"sces"|"crashes"|"deaths">("risk");
+  const [userDataMode,setUserDataMode]=useState(false);
+  const [userYear,setUserYear]=useState(2026);
+  const [userCrashes,setUserCrashes]=useState(0);
+  const [userDeaths,setUserDeaths]=useState(0);
+  const [userSeriousInjuries,setUserSeriousInjuries]=useState(0);
   const [projectionHorizon,setProjectionHorizon]=useState(2030);
   const [baselineRiskIndex,setBaselineRiskIndex]=useState(100);
   const [annualRiskGrowth,setAnnualRiskGrowth]=useState(4);
@@ -1082,7 +1087,7 @@ function FrameworkLab(){
 
   const money=(n:number)=>"RM "+n.toLocaleString("en-MY",{maximumFractionDigits:0});
 
-  const projectionBase = projectionMetric==="risk" ? baselineRiskIndex : projectionMetric==="sces" ? baselineSCE : baselineCrashes;
+  const projectionBase = projectionMetric==="risk" ? baselineRiskIndex : projectionMetric==="sces" ? (userDataMode ? userCrashes : baselineSCE) : projectionMetric==="crashes" ? (userDataMode ? userCrashes : baselineCrashes) : userDeaths;
   const projectionData = Array.from({length:projectionHorizon-2026+1},(_,i)=>{
     const year=2026+i;
     const bau=projectionBase*Math.pow(1+annualRiskGrowth/100,i);
@@ -1307,7 +1312,7 @@ function FrameworkLab(){
           </div>
 
           <button onClick={run} className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-3 text-xs font-bold text-slate-950 hover:bg-amber-400"><Sparkles size={14}/> Run evidence-bounded scenario</button>
-          <button onClick={()=>{setTraining(10);setTechnology(10);setExposure(5);setRetraining(5);setSceEffectiveness(25);setTargetRiders(10000);setBaselineSCE(0);setBaselineCrashes(0);setUnitCost(2500);setResult(null)}} className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-3 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-400"><RotateCcw size={14}/> Reset</button>
+          <button onClick={()=>{setTraining(10);setTechnology(10);setExposure(5);setRetraining(5);setSceEffectiveness(25);setTargetRiders(10000);setBaselineSCE(0);setBaselineCrashes(0);setUnitCost(2500);setUserDataMode(false);setUserYear(2026);setUserCrashes(0);setUserDeaths(0);setUserSeriousInjuries(0);setResult(null)}} className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-3 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-400"><RotateCcw size={14}/> Reset</button>
         </div>
 
         <div>
@@ -1341,10 +1346,22 @@ function FrameworkLab(){
             </div>
 
             <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-              <label><span className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Projection metric</span><select value={projectionMetric} onChange={e=>setProjectionMetric(e.target.value as "risk"|"sces"|"crashes")} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-[10px] text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"><option value="risk">Risk index (simulated)</option><option value="sces">SCEs / year</option><option value="crashes">Crashes / year</option></select></label>
+              <label><span className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Projection metric</span><select value={projectionMetric} onChange={e=>setProjectionMetric(e.target.value as "risk"|"sces"|"crashes")} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-[10px] text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"><option value="risk">Risk index (simulated)</option><option value="sces">SCEs / year</option><option value="crashes">Crashes / year</option><option value="deaths">Deaths / year</option></select></label>
               <label><span className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Annual BAU growth</span><select value={annualRiskGrowth} onChange={e=>setAnnualRiskGrowth(Number(e.target.value))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-[10px] text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"><option value="0">0%</option><option value="2">2%</option><option value="4">4%</option><option value="6">6%</option><option value="8">8%</option></select></label>
               <label><span className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Intervention starts</span><select value={interventionStart} onChange={e=>setInterventionStart(Number(e.target.value))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-[10px] text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"><option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option></select></label>
               <label><span className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Projection effectiveness</span><select value={projectionEffectiveness} onChange={e=>setProjectionEffectiveness(Number(e.target.value))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-[10px] text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"><option value="10">10%</option><option value="25">25%</option><option value="50">50%</option><option value="75">75%</option></select></label>
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-sky-200 bg-sky-50/70 p-4 dark:border-sky-500/20 dark:bg-sky-500/5">
+              <div className="flex flex-wrap items-center justify-between gap-3"><div><div className="text-[9px] font-mono uppercase tracking-[.2em] text-sky-700 dark:text-sky-300">Bring your own crash data</div><div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">Use a real baseline when you have one.</div></div><label className="flex items-center gap-2 text-[10px] font-semibold text-slate-700 dark:text-slate-300"><input type="checkbox" checked={userDataMode} onChange={e=>setUserDataMode(e.target.checked)}/> Use user-supplied data</label></div>
+              <p className="mt-2 text-[10px] leading-5 text-slate-600 dark:text-slate-400">Enter a single observed year first. The Explorer uses it as a starting level; it does not infer a trend or causal effect from one year.</p>
+              {userDataMode && <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <label><span className="text-[9px] text-slate-500">Baseline year</span><input type="number" min="2000" max="2100" value={userYear} onChange={e=>setUserYear(Number(e.target.value)||2026)} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"/></label>
+                <label><span className="text-[9px] text-slate-500">Motorcycle crashes</span><input type="number" min="0" value={userCrashes} onChange={e=>setUserCrashes(Math.max(0,Number(e.target.value)||0))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"/></label>
+                <label><span className="text-[9px] text-slate-500">Deaths</span><input type="number" min="0" value={userDeaths} onChange={e=>setUserDeaths(Math.max(0,Number(e.target.value)||0))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"/></label>
+                <label><span className="text-[9px] text-slate-500">Serious injuries (optional)</span><input type="number" min="0" value={userSeriousInjuries} onChange={e=>setUserSeriousInjuries(Math.max(0,Number(e.target.value)||0))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"/></label>
+              </div>}
+              {userDataMode && <div className="mt-3 rounded-lg border border-sky-200 bg-white p-3 text-[10px] leading-5 text-slate-600 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-400"><b className="text-sky-700 dark:text-sky-300">Baseline snapshot:</b> {userCrashes.toLocaleString()} crashes · {userDeaths.toLocaleString()} deaths · {userSeriousInjuries.toLocaleString()} serious injuries. {userCrashes>0 ? (userDeaths/userCrashes*100).toFixed(1)+" deaths per 100 recorded crashes — descriptive only, not a probability of death unless the definitions support that interpretation." : "Enter crash count to calculate a descriptive ratio."}</div>}
             </div>
 
             <div className="mt-4 grid gap-3 md:grid-cols-2">
