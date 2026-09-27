@@ -270,7 +270,7 @@ function ResearchGuide({sectionId}:{sectionId:string}){
               {mode==="how" && "Methods → Data → Evidence provenance"}
             </div>
           </div>
-          <div className="mt-3 flex items-start gap-2 text-[9px] leading-4 text-slate-500"><Info size={12} className="mt-0.5 shrink-0 text-violet-500"/>{boundary}</div>
+          <div className="mt-3 flex items-start gap-2 text-[9px] leading-4 text-slate-500"><Info size={12} className="mt-0.5 shrink-0 text-violet-500"/>This guide stays within the published paper and its stated evidence boundary; it does not add new empirical findings.</div>
         </div>
       </div>
 
@@ -1398,91 +1398,3 @@ function FrameworkLab(){
 
           <button onClick={run} className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-3 text-xs font-bold text-slate-950 hover:bg-amber-400"><Sparkles size={14}/> Run evidence-bounded scenario</button>
           <button onClick={()=>{setTraining(10);setTechnology(10);setExposure(5);setRetraining(5);setSceEffectiveness(25);setTargetRiders(10000);setBaselineSCE(0);setBaselineCrashes(0);setUnitCost(2500);setResult(null)}} className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-3 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-400"><RotateCcw size={14}/> Reset</button>
-        </div>
-
-        <div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Metric label="Observed HPT" value="49.3%" sub="Experiment 1 reported mean" kind="observed"/>
-            <Metric label="Observed SA" value="23.2%" sub="Experiment 2 reported total mean" kind="observed"/>
-            <Metric label="Technology coverage" value={result ? Math.round(result.coverage*100)+"%" : "—"} sub="Scenario share of target riders receiving MCAS" kind="scenario"/>
-            <Metric label="Assumed SCE mitigation" value={sceEffectiveness+"%"} sub="User-defined planning assumption" kind="scenario"/>
-          </div>
-
-          {result ? <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-            <Metric label="Scenario HPT" value={result.hpt.toFixed(1)+"%"} sub="Illustrative capability pathway: training + retraining" kind="scenario"/>
-            <Metric label="Scenario SA" value={result.sa.toFixed(1)+"%"} sub="Illustrative capability pathway only; technology does not add SA" kind="scenario"/>
-            <Metric label="Potential SCEs mitigated" value={baselineSCE>0 ? result.sceMitigated.toFixed(1) : "Enter SCE baseline"} sub={baselineSCE>0 ? "Baseline SCEs × technology coverage × assumed mitigation" : "Requires a user-supplied SCE baseline"} kind="scenario"/>
-            <Metric label="Potential crashes prevented" value={baselineCrashes>0 ? result.crashesMitigated.toFixed(1) : "Enter crash baseline"} sub={baselineCrashes>0 ? "Baseline crashes × technology coverage × assumed mitigation" : "Requires a user-supplied crash baseline"} kind="scenario"/>
-          </div> : <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-center dark:border-slate-800 dark:bg-slate-950/40"><div className="text-sm font-semibold text-slate-900 dark:text-white">No scenario calculated yet</div><p className="mt-1 text-[11px] text-slate-500">Change the intervention assumptions and run the laboratory. No crash or SCE estimate is invented when a baseline is missing.</p></div>}
-
-          {result && <div className="mb-4 flex justify-end"><DownloadButton label="Download scenario CSV" onClick={()=>downloadCSV("research-explorer-framework-scenario.csv",[{target_riders:targetRiders,technology_coverage_percent:Math.round(result.coverage*100),training_assumption:training,retraining_assumption:retraining,exposure_control:exposure,assumed_sce_mitigation_percent:sceEffectiveness,baseline_sces:baselineSCE,baseline_crashes:baselineCrashes,unit_cost_rm:unitCost,scenario_hpt:result.hpt,scenario_sa:result.sa,potential_sces_mitigated:result.sceMitigated,potential_crashes_prevented:result.crashesMitigated,programme_cost_rm:result.cost}])}/></div>}{result && <div className="mt-4 grid gap-3 md:grid-cols-2">
-            <Metric label="Programme cost" value={money(result.cost)} sub="Target riders × technology coverage × unit cost" kind="scenario"/>
-            <Metric label="Capability change" value={(result.sa-23.2).toFixed(1)+" pp"} sub="Illustrative change in SA from training/retraining only" kind="scenario"/>
-          </div>}
-
-          <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950/30">
-            <h3 className="font-semibold text-slate-900 dark:text-white">How to read the result</h3>
-            <div className="mt-4 grid gap-3 md:grid-cols-3">
-              <div className="rounded-xl border border-sky-200 bg-sky-50 p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-sky-700">Observed</div><p className="mt-2 text-[11px] leading-5 text-slate-600">Study results are fixed evidence: HPT 49.3% and total SA 23.2%.</p></div>
-              <div className="rounded-xl border border-violet-200 bg-violet-50 p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-violet-700">External evidence</div><p className="mt-2 text-[11px] leading-5 text-slate-600">Collision-warning studies provide context and benchmark ranges, but their effect sizes are not assigned to MCAS.</p></div>
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-amber-700">Scenario</div><p className="mt-2 text-[11px] leading-5 text-slate-600">SCE/crash outputs are conditional calculations from user-supplied baselines, coverage and assumed mitigation.</p></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </Card>
-
-    <Card className="p-5 md:p-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="text-[9px] font-mono uppercase tracking-[.2em] text-emerald-600 dark:text-emerald-300">Policy change</div>
-          <h3 className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">Implemented policy precedent outside LMIC settings</h3>
-          <p className="mt-2 max-w-5xl text-xs leading-5 text-slate-500">
-            These are documented policy measures already used in high-income / developed-country jurisdictions. They are shown as implementation precedent, not as claims that the same policy will produce the same effect in Malaysia.
-          </p>
-        </div>
-        <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[9px] font-mono font-semibold text-emerald-700">IMPLEMENTED</span>
-      </div>
-      <div className="mt-5 grid gap-3 lg:grid-cols-2">
-        {policyCards.map(card=><article key={card.title} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/30">
-          <div className="flex items-start justify-between gap-3">
-            <div><h4 className="text-sm font-semibold text-slate-900 dark:text-white">{card.title}</h4><div className="mt-1 text-[9px] font-mono uppercase tracking-wider text-slate-500">{card.jurisdiction}</div></div>
-            <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[8px] font-mono font-bold uppercase text-emerald-700">{card.mechanism}</span>
-          </div>
-          <p className="mt-3 text-[11px] leading-5 text-slate-600 dark:text-slate-400">{card.detail}</p>
-          <a href={card.href} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">Open policy source <ArrowRight size={11}/></a>
-        </article>)}
-      </div>
-    </Card>
-
-    <div className="rounded-2xl border border-violet-200 bg-violet-50 p-5 text-xs leading-5 text-slate-600">
-      <b className="text-violet-700">Evidence boundary:</b> MCAS currently has prototype-level evidence of detection, warning and observed SCE responses. External collision-warning research supports the plausibility and research relevance of this technology class. Population-level crash reduction for MCAS remains an empirical question for the next field-evidence phase.
-    </div>
-  </div>;
-}
-
-function Provenance({onGo}:{onGo:(t:Tab)=>void}){
-  const refs:Record<string,string>={
-    e1:"Paper 1 · Experiment 1 · pp. 1587–1589",
-    e2:"Paper 1 · Experiment 2 · pp. 1588–1590",
-    m1:"Paper 1 · Methodology / HPT · p. 1587",
-    m2:"Paper 1 · Methodology / MRSAA · pp. 1587–1588",
-    f1:"Paper 1 · IMSEF-MY / Figure 6 · p. 1591",
-    s1:"Explorer-generated · not part of the published paper"
-  };
-  return <div className="space-y-5">
-    <Card className="border-emerald-500/20 bg-emerald-500/5 p-6 md:p-8">
-      <div className="flex items-center gap-2 text-emerald-300"><GitBranch size={17}/><span className="text-[10px] font-mono uppercase tracking-[.2em]">06 · Evidence provenance</span></div>
-      <h2 className="mt-2 text-2xl font-semibold">Every number should tell you where it came from.</h2>
-      <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-400">This is the provenance layer for the interactive companion. The observed evidence below is anchored directly to <b className="text-slate-200">{paperMeta.title}</b>, the published Paper 1. Calculations, simulations and scenario outputs generated by the Explorer are explicitly separated from that scholarly record.</p>
-      <div className="mt-5 rounded-2xl border border-emerald-200 bg-white p-4 dark:border-emerald-500/20 dark:bg-slate-950/40">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div><div className="text-[9px] font-mono uppercase tracking-[.18em] text-emerald-600">Primary source · Paper 1</div><div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">{paperMeta.journal} · pp. {paperMeta.pages}</div><div className="mt-1 text-[10px] text-slate-500">DOI {paperMeta.doi}</div></div>
-          <button type="button" onClick={()=>onGo("paper")} className="rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-[10px] font-semibold text-violet-700 hover:border-violet-400">Open Paper 1 →</button>
-        </div>
-      </div>
-    </Card>
-    <div className="grid gap-3 md:grid-cols-2">{provenance.map(p=><div key={p.id} className="rounded-2xl border border-slate-800 bg-[#0b111c] p-5"><div className="flex items-center justify-between gap-3"><h3 className="font-semibold">{p.title}</h3><EvidenceBadge kind={p.status}/></div><p className="mt-3 text-sm leading-6 text-slate-500">{p.detail}</p><div className="mt-4 flex items-center gap-2 text-[10px] font-mono text-slate-600"><Info size={12}/> {refs[p.id]}</div></div>)}</div>
-    <Card className="p-5"><div className="flex items-center gap-2"><BookOpen size={16} className="text-sky-400"/><h3 className="font-semibold">Publication boundary</h3></div><p className="mt-2 text-sm leading-6 text-slate-500">The published article remains the scholarly record. The Explorer adds navigation, visualisation and clearly labelled derived, simulated and scenario layers around it; those additions should not be read as new empirical findings.</p></Card>
-  </div>;
-}
