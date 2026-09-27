@@ -881,6 +881,7 @@ function Overview({onGo}:{onGo:(t:Tab)=>void}){
     {title:"Test assumptions", desc:"Change sample size, effect, noise and intervention assumptions in controlled simulations.", target:"simulation", Icon:FlaskConical}
   ];
   return <div className="space-y-5">
+    <RiskReductionModel/>
     <Card className="border-violet-500/20 bg-violet-500/5 p-6 md:p-8">
       <div className="grid gap-8 lg:grid-cols-[1.2fr_.8fr]">
         <div>
@@ -1040,6 +1041,109 @@ function MonteCarlo(){
         </div>}
       </Card>
     </div>
+  </div>;
+}
+
+
+type RiskEvidenceStatus = "observed" | "published" | "assumption" | "gap";
+
+function RiskEvidencePill({status}:{status:RiskEvidenceStatus}) {
+  const cfg = {
+    observed:{label:"Observed",cls:"border-sky-200 bg-sky-50 text-sky-700"},
+    published:{label:"Published evidence",cls:"border-violet-200 bg-violet-50 text-violet-700"},
+    assumption:{label:"Model assumption",cls:"border-amber-200 bg-amber-50 text-amber-700"},
+    gap:{label:"Evidence gap",cls:"border-rose-200 bg-rose-50 text-rose-700"}
+  }[status];
+  return <span className={"inline-flex items-center rounded-full border px-2 py-1 text-[8px] font-mono font-bold uppercase tracking-wider "+cfg.cls}>{cfg.label}</span>;
+}
+
+function RiskReductionModel(){
+  const [selected,setSelected]=useState<"haddon"|"pathway"|"economics">("haddon");
+  const haddon = [
+    {phase:"Pre-crash",human:"Training · fatigue · hazard perception",vehicle:"MCAS · warning · braking",environment:"Speed · road · traffic",active:true},
+    {phase:"Crash",human:"Rider protection · response",vehicle:"Protective equipment · vehicle safety",environment:"Crash environment",active:false},
+    {phase:"Post-crash",human:"First response · care",vehicle:"Emergency notification",environment:"Emergency access · response",active:false}
+  ];
+  const pathway = [
+    {key:"applicable",title:"Applicable",detail:"Does the intervention address the relevant crash / hazard configuration?",status:"published" as RiskEvidenceStatus},
+    {key:"detected",title:"Detected",detail:"Is the relevant hazard detected by the intervention?",status:"observed" as RiskEvidenceStatus},
+    {key:"responded",title:"Responded",detail:"Does the rider respond appropriately to the warning?",status:"gap" as RiskEvidenceStatus},
+    {key:"avoided",title:"Avoided",detail:"Does the response prevent the SCE / crash?",status:"gap" as RiskEvidenceStatus}
+  ];
+
+  return <div className="space-y-5">
+    <Card className="border-violet-500/20 bg-violet-500/5 p-6 md:p-8">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="max-w-4xl">
+          <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[.2em] text-violet-600 dark:text-violet-300"><GitBranch size={15}/> Safety-system model</div>
+          <h2 className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white md:text-3xl">From intervention location to measurable risk reduction.</h2>
+          <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-400">This layer combines an established Haddon-style intervention map with a conditional risk pathway and a cost-benefit layer. Haddon locates the intervention; it does not supply an effect size. The quantitative links remain evidence-dependent.</p>
+        </div>
+        <div className="flex rounded-xl border border-violet-200 bg-white p-1 dark:border-violet-500/20 dark:bg-slate-950/40">
+          {[["haddon","Haddon"],["pathway","Risk pathway"],["economics","Investment"]].map(([id,label])=><button key={id} type="button" onClick={()=>setSelected(id as "haddon"|"pathway"|"economics")} className={"rounded-lg px-3 py-2 text-[9px] font-mono font-bold "+(selected===id?"bg-violet-600 text-white":"text-slate-500 hover:text-violet-700")}>{label}</button>)}
+        </div>
+      </div>
+
+      {selected==="haddon" && <div className="mt-6">
+        <div className="grid gap-2 md:grid-cols-[130px_1fr_1fr_1fr]">
+          {["Haddon phase","Human","Vehicle / equipment","Environment"].map(x=><div key={x} className="hidden rounded-xl border border-slate-200 bg-white p-3 text-[8px] font-mono font-bold uppercase tracking-wider text-slate-500 md:block">{x}</div>)}
+          {haddon.map(row=><React.Fragment key={row.phase}>
+            <div className={"rounded-xl border p-3 "+(row.active?"border-violet-300 bg-violet-50":"border-slate-200 bg-slate-50")}><div className="text-[9px] font-mono font-bold uppercase tracking-wider text-violet-700">{row.phase}</div>{row.active && <div className="mt-1 text-[8px] text-violet-600">MCAS pathway</div>}</div>
+            {[row.human,row.vehicle,row.environment].map((value,i)=><div key={i} className={"rounded-xl border p-3 "+(row.active&&i===1?"border-violet-200 bg-violet-50/70":"border-slate-200 bg-white")}><div className="text-[10px] leading-5 text-slate-700">{value}</div></div>)}
+          </React.Fragment>)}
+        </div>
+        <div className="mt-4 rounded-xl border border-violet-200 bg-white p-4 text-[10px] leading-5 text-slate-600 dark:border-violet-500/20 dark:bg-slate-950/40 dark:text-slate-400"><b className="text-violet-700 dark:text-violet-300">How to read this:</b> Haddon provides an intervention architecture across pre-crash, crash and post-crash phases and human, vehicle/equipment and environmental factors. It is a planning framework, not a crash-reduction equation.</div>
+      </div>}
+
+      {selected==="pathway" && <div className="mt-6">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950/30">
+          <div className="text-[9px] font-mono uppercase tracking-[.18em] text-slate-500">Conceptual conditional model</div>
+          <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-slate-50 p-5 text-center dark:border-slate-800 dark:bg-slate-950/50">
+            <div className="min-w-[760px] font-serif text-xl text-slate-900 dark:text-white">N<sub>crash</sub> = N<sub>baseline</sub> × (1 − P<sub>applicable</sub>) × (1 − P<sub>detected</sub>) × (1 − P<sub>responded</sub>) × (1 − P<sub>avoided</sub>)</div>
+            <div className="mt-3 text-[9px] font-mono text-slate-500">LaTeX: <code>N_{\mathrm{crash}}=N_{\mathrm{baseline}}\times(1-P_{\mathrm{applicable}})\times(1-P_{\mathrm{detected}})\times(1-P_{\mathrm{responded}})\times(1-P_{\mathrm{avoided}})</code></div>
+          </div>
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-[10px] leading-5 text-slate-600 dark:border-amber-500/20 dark:bg-amber-500/5 dark:text-slate-400"><b className="text-amber-700 dark:text-amber-300">Conceptual model — not an estimated MCAS effect.</b> Each probability represents a conditional transition in the proposed risk-reduction pathway. The Explorer must not populate a probability merely because the formula permits it; a value requires an appropriate empirical estimate or an explicitly labelled external analogue / scenario assumption.</div>
+        </div>
+
+        <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+          {pathway.map(x=><div key={x.key} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/30">
+            <div className="flex items-center justify-between gap-2"><span className="font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500">P<sub>{x.key}</sub></span><RiskEvidencePill status={x.status}/></div>
+            <h3 className="mt-3 text-sm font-semibold text-slate-900 dark:text-white">{x.title}</h3>
+            <p className="mt-2 text-[10px] leading-5 text-slate-500">{x.detail}</p>
+            <div className="mt-3 rounded-lg border border-dashed border-slate-200 px-3 py-2 text-[9px] font-mono text-slate-500 dark:border-slate-700">Parameter: not populated</div>
+          </div>)}
+        </div>
+
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <div className="rounded-xl border border-sky-200 bg-sky-50 p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-sky-700">Observed MCAS evidence</div><p className="mt-2 text-[11px] leading-5 text-slate-600">Prototype evidence can anchor detection, warning and observed SCE-response steps. It does not automatically provide a population-level crash-reduction probability.</p></div>
+          <div className="rounded-xl border border-rose-200 bg-rose-50 p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-rose-700">Current evidence gap</div><p className="mt-2 text-[11px] leading-5 text-slate-600">MCAS-specific probabilities linking rider response to population crash or fatality reduction remain to be estimated in field evaluation.</p></div>
+        </div>
+      </div>}
+
+      {selected==="economics" && <div className="mt-6">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950/30"><div className="text-[9px] font-mono uppercase tracking-[.18em] text-emerald-700">Safety benefit</div><div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-center dark:border-slate-800 dark:bg-slate-950/50"><div className="font-serif text-xl text-slate-900 dark:text-white">N<sub>avoided</sub> = N<sub>baseline</sub> − N<sub>intervention</sub></div><div className="mt-2 font-serif text-lg text-slate-700 dark:text-slate-300">Reduction rate = (N<sub>baseline</sub> − N<sub>intervention</sub>) / N<sub>baseline</sub></div></div></div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950/30"><div className="text-[9px] font-mono uppercase tracking-[.18em] text-emerald-700">Investment case</div><div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-center dark:border-slate-800 dark:bg-slate-950/50"><div className="font-serif text-xl text-slate-900 dark:text-white">BCR = Monetised safety benefits / Programme cost</div><div className="mt-2 font-serif text-lg text-slate-700 dark:text-slate-300">ROI = (Benefits − Cost) / Cost</div></div></div>
+        </div>
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-[10px] leading-5 text-slate-600 dark:border-amber-500/20 dark:bg-amber-500/5 dark:text-slate-400"><b className="text-amber-700 dark:text-amber-300">Economic boundary:</b> BCR or ROI inherits the uncertainty of the safety-effect estimate. If crash reduction is a scenario assumption, the resulting economic output is also a scenario result — not observed programme ROI.</div>
+      </div>}
+
+      <details className="mt-5 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/30">
+        <summary className="cursor-pointer text-[10px] font-semibold text-slate-700 dark:text-slate-300">Model logic · why the pathway is conditional</summary>
+        <div className="mt-3 grid gap-3 md:grid-cols-3">
+          <div><div className="text-[9px] font-mono uppercase tracking-wider text-slate-500">1 · Locate</div><p className="mt-1 text-[10px] leading-5 text-slate-500">Haddon identifies where an intervention acts. It does not tell us how large its effect is.</p></div>
+          <div><div className="text-[9px] font-mono uppercase tracking-wider text-slate-500">2 · Estimate</div><p className="mt-1 text-[10px] leading-5 text-slate-500">Each conditional probability needs a defensible estimate from the relevant population, crash type, technology and outcome.</p></div>
+          <div><div className="text-[9px] font-mono uppercase tracking-wider text-slate-500">3 · Propagate</div><p className="mt-1 text-[10px] leading-5 text-slate-500">Only populated, evidence-qualified parameters should propagate into crash, injury, fatality or economic outputs.</p></div>
+        </div>
+      </details>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        <a href="https://iris.who.int/bitstream/10665/326543/1/9789289013796-eng.pdf" target="_blank" rel="noreferrer" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[9px] font-semibold text-slate-600 hover:border-violet-300 hover:text-violet-700">WHO · Haddon Matrix</a>
+        <a href="https://www.who.int/publications/i/item/9789240027437" target="_blank" rel="noreferrer" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[9px] font-semibold text-slate-600 hover:border-violet-300 hover:text-violet-700">WHO · Safe System</a>
+        <a href="https://toolkit.irap.org/management/crash-costing/" target="_blank" rel="noreferrer" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[9px] font-semibold text-slate-600 hover:border-violet-300 hover:text-violet-700">iRAP · Crash costing</a>
+        <a href="https://pubmed.ncbi.nlm.nih.gov/37572423/" target="_blank" rel="noreferrer" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[9px] font-semibold text-slate-600 hover:border-violet-300 hover:text-violet-700">PTW collision-warning simulation</a>
+      </div>
+    </Card>
   </div>;
 }
 
