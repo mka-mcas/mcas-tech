@@ -881,7 +881,6 @@ function Overview({onGo}:{onGo:(t:Tab)=>void}){
     {title:"Test assumptions", desc:"Change sample size, effect, noise and intervention assumptions in controlled simulations.", target:"simulation", Icon:FlaskConical}
   ];
   return <div className="space-y-5">
-    <RiskReductionModel/>
     <Card className="border-violet-500/20 bg-violet-500/5 p-6 md:p-8">
       <div className="grid gap-8 lg:grid-cols-[1.2fr_.8fr]">
         <div>
@@ -1320,6 +1319,7 @@ function FrameworkLab(){
   ];
 
   return <div className="space-y-5">
+    <RiskReductionModel/>
     <Card className="border-amber-500/20 bg-amber-500/5 p-6 md:p-8">
       <div className="flex items-start justify-between gap-5">
         <div>
