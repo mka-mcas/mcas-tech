@@ -14,7 +14,7 @@ import { evidenceLegend, provenance, studyFacts } from "@/data/research-explorer
 import { paperMeta, paperPages, paperSections } from "@/data/research-paper";
 import type { LucideIcon } from "lucide-react";
 
-type Tab = "overview" | "paper" | "study" | "methods" | "data" | "simulation" | "framework" | "provenance";
+type Tab = "overview" | "paper" | "study" | "methods" | "data" | "simulation" | "framework" | "provenance" | "argument";
 
 const tabItems: Array<[Tab,string,string]> = [
   ["overview","01","Research"],
@@ -24,7 +24,8 @@ const tabItems: Array<[Tab,string,string]> = [
   ["data","05","Data"],
   ["provenance","06","Evidence"],
   ["simulation","07","Monte Carlo"],
-  ["framework","08","Framework Lab"]
+  ["framework","08","Framework Lab"],
+  ["argument","09","Evidence Intelligence"]
 ];
 
 function ChartTooltip({active,payload,label}:{active?:boolean;payload?:Array<{value?:number;name?:string}>;label?:string}) {
@@ -235,6 +236,7 @@ export default function ResearchExplorer(){
       {tab==="data" && <DataExplorer/>}
       {tab==="simulation" && <MonteCarlo/>}
       {tab==="framework" && <FrameworkLab/>}
+      {tab==="argument" && <EvidenceIntelligence/>}
       {tab==="provenance" && <Provenance onGo={setTab}/>} 
     </main>
     <CommentDock/>
@@ -1462,6 +1464,193 @@ function FrameworkLab(){
       <p className="mb-3 text-[10px] leading-5 text-slate-500">The observed HPT and SA baselines in this laboratory are drawn from Paper 1. The scenario and projection layers are Explorer-generated and are not presented as additional findings of MKA Ibrahim (2026).</p>
       <b className="text-violet-700">Evidence boundary:</b> MCAS currently has prototype-level evidence of detection, warning and observed SCE responses. External collision-warning research supports the plausibility and research relevance of this technology class. Population-level crash reduction for MCAS remains an empirical question for the next field-evidence phase.
     </div>
+  </div>;
+}
+
+
+type ArgumentClaim = {
+  id:string;
+  title:string;
+  status:"supported"|"qualified"|"gap";
+  verdict:string;
+  evidence:string;
+  limitation:string;
+  sources:Array<{label:string;href:string}>;
+};
+
+const argumentClaims:ArgumentClaim[] = [
+  {
+    id:"A",
+    title:"Motorcycle risk is associated with rider-level and behavioural factors.",
+    status:"supported",
+    verdict:"Supported by systematic-review evidence, with the strongest associations reported for factors such as young age, speeding, mobile-phone use, risky riding behaviour and long working hours among commercial motorcycle drivers.",
+    evidence:"A 2024 systematic review included 20 higher-quality studies involving 7,852 commercial motorcycle drivers. Most studies were observational, so association should not be read as proof of causation.",
+    limitation:"The evidence base is geographically uneven and predominantly cross-sectional; it is not a Malaysia-specific causal estimate.",
+    sources:[{label:"Kiwango et al. (2024)",href:"https://pubmed.ncbi.nlm.nih.gov/38385344/"}]
+  },
+  {
+    id:"B",
+    title:"Hazard-perception capability can be improved through training.",
+    status:"qualified",
+    verdict:"Supported at the capability level, but with an important qualification: the 2024 meta-analysis found a small effect for motorcyclists (g = 0.42) and only three motorcyclist studies.",
+    evidence:"Across 57 studies, hazard-perception training improved hazard-perception skill. The review also found substantial heterogeneity and explicitly called for research on whether early-stage gains translate into on-road responses and persist over time.",
+    limitation:"Improved hazard-perception scores are not the same as demonstrated crash or fatality reduction.",
+    sources:[{label:"Prabhakharan et al. (2024)",href:"https://pubmed.ncbi.nlm.nih.gov/38701558/"}]
+  },
+  {
+    id:"C",
+    title:"PTW active-safety technologies can address multiple crash configurations.",
+    status:"supported",
+    verdict:"Supported as a technology-landscape proposition. A systematic review identified collision avoidance, collision warning, AEB, intersection support, ITS, curve warning, HMI and other PTW active-safety systems.",
+    evidence:"The review included 62 studies and found a wide range of systems and development stages, including early-stage prototypes and studies evaluating system effectiveness.",
+    limitation:"Technology coverage and development maturity vary substantially; the review does not establish a single population-level effect for MCAS or every system.",
+    sources:[{label:"Savino et al. (2020)",href:"https://pubmed.ncbi.nlm.nih.gov/31914321/"}]
+  },
+  {
+    id:"D",
+    title:"Exposure and work-related factors contribute to commercial-motorcycle risk.",
+    status:"qualified",
+    verdict:"Supported for several exposure-related factors, but context-dependent. Long working hours were among factors consistently associated with crashes/injuries in the 2024 systematic review.",
+    evidence:"The review found consistent associations for several factors, while evidence for driver training and work schedules themselves was inconclusive.",
+    limitation:"Most included studies were cross-sectional and almost half came from sub-Saharan Africa; the finding should not be converted directly into a Malaysian effect size.",
+    sources:[{label:"Kiwango et al. (2024)",href:"https://pubmed.ncbi.nlm.nih.gov/38385344/"}]
+  },
+  {
+    id:"E",
+    title:"Combining training, technology and exposure management will reduce Malaysian motorcycle fatalities by a specific percentage.",
+    status:"gap",
+    verdict:"Not established by the retrieved evidence.",
+    evidence:"The evidence base supports individual links at different stages — capability improvement, risk-factor association and technology plausibility — but does not establish a combined causal effect or a Malaysia-specific fatality-reduction magnitude.",
+    limitation:"A numerical reduction should therefore be treated as a hypothesis or scenario assumption until evaluated with an appropriate intervention design and outcome data.",
+    sources:[]
+  }
+];
+
+function EvidenceStatus({status}:{status:ArgumentClaim["status"]}) {
+  const cfg = {
+    supported:{label:"Supported",cls:"border-emerald-200 bg-emerald-50 text-emerald-700",dot:"bg-emerald-500"},
+    qualified:{label:"Supported · qualified",cls:"border-amber-200 bg-amber-50 text-amber-700",dot:"bg-amber-500"},
+    gap:{label:"Evidence gap",cls:"border-rose-200 bg-rose-50 text-rose-700",dot:"bg-rose-500"}
+  }[status];
+  return <span className={"inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-mono font-bold uppercase tracking-wider "+cfg.cls}><span className={"h-1.5 w-1.5 rounded-full "+cfg.dot}/>{cfg.label}</span>;
+}
+
+function EvidenceIntelligence(){
+  const defaultArgument="Motorcycle safety policy should move from a rider-only model toward a multi-layered system approach combining training, technology and exposure management.";
+  const [argument,setArgument]=useState(defaultArgument);
+  const [activeArgument,setActiveArgument]=useState(defaultArgument);
+  const [interrogated,setInterrogated]=useState(true);
+
+  const lower=activeArgument.toLowerCase();
+  const selectedClaims = argumentClaims.filter(c=>{
+    if(c.id==="A") return true;
+    if(c.id==="B") return /training|hazard|rider|competenc/.test(lower);
+    if(c.id==="C") return /technology|collision|warning|active.?safety|mcas/.test(lower);
+    if(c.id==="D") return /exposure|work|hours|delivery|commercial|system/.test(lower);
+    if(c.id==="E") return /reduce|reduction|fatalit|crash|percent|%|combining|combined|system/.test(lower);
+    return true;
+  });
+
+  const gap = selectedClaims.find(c=>c.status==="gap") ?? selectedClaims.find(c=>c.status==="qualified") ?? selectedClaims[selectedClaims.length-1];
+  const statusCount = selectedClaims.reduce((a,c)=>({...a,[c.status]:a[c.status]+1}),{supported:0,qualified:0,gap:0} as Record<ArgumentClaim["status"],number>);
+
+  return <div className="space-y-5">
+    <Card className="border-violet-500/20 bg-violet-500/5 p-6 md:p-8">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+        <div className="max-w-4xl">
+          <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[.2em] text-violet-600 dark:text-violet-300"><Sparkles size={15}/> 09 · Evidence intelligence · prototype</div>
+          <h2 className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white md:text-3xl">Support this argument.</h2>
+          <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-400">Enter a research or policy proposition. This prototype decomposes a bounded motorcycle-safety argument into claims and interrogates each claim against a curated evidence set. It does not write a literature review or invent evidence.</p>
+        </div>
+        <div className="rounded-xl border border-violet-200 bg-white px-3 py-2 text-[9px] font-mono text-violet-700 dark:border-violet-500/20 dark:bg-slate-950/40 dark:text-violet-300">Evidence synthesis · not empirical finding</div>
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-violet-200 bg-white p-4 dark:border-violet-500/20 dark:bg-slate-950/40">
+        <label className="text-[9px] font-mono uppercase tracking-[.18em] text-violet-600 dark:text-violet-300">Your argument</label>
+        <textarea value={argument} onChange={e=>setArgument(e.target.value)} rows={4} className="mt-2 w-full resize-y rounded-xl border border-slate-300 bg-white p-4 text-sm leading-6 text-slate-800 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:ring-violet-500/10"/>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="text-[9px] leading-4 text-slate-500">Current prototype: bounded claim decomposition around training, technology, exposure and safety outcomes.</div>
+          <button type="button" onClick={()=>{setActiveArgument(argument.trim()||defaultArgument);setInterrogated(true)}} className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2.5 text-[10px] font-bold text-white hover:bg-violet-700"><Play size={12}/> Interrogate argument</button>
+        </div>
+      </div>
+    </Card>
+
+    {interrogated && <React.Fragment>
+      <Card className="p-5 md:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div className="text-[9px] font-mono uppercase tracking-[.18em] text-slate-500">Argument under interrogation</div>
+            <p className="mt-2 max-w-5xl text-base font-semibold leading-7 text-slate-900 dark:text-white">“{activeArgument}”</p>
+          </div>
+          <div className="flex gap-2">
+            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[9px] font-mono text-emerald-700">{statusCount.supported} supported</span>
+            <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[9px] font-mono text-amber-700">{statusCount.qualified} qualified</span>
+            <span className="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[9px] font-mono text-rose-700">{statusCount.gap} gap</span>
+          </div>
+        </div>
+
+        <div className="mt-6 space-y-3">
+          {selectedClaims.map(claim=><article key={claim.id} className={"rounded-2xl border p-5 "+(claim.status==="gap"?"border-rose-200 bg-rose-50/60":"border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950/30")}>
+            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div className="flex gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 font-mono text-[10px] font-bold text-white dark:bg-white dark:text-slate-900">{claim.id}</div>
+                <div><h3 className="text-sm font-semibold text-slate-900 dark:text-white">{claim.title}</h3><div className="mt-2"><EvidenceStatus status={claim.status}/></div></div>
+              </div>
+            </div>
+            <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_1fr]">
+              <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/40"><div className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Evidence interrogation</div><p className="mt-2 text-[11px] leading-5 text-slate-600 dark:text-slate-400">{claim.verdict}</p><p className="mt-2 text-[11px] leading-5 text-slate-600 dark:text-slate-400">{claim.evidence}</p></div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/20"><div className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Boundary / what is not established</div><p className="mt-2 text-[11px] leading-5 text-slate-600 dark:text-slate-400">{claim.limitation}</p>{claim.sources.length>0 && <div className="mt-3 flex flex-wrap gap-2">{claim.sources.map(src=><a key={src.href} href={src.href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-lg border border-violet-200 bg-violet-50 px-2.5 py-1.5 text-[9px] font-semibold text-violet-700 hover:border-violet-400">{src.label} <ArrowRight size={10}/></a>)}</div>}</div>
+            </div>
+          </article>)}
+        </div>
+      </Card>
+
+      <Card className="p-5 md:p-6">
+        <div className="flex items-start gap-3">
+          <div className="rounded-xl bg-rose-100 p-2 text-rose-700"><GitBranch size={17}/></div>
+          <div><div className="text-[9px] font-mono uppercase tracking-[.18em] text-rose-600">Gap detector</div><h2 className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">What evidence link is still missing?</h2><p className="mt-2 text-xs leading-5 text-slate-500">The prototype prioritises the weakest link in the argument rather than filling it with an invented effect size.</p></div>
+        </div>
+        <div className="mt-5 grid gap-3 lg:grid-cols-[1.1fr_.9fr]">
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5">
+            <div className="text-[9px] font-mono uppercase tracking-wider text-rose-600">Largest unresolved claim</div>
+            <h3 className="mt-2 text-base font-semibold text-slate-900">{gap?.title ?? "No claim selected"}</h3>
+            <p className="mt-3 text-[11px] leading-5 text-slate-600">{gap?.verdict}</p>
+            <div className="mt-4 flex items-center gap-2"><EvidenceStatus status={gap?.status ?? "gap"}/><span className="text-[9px] text-slate-500">No causal magnitude is assigned by this Explorer.</span></div>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950/30">
+            <div className="text-[9px] font-mono uppercase tracking-wider text-violet-600 dark:text-violet-300">Evidence pathway</div>
+            <div className="mt-4 space-y-2">
+              {[
+                ["HPT measurement","supported"],
+                ["SA measurement","supported"],
+                ["Intervention plausibility","supported"],
+                ["Behavioural translation","qualified"],
+                ["Crash / fatality outcome","gap"]
+              ].map(([label,status])=><div key={label} className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-800"><span className="text-[10px] font-semibold text-slate-700 dark:text-slate-300">{label}</span><span className={"text-[9px] font-mono font-bold "+(status==="supported"?"text-emerald-600":status==="qualified"?"text-amber-600":"text-rose-600")}>{status==="supported"?"● supported":status==="qualified"?"● qualified":"● gap"}</span></div>)}
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="border-emerald-200 bg-emerald-50/70 p-5 md:p-6">
+        <div className="flex items-center gap-2"><FlaskConical size={17} className="text-emerald-700"/><div className="text-[9px] font-mono uppercase tracking-[.18em] text-emerald-700">Study design generator · bounded proposal</div></div>
+        <h2 className="mt-2 text-xl font-semibold text-slate-900">What study would close the largest gap?</h2>
+        <p className="mt-2 max-w-4xl text-xs leading-5 text-slate-600">A candidate next study should target the weakest unsupported link rather than simply repeat an already-supported measurement.</p>
+        <div className="mt-5 grid gap-3 md:grid-cols-4">
+          {[
+            ["Population","Malaysian motorcycle workers"],
+            ["Design","Longitudinal intervention + comparison groups"],
+            ["Measures","HPT → SA → riding behaviour → SCE / crash outcomes"],
+            ["Question","Do capability gains translate into real-world safety outcomes?"]
+          ].map(([label,value])=><div key={label} className="rounded-xl border border-emerald-200 bg-white p-4"><div className="text-[9px] font-mono uppercase tracking-wider text-emerald-700">{label}</div><div className="mt-2 text-[11px] font-semibold leading-5 text-slate-800">{value}</div></div>)}
+        </div>
+        <div className="mt-4 rounded-xl border border-emerald-200 bg-white p-4 text-[10px] leading-5 text-slate-600"><b className="text-emerald-700">Why this closes the gap:</b> the current evidence is stronger for measurement, capability and intervention plausibility than for downstream crash outcomes. A longitudinal design can test whether changes propagate along the proposed pathway rather than assuming that they do.</div>
+      </Card>
+
+      <div className="rounded-2xl border border-slate-300 bg-slate-50 p-5 text-[10px] leading-5 text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
+        <b className="text-slate-800 dark:text-slate-200">Scholarly boundary:</b> this page is an Explorer-generated evidence synthesis. Paper 1 remains the primary empirical anchor; external literature is labelled separately; the gap and study proposal are synthesis/inference, not findings reported by the cited studies.
+      </div>
+    </React.Fragment>}
   </div>;
 }
 
