@@ -1064,6 +1064,20 @@ function FrameworkLab(){
   const [annualRiskGrowth,setAnnualRiskGrowth]=useState(4);
   const [projectionEffectiveness,setProjectionEffectiveness]=useState(25);
   const [interventionStart,setInterventionStart]=useState(2027);
+  const [projectionRun,setProjectionRun]=useState<{metric:"risk"|"crashes"|"deaths";year:number;crashes:number;deaths:number;risk:number;horizon:number;growth:number;effectiveness:number;start:number;coverage:number}>({metric:"risk",year:2026,crashes:0,deaths:0,risk:100,horizon:2030,growth:4,effectiveness:25,start:2027,coverage:clamp(technology/30,0,1)});
+
+  const runProjection=()=>setProjectionRun({
+    metric:projectionMetric==="sces"?"crashes":projectionMetric,
+    year:userDataMode?userYear:2026,
+    crashes:userDataMode?userCrashes:baselineCrashes,
+    deaths:userDataMode?userDeaths:0,
+    risk:baselineRiskIndex,
+    horizon:Math.max(projectionHorizon,userDataMode?userYear+1:2027),
+    growth:annualRiskGrowth,
+    effectiveness:projectionEffectiveness,
+    start:interventionStart,
+    coverage:result?.coverage ?? clamp(technology/30,0,1)
+  });
 
   const run=()=>{
     const hpt=clamp(49.3+training,0,100);
@@ -1087,13 +1101,13 @@ function FrameworkLab(){
 
   const money=(n:number)=>"RM "+n.toLocaleString("en-MY",{maximumFractionDigits:0});
 
-  const projectionBase = projectionMetric==="risk" ? baselineRiskIndex : projectionMetric==="sces" ? (userDataMode ? userCrashes : baselineSCE) : projectionMetric==="crashes" ? (userDataMode ? userCrashes : baselineCrashes) : userDeaths;
-  const projectionData = Array.from({length:projectionHorizon-2026+1},(_,i)=>{
-    const year=2026+i;
-    const bau=projectionBase*Math.pow(1+annualRiskGrowth/100,i);
-    const coverage=result?.coverage ?? clamp(technology/30,0,1);
-    const effect=projectionEffectiveness/100*coverage;
-    const ramp=year<interventionStart ? 0 : Math.min(1,(year-interventionStart+1)/3);
+  const applied=projectionRun;
+  const projectionBase = applied.metric==="risk" ? applied.risk : applied.metric==="crashes" ? applied.crashes : applied.deaths;
+  const projectionData = Array.from({length:Math.max(1,applied.horizon-applied.year+1)},(_,i)=>{
+    const year=applied.year+i;
+    const bau=projectionBase*Math.pow(1+applied.growth/100,i);
+    const effect=applied.effectiveness/100*applied.coverage;
+    const ramp=year<applied.start ? 0 : Math.min(1,(year-applied.start+1)/3);
     const intervention=bau*(1-effect*ramp);
     return {year,bau:Number(bau.toFixed(2)),intervention:Number(intervention.toFixed(2)),gap:Number((bau-intervention).toFixed(2))};
   });
@@ -1312,7 +1326,7 @@ function FrameworkLab(){
           </div>
 
           <button onClick={run} className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-3 text-xs font-bold text-slate-950 hover:bg-amber-400"><Sparkles size={14}/> Run evidence-bounded scenario</button>
-          <button onClick={()=>{setTraining(10);setTechnology(10);setExposure(5);setRetraining(5);setSceEffectiveness(25);setTargetRiders(10000);setBaselineSCE(0);setBaselineCrashes(0);setUnitCost(2500);setUserDataMode(false);setUserYear(2026);setUserCrashes(0);setUserDeaths(0);setUserSeriousInjuries(0);setResult(null)}} className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-3 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-400"><RotateCcw size={14}/> Reset</button>
+          <button onClick={()=>{setTraining(10);setTechnology(10);setExposure(5);setRetraining(5);setSceEffectiveness(25);setTargetRiders(10000);setBaselineSCE(0);setBaselineCrashes(0);setUnitCost(2500);setUserDataMode(false);setUserYear(2026);setUserCrashes(0);setUserDeaths(0);setUserSeriousInjuries(0);setProjectionMetric("risk");setProjectionHorizon(2030);setProjectionRun({metric:"risk",year:2026,crashes:0,deaths:0,risk:100,horizon:2030,growth:4,effectiveness:25,start:2027,coverage:clamp(technology/30,0,1)});setResult(null)}} className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-3 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-400"><RotateCcw size={14}/> Reset</button>
         </div>
 
         <div>
@@ -1346,17 +1360,17 @@ function FrameworkLab(){
             </div>
 
             <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-              <label><span className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Projection metric</span><select value={projectionMetric} onChange={e=>setProjectionMetric(e.target.value as "risk"|"sces"|"crashes")} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-[10px] text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"><option value="risk">Risk index (simulated)</option><option value="sces">SCEs / year</option><option value="crashes">Crashes / year</option><option value="deaths">Deaths / year</option></select></label>
+              <label><span className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Projection metric</span><select value={projectionMetric} onChange={e=>setProjectionMetric(e.target.value as "risk"|"crashes"|"deaths")} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-[10px] text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"><option value="risk">Risk index (simulated)</option><option value="crashes">Crashes / year</option><option value="deaths">Deaths / year</option></select></label>
               <label><span className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Annual BAU growth</span><select value={annualRiskGrowth} onChange={e=>setAnnualRiskGrowth(Number(e.target.value))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-[10px] text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"><option value="0">0%</option><option value="2">2%</option><option value="4">4%</option><option value="6">6%</option><option value="8">8%</option></select></label>
               <label><span className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Intervention starts</span><select value={interventionStart} onChange={e=>setInterventionStart(Number(e.target.value))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-[10px] text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"><option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option></select></label>
               <label><span className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Projection effectiveness</span><select value={projectionEffectiveness} onChange={e=>setProjectionEffectiveness(Number(e.target.value))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-[10px] text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"><option value="10">10%</option><option value="25">25%</option><option value="50">50%</option><option value="75">75%</option></select></label>
             </div>
 
             <div className="mt-4 rounded-2xl border border-sky-200 bg-sky-50/70 p-4 dark:border-sky-500/20 dark:bg-sky-500/5">
-              <div className="flex flex-wrap items-center justify-between gap-3"><div><div className="text-[9px] font-mono uppercase tracking-[.2em] text-sky-700 dark:text-sky-300">Bring your own crash data</div><div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">Use a real baseline when you have one.</div></div><label className="flex items-center gap-2 text-[10px] font-semibold text-slate-700 dark:text-slate-300"><input type="checkbox" checked={userDataMode} onChange={e=>setUserDataMode(e.target.checked)}/> Use user-supplied data</label></div>
+              <div className="flex flex-wrap items-center justify-between gap-3"><div><div className="text-[9px] font-mono uppercase tracking-[.2em] text-sky-700 dark:text-sky-300">Bring your own crash data</div><div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">Use a real baseline when you have one.</div></div><label className="flex items-center gap-2 text-[10px] font-semibold text-slate-700 dark:text-slate-300"><input type="checkbox" checked={userDataMode} onChange={e=>setUserDataMode(e.target.checked); if(e.target.checked) setProjectionMetric("crashes")}/> Use user-supplied data</label></div>
               <p className="mt-2 text-[10px] leading-5 text-slate-600 dark:text-slate-400">Enter a single observed year first. The Explorer uses it as a starting level; it does not infer a trend or causal effect from one year.</p>
               {userDataMode && <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <label><span className="text-[9px] text-slate-500">Baseline year</span><input type="number" min="2000" max="2100" value={userYear} onChange={e=>setUserYear(Number(e.target.value)||2026)} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"/></label>
+                <label><span className="text-[9px] text-slate-500">Baseline year</span><input type="number" min="2000" max="2100" value={userYear} onChange={e=>{const y=Number(e.target.value)||2026;setUserYear(y);if(projectionHorizon<=y)setProjectionHorizon(y+4)}} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"/></label>
                 <label><span className="text-[9px] text-slate-500">Motorcycle crashes</span><input type="number" min="0" value={userCrashes} onChange={e=>setUserCrashes(Math.max(0,Number(e.target.value)||0))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"/></label>
                 <label><span className="text-[9px] text-slate-500">Deaths</span><input type="number" min="0" value={userDeaths} onChange={e=>setUserDeaths(Math.max(0,Number(e.target.value)||0))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"/></label>
                 <label><span className="text-[9px] text-slate-500">Serious injuries (optional)</span><input type="number" min="0" value={userSeriousInjuries} onChange={e=>setUserSeriousInjuries(Math.max(0,Number(e.target.value)||0))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"/></label>
@@ -1364,9 +1378,14 @@ function FrameworkLab(){
               {userDataMode && <div className="mt-3 rounded-lg border border-sky-200 bg-white p-3 text-[10px] leading-5 text-slate-600 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-400"><b className="text-sky-700 dark:text-sky-300">Baseline snapshot:</b> {userCrashes.toLocaleString()} crashes · {userDeaths.toLocaleString()} deaths · {userSeriousInjuries.toLocaleString()} serious injuries. {userCrashes>0 ? (userDeaths/userCrashes*100).toFixed(1)+" deaths per 100 recorded crashes — descriptive only, not a probability of death unless the definitions support that interpretation." : "Enter crash count to calculate a descriptive ratio."}</div>}
             </div>
 
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-violet-200 bg-violet-50 p-3 dark:border-violet-500/20 dark:bg-violet-500/5">
+              <div><div className="text-[10px] font-semibold text-slate-900 dark:text-white">Projection is calculated on demand</div><div className="text-[9px] leading-4 text-slate-500">Change the baseline or assumptions, then run the projection to refresh the two curves.</div></div>
+              <button onClick={runProjection} className="inline-flex items-center justify-center gap-2 rounded-lg bg-violet-600 px-4 py-2.5 text-[10px] font-bold text-white hover:bg-violet-700"><Play size={13}/> Run projection</button>
+            </div>
+
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               <label className="block rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950/40"><div className="flex justify-between text-[10px]"><span>Simulated baseline risk index</span><b className="font-mono">{baselineRiskIndex}</b></div><input type="range" min="50" max="150" value={baselineRiskIndex} onChange={e=>setBaselineRiskIndex(Number(e.target.value))} className="mt-2 w-full"/></label>
-              <label className="block rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950/40"><div className="flex justify-between text-[10px]"><span>Projection horizon</span><b className="font-mono">{projectionHorizon}</b></div><input type="range" min="2028" max="2035" value={projectionHorizon} onChange={e=>setProjectionHorizon(Number(e.target.value))} className="mt-2 w-full"/></label>
+              <label className="block rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950/40"><div className="flex justify-between text-[10px]"><span>Projection horizon</span><b className="font-mono">{projectionHorizon}</b></div><input type="range" min={userDataMode?userYear+1:2027} max={userDataMode?userYear+9:2035} value={projectionHorizon} onChange={e=>setProjectionHorizon(Number(e.target.value))} className="mt-2 w-full"/></label>
             </div>
 
             <div className="mt-5 h-80 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950/30">
