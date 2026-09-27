@@ -1052,6 +1052,13 @@ function FrameworkLab(){
   const [baselineCrashes,setBaselineCrashes]=useState(0);
   const [unitCost,setUnitCost]=useState(2500);
   const [result,setResult]=useState<{hpt:number;sa:number;coverage:number;exposureReduction:number;sceMitigated:number;crashesMitigated:number;cost:number}|null>(null);
+  // Projection sandbox: simulated until empirical baseline data are supplied.
+  const [projectionMetric,setProjectionMetric]=useState<"risk"|"sces"|"crashes">("risk");
+  const [projectionHorizon,setProjectionHorizon]=useState(2030);
+  const [baselineRiskIndex,setBaselineRiskIndex]=useState(100);
+  const [annualRiskGrowth,setAnnualRiskGrowth]=useState(4);
+  const [projectionEffectiveness,setProjectionEffectiveness]=useState(25);
+  const [interventionStart,setInterventionStart]=useState(2027);
 
   const run=()=>{
     const hpt=clamp(49.3+training,0,100);
@@ -1074,6 +1081,18 @@ function FrameworkLab(){
   ] as const;
 
   const money=(n:number)=>"RM "+n.toLocaleString("en-MY",{maximumFractionDigits:0});
+
+  const projectionBase = projectionMetric==="risk" ? baselineRiskIndex : projectionMetric==="sces" ? baselineSCE : baselineCrashes;
+  const projectionData = Array.from({length:projectionHorizon-2026+1},(_,i)=>{
+    const year=2026+i;
+    const bau=projectionBase*Math.pow(1+annualRiskGrowth/100,i);
+    const coverage=result?.coverage ?? clamp(technology/30,0,1);
+    const effect=projectionEffectiveness/100*coverage;
+    const ramp=year<interventionStart ? 0 : Math.min(1,(year-interventionStart+1)/3);
+    const intervention=bau*(1-effect*ramp);
+    return {year,bau:Number(bau.toFixed(2)),intervention:Number(intervention.toFixed(2)),gap:Number((bau-intervention).toFixed(2))};
+  });
+  const finalProjection=projectionData[projectionData.length-1];
 
   const evidenceCards=[
     {
@@ -1303,13 +1322,69 @@ function FrameworkLab(){
             <Metric label="Scenario HPT" value={result.hpt.toFixed(1)+"%"} sub="Illustrative capability pathway: training + retraining" kind="scenario"/>
             <Metric label="Scenario SA" value={result.sa.toFixed(1)+"%"} sub="Illustrative capability pathway only; technology does not add SA" kind="scenario"/>
             <Metric label="Potential SCEs mitigated" value={baselineSCE>0 ? result.sceMitigated.toFixed(1) : "Enter SCE baseline"} sub={baselineSCE>0 ? "Baseline SCEs × technology coverage × assumed mitigation" : "Requires a user-supplied SCE baseline"} kind="scenario"/>
-            <Metric label="Potential crashes prevented" value={baselineCrashes>0 ? result.crashesMitigated.toFixed(1) : "Enter crash baseline"} sub={baselineCrashes>0 ? "Baseline crashes × technology coverage × assumed mitigation" : "Requires a user-supplied crash baseline"} kind="scenario"/>
+            <Metric label="Scenario-estimated crashes mitigated" value={baselineCrashes>0 ? result.crashesMitigated.toFixed(1) : "Enter crash baseline"} sub={baselineCrashes>0 ? "Baseline crashes × technology coverage × assumed mitigation" : "Requires a user-supplied crash baseline"} kind="scenario"/>
           </div> : <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-center dark:border-slate-800 dark:bg-slate-950/40"><div className="text-sm font-semibold text-slate-900 dark:text-white">No scenario calculated yet</div><p className="mt-1 text-[11px] text-slate-500">Change the intervention assumptions and run the laboratory. No crash or SCE estimate is invented when a baseline is missing.</p></div>}
 
           {result && <div className="mb-4 flex justify-end"><DownloadButton label="Download scenario CSV" onClick={()=>downloadCSV("research-explorer-framework-scenario.csv",[{target_riders:targetRiders,technology_coverage_percent:Math.round(result.coverage*100),training_assumption:training,retraining_assumption:retraining,exposure_control:exposure,assumed_sce_mitigation_percent:sceEffectiveness,baseline_sces:baselineSCE,baseline_crashes:baselineCrashes,unit_cost_rm:unitCost,scenario_hpt:result.hpt,scenario_sa:result.sa,potential_sces_mitigated:result.sceMitigated,potential_crashes_prevented:result.crashesMitigated,programme_cost_rm:result.cost}])}/></div>}{result && <div className="mt-4 grid gap-3 md:grid-cols-2">
             <Metric label="Programme cost" value={money(result.cost)} sub="Target riders × technology coverage × unit cost" kind="scenario"/>
             <Metric label="Capability change" value={(result.sa-23.2).toFixed(1)+" pp"} sub="Illustrative change in SA from training/retraining only" kind="scenario"/>
           </div>}
+
+          <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5 dark:border-emerald-500/20 dark:bg-emerald-500/5">
+            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div>
+                <div className="text-[9px] font-mono uppercase tracking-[.2em] text-emerald-700 dark:text-emerald-300">Counterfactual projection · simulation mode</div>
+                <h3 className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">What if we do nothing additional — versus intervene?</h3>
+                <p className="mt-2 max-w-3xl text-[11px] leading-5 text-slate-600 dark:text-slate-400">This first version uses simulated data so the projection architecture can be tested before empirical baseline data are supplied. “BAU” means business-as-usual / no additional intervention, not literally zero safety activity.</p>
+              </div>
+              <EvidenceBadge kind="simulated"/>
+            </div>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+              <label><span className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Projection metric</span><select value={projectionMetric} onChange={e=>setProjectionMetric(e.target.value as "risk"|"sces"|"crashes")} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-[10px] text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"><option value="risk">Risk index (simulated)</option><option value="sces">SCEs / year</option><option value="crashes">Crashes / year</option></select></label>
+              <label><span className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Annual BAU growth</span><select value={annualRiskGrowth} onChange={e=>setAnnualRiskGrowth(Number(e.target.value))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-[10px] text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"><option value="0">0%</option><option value="2">2%</option><option value="4">4%</option><option value="6">6%</option><option value="8">8%</option></select></label>
+              <label><span className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Intervention starts</span><select value={interventionStart} onChange={e=>setInterventionStart(Number(e.target.value))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-[10px] text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"><option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option></select></label>
+              <label><span className="text-[9px] font-mono uppercase tracking-wider text-slate-500">Projection effectiveness</span><select value={projectionEffectiveness} onChange={e=>setProjectionEffectiveness(Number(e.target.value))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-[10px] text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"><option value="10">10%</option><option value="25">25%</option><option value="50">50%</option><option value="75">75%</option></select></label>
+            </div>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              <label className="block rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950/40"><div className="flex justify-between text-[10px]"><span>Simulated baseline risk index</span><b className="font-mono">{baselineRiskIndex}</b></div><input type="range" min="50" max="150" value={baselineRiskIndex} onChange={e=>setBaselineRiskIndex(Number(e.target.value))} className="mt-2 w-full"/></label>
+              <label className="block rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950/40"><div className="flex justify-between text-[10px]"><span>Projection horizon</span><b className="font-mono">{projectionHorizon}</b></div><input type="range" min="2028" max="2035" value={projectionHorizon} onChange={e=>setProjectionHorizon(Number(e.target.value))} className="mt-2 w-full"/></label>
+            </div>
+
+            <div className="mt-5 h-80 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950/30">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={projectionData} margin={{top:8,right:12,left:0,bottom:4}}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1"/>
+                  <XAxis dataKey="year" tick={{fill:"#64748b",fontSize:9}}/>
+                  <YAxis tick={{fill:"#64748b",fontSize:9}}/>
+                  <Tooltip content={<ChartTooltip/>}/>
+                  <Line type="monotone" dataKey="bau" name="BAU / no additional intervention" stroke="#64748b" strokeWidth={2} strokeDasharray="6 4" dot={{r:2}}/>
+                  <Line type="monotone" dataKey="intervention" name="Intervention scenario" stroke="#10b981" strokeWidth={2.5} dot={{r:2}}/>
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+              <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950/40"><div className="text-[9px] font-mono uppercase tracking-wider text-slate-500">BAU at {projectionHorizon}</div><div className="mt-1 font-mono text-lg font-semibold text-slate-900 dark:text-white">{finalProjection ? finalProjection.bau.toFixed(1) : "—"}</div></div>
+              <div className="rounded-xl border border-emerald-200 bg-white p-3 dark:border-emerald-500/20 dark:bg-slate-950/40"><div className="text-[9px] font-mono uppercase tracking-wider text-emerald-600 dark:text-emerald-300">Intervention at {projectionHorizon}</div><div className="mt-1 font-mono text-lg font-semibold text-slate-900 dark:text-white">{finalProjection ? finalProjection.intervention.toFixed(1) : "—"}</div></div>
+              <div className="rounded-xl border border-violet-200 bg-white p-3 dark:border-violet-500/20 dark:bg-slate-950/40"><div className="text-[9px] font-mono uppercase tracking-wider text-violet-600 dark:text-violet-300">Scenario gap</div><div className="mt-1 font-mono text-lg font-semibold text-slate-900 dark:text-white">{finalProjection ? finalProjection.gap.toFixed(1) : "—"}</div></div>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-[10px] leading-5 text-slate-600 dark:border-amber-500/20 dark:bg-amber-500/5 dark:text-slate-400"><b className="text-amber-700 dark:text-amber-300">Model boundary:</b> the projection curve is illustrative. The BAU trend, intervention ramp and effectiveness are assumptions, not estimates from the published paper. When real historical crash/SCE/exposure data are supplied, this layer should be replaced with an empirical baseline and a defensible counterfactual model.</div>
+          </div>
+
+          <div className="mt-4 rounded-2xl border border-violet-200 bg-violet-50/70 p-5 dark:border-violet-500/20 dark:bg-violet-500/5">
+            <div className="flex items-center gap-2"><CircleHelp size={15} className="text-violet-600 dark:text-violet-300"/><h3 className="font-semibold text-slate-900 dark:text-white">How each scenario value is calculated</h3></div>
+            <div className="mt-3 grid gap-2 md:grid-cols-2">
+              <div className="rounded-xl border border-white bg-white p-3 dark:border-slate-800 dark:bg-slate-950/40"><b className="text-[10px] text-slate-900 dark:text-white">Scenario HPT</b><p className="mt-1 text-[10px] leading-4 text-slate-500">49.3% observed baseline + training assumption. The slider represents an illustrative capability change; it is not an observed intervention effect.</p></div>
+              <div className="rounded-xl border border-white bg-white p-3 dark:border-slate-800 dark:bg-slate-950/40"><b className="text-[10px] text-slate-900 dark:text-white">Scenario SA</b><p className="mt-1 text-[10px] leading-4 text-slate-500">23.2% observed baseline + (training × 0.35) + (retraining × 0.10). These coefficients are scenario assumptions.</p></div>
+              <div className="rounded-xl border border-white bg-white p-3 dark:border-slate-800 dark:bg-slate-950/40"><b className="text-[10px] text-slate-900 dark:text-white">Technology coverage</b><p className="mt-1 text-[10px] leading-4 text-slate-500">Technology slider ÷ 30. A slider value of 15 therefore represents 50% illustrative coverage.</p></div>
+              <div className="rounded-xl border border-white bg-white p-3 dark:border-slate-800 dark:bg-slate-950/40"><b className="text-[10px] text-slate-900 dark:text-white">SCEs / crashes mitigated</b><p className="mt-1 text-[10px] leading-4 text-slate-500">Baseline × technology coverage × assumed mitigation effectiveness. No baseline means no invented impact estimate.</p></div>
+              <div className="rounded-xl border border-white bg-white p-3 dark:border-slate-800 dark:bg-slate-950/40"><b className="text-[10px] text-slate-900 dark:text-white">Programme cost</b><p className="mt-1 text-[10px] leading-4 text-slate-500">Target riders × technology coverage × unit cost.</p></div>
+              <div className="rounded-xl border border-white bg-white p-3 dark:border-slate-800 dark:bg-slate-950/40"><b className="text-[10px] text-slate-900 dark:text-white">pp = percentage points</b><p className="mt-1 text-[10px] leading-4 text-slate-500">23.2% → 27.2% is +4.0 percentage points, not a 4% relative increase.</p></div>
+            </div>
+          </div>
 
           <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950/30">
             <h3 className="font-semibold text-slate-900 dark:text-white">How to read the result</h3>
@@ -1347,6 +1422,8 @@ function FrameworkLab(){
     </Card>
 
     <div className="rounded-2xl border border-violet-200 bg-violet-50 p-5 text-xs leading-5 text-slate-600">
+      <div className="mb-3 flex flex-wrap items-center gap-2"><span className="rounded-full border border-violet-200 bg-white px-2.5 py-1 text-[9px] font-mono font-bold uppercase tracking-wider text-violet-700">MKA Ibrahim (2026) · Evidence basis</span><span className="text-[9px] text-slate-500">{paperMeta.journal} · {paperMeta.doi}</span></div>
+      <p className="mb-3 text-[10px] leading-5 text-slate-500">The observed HPT and SA baselines in this laboratory are drawn from Paper 1. The scenario and projection layers are Explorer-generated and are not presented as additional findings of MKA Ibrahim (2026).</p>
       <b className="text-violet-700">Evidence boundary:</b> MCAS currently has prototype-level evidence of detection, warning and observed SCE responses. External collision-warning research supports the plausibility and research relevance of this technology class. Population-level crash reduction for MCAS remains an empirical question for the next field-evidence phase.
     </div>
   </div>;
