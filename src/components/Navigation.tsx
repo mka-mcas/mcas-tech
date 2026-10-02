@@ -33,6 +33,9 @@ export default function Navigation() {
           <Link href="/research-explorer" className="text-violet-400 hover:text-violet-300 transition-colors">
             Research Explorer
           </Link>
+          <Link href="/technology" className="text-slate-400 hover:text-white transition-colors">
+            Technology Explorer
+          </Link>
           <Link href="/reader" className="text-slate-400 hover:text-white transition-colors">
             Life-long learning
           </Link>
@@ -111,6 +114,13 @@ export default function Navigation() {
             className="text-violet-400 hover:text-violet-300 transition-colors py-1"
           >
             Research Explorer
+          </Link>
+          <Link 
+            href="/technology" 
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="text-slate-400 hover:text-white transition-colors py-1"
+          >
+            Technology Explorer
           </Link>
           <Link 
             href="/reader" 
