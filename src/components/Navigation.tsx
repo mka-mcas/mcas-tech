@@ -30,6 +30,9 @@ export default function Navigation() {
           <Link href="/sem" className="text-sky-400 hover:text-sky-300 transition-colors">
             SEM Explorer
           </Link>
+          <Link href="/technology" className="text-slate-400 hover:text-white transition-colors">
+            Technology Explorer
+          </Link>
           <Link href="/reader" className="text-slate-400 hover:text-white transition-colors">
             Life-long learning
           </Link>
@@ -101,6 +104,13 @@ export default function Navigation() {
             className="text-sky-400 hover:text-sky-300 transition-colors py-1"
           >
             SEM Explorer
+          </Link>
+          <Link 
+            href="/technology" 
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="text-slate-400 hover:text-white transition-colors py-1"
+          >
+            Technology Explorer
           </Link>
           <Link 
             href="/reader" 
