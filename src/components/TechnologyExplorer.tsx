@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 
 type ResponseMode = "brake" | "maintain" | "accelerate";
@@ -12,6 +12,9 @@ export default function TechnologyExplorer() {
   const [leadSpeed, setLeadSpeed] = useState(38);
   const [distance, setDistance] = useState(52);
   const [response, setResponse] = useState<ResponseMode | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [scenarioTime, setScenarioTime] = useState(0);
+  const lastTick = useRef<number | null>(null);
 
   const relativeSpeed = Math.max(0, speed - leadSpeed);
   const ttc = relativeSpeed > 0 ? distance / (relativeSpeed / 3.6) : Infinity;
@@ -33,11 +36,58 @@ export default function TechnologyExplorer() {
     accelerate: "Accelerating increases closing speed and reduces the available time.",
   };
 
+  useEffect(() => {
+    if (!isPlaying) {
+      lastTick.current = null;
+      return;
+    }
+
+    let frame = 0;
+    const tick = (now: number) => {
+      if (lastTick.current == null) lastTick.current = now;
+      const dt = Math.min((now - lastTick.current) / 1000, 0.08);
+      lastTick.current = now;
+
+      setDistance((current) => {
+        const currentRelative = Math.max(0, speed - leadSpeed);
+        const closingMps = currentRelative / 3.6;
+        const nextDistance = current - closingMps * dt;
+
+        if (nextDistance <= 10) {
+          setIsPlaying(false);
+          return 10;
+        }
+
+        return nextDistance;
+      });
+      setScenarioTime((t) => t + dt);
+      frame = requestAnimationFrame(tick);
+    };
+
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [isPlaying, speed, leadSpeed]);
+
+  const chooseResponse = (mode: ResponseMode) => {
+    setResponse(mode);
+    if (mode === "brake") {
+      setSpeed((value) => Math.max(30, value - 8));
+      setIsPlaying(true);
+    } else if (mode === "accelerate") {
+      setSpeed((value) => Math.min(120, value + 8));
+      setIsPlaying(true);
+    } else {
+      setIsPlaying(true);
+    }
+  };
+
   const reset = () => {
     setSpeed(60);
     setLeadSpeed(38);
     setDistance(52);
     setResponse(null);
+    setIsPlaying(false);
+    setScenarioTime(0);
   };
 
   return (
@@ -67,7 +117,10 @@ export default function TechnologyExplorer() {
             </p>
           </div>
 
-          <ScenarioView ttc={ttc} alert={alert} speed={speed} distance={distance} leadBottom={leadBottom} leadScale={leadScale} />
+          <div className="space-y-4">
+            <ScenarioView ttc={ttc} alert={alert} speed={speed} distance={distance} leadBottom={leadBottom} leadScale={leadScale} isPlaying={isPlaying} scenarioTime={scenarioTime} onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} />
+            <FieldView ttc={ttc} alert={alert} speed={speed} distance={distance} isPlaying={isPlaying} />
+          </div>
         </div>
       </section>
 
@@ -92,9 +145,9 @@ export default function TechnologyExplorer() {
             </div>
 
             <div className="mt-8 grid gap-3 sm:grid-cols-3">
-              <ResponseButton active={response === "brake"} onClick={() => setResponse("brake")} title="Brake" detail="Increase separation" />
-              <ResponseButton active={response === "maintain"} onClick={() => setResponse("maintain")} title="Maintain" detail="Keep the current state" />
-              <ResponseButton active={response === "accelerate"} onClick={() => setResponse("accelerate")} title="Accelerate" detail="Increase closing speed" />
+              <ResponseButton active={response === "brake"} onClick={() => chooseResponse("brake")} title="Brake" detail="Reduce closing speed" />
+              <ResponseButton active={response === "maintain"} onClick={() => chooseResponse("maintain")} title="Maintain" detail="Keep the current state" />
+              <ResponseButton active={response === "accelerate"} onClick={() => chooseResponse("accelerate")} title="Accelerate" detail="Increase closing speed" />
             </div>
 
             {response && (
@@ -159,7 +212,7 @@ export default function TechnologyExplorer() {
   );
 }
 
-function ScenarioView({ ttc, alert, speed, distance, leadBottom, leadScale }: any) {
+function ScenarioView({ ttc, alert, speed, distance, leadBottom, leadScale, isPlaying, scenarioTime, onPlay, onPause }: any) {
   const toneClass = alert.tone === "red" ? "bg-red-400" : alert.tone === "orange" ? "bg-orange-400" : alert.tone === "amber" ? "bg-amber-400" : "bg-emerald-400";
   const progress = clamp(Number.isFinite(ttc) ? 100 - ttc * 4 : 8, 8, 100);
 
@@ -206,8 +259,85 @@ function ScenarioView({ ttc, alert, speed, distance, leadBottom, leadScale }: an
 
         <div className="absolute bottom-4 left-4 right-4 grid grid-cols-3 gap-2">
           <Metric label="Speed" value={speed + " km/h"} />
-          <Metric label="Distance" value={distance + " m"} />
+          <Metric label="Distance" value={distance.toFixed(1) + " m"} />
           <Metric label="TTC" value={Number.isFinite(ttc) ? ttc.toFixed(1) + " s" : "∞"} emphasis />
+        </div>
+
+        <div className="absolute bottom-[78px] left-4 right-4 flex items-center justify-between gap-3">
+          <div className="rounded-full border border-white/15 bg-slate-950/70 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-300 backdrop-blur">
+            {isPlaying ? "Scenario running" : "Scenario paused"} · {scenarioTime.toFixed(1)} s
+          </div>
+          <button
+            type="button"
+            onClick={isPlaying ? onPause : onPlay}
+            className="rounded-full border border-white/20 bg-white px-4 py-2 text-xs font-black text-slate-900 shadow-lg transition hover:bg-slate-100"
+          >
+            {isPlaying ? "Pause scenario" : "▶ Play scenario"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FieldView({ ttc, alert, speed, distance, isPlaying }: any) {
+  const tone = alert.tone === "red" ? "bg-red-500" : alert.tone === "orange" ? "bg-orange-400" : alert.tone === "amber" ? "bg-amber-400" : "bg-emerald-400";
+  const roadShift = isPlaying ? ((distance * 3) % 48) + "px" : "0px";
+
+  return (
+    <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 shadow-xl">
+      <div className="relative h-56 bg-slate-900">
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,#b8d7df_0%,#e8eee8_42%,#64748b_42%,#334155_100%)]" />
+        <div className="absolute inset-x-0 bottom-0 h-[58%] bg-slate-700 [clip-path:polygon(28%_0,72%_0,100%_100%,0_100%)]" />
+        <div className="absolute bottom-0 left-1/2 h-[58%] w-1 -translate-x-1/2 bg-[repeating-linear-gradient(to_bottom,transparent_0_24px,#f8fafc_24px_42px)] opacity-80" style={{ backgroundPositionY: roadShift }} />
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
+          <div className="relative h-16 w-24 rounded-[16px] bg-slate-100 shadow-xl">
+            <div className="absolute left-2 right-2 top-2 h-7 rounded-xl bg-slate-500" />
+            <div className="absolute -bottom-2 left-2 h-4 w-4 rounded-full bg-slate-950" />
+            <div className="absolute -bottom-2 right-2 h-4 w-4 rounded-full bg-slate-950" />
+            <div className="absolute bottom-2 left-1 h-2 w-2 rounded-full bg-red-400" />
+            <div className="absolute bottom-2 right-1 h-2 w-2 rounded-full bg-red-400" />
+          </div>
+        </div>
+
+        <div className="absolute left-4 top-4 rounded-lg border border-white/15 bg-slate-950/75 px-3 py-2 text-white backdrop-blur">
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
+            <span className={"h-2 w-2 rounded-full " + (isPlaying ? "animate-pulse bg-red-400" : "bg-slate-500")} />
+            FIELD VIEW · SIMULATED
+          </div>
+          <div className="mt-1 text-[10px] text-slate-400">Forward-facing rider perspective</div>
+        </div>
+
+        <div className="absolute right-4 top-4 rounded-lg border border-white/15 bg-slate-950/75 px-3 py-2 text-right text-white backdrop-blur">
+          <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">MCAS alert</div>
+          <div className="mt-1 flex items-center justify-end gap-2 text-sm font-black">
+            <span className={"h-2.5 w-2.5 rounded-full " + tone} />
+            {alert.label}
+          </div>
+        </div>
+
+        <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
+          <div>
+            <div className="text-[9px] font-bold uppercase tracking-widest text-slate-300">Speed</div>
+            <div className="font-mono text-lg font-black text-white">{speed} km/h</div>
+          </div>
+          <div className="text-center">
+            <div className="text-[9px] font-bold uppercase tracking-widest text-slate-300">TTC</div>
+            <div className="font-mono text-lg font-black text-sky-300">{Number.isFinite(ttc) ? ttc.toFixed(1) + " s" : "∞"}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-[9px] font-bold uppercase tracking-widest text-slate-300">Separation</div>
+            <div className="font-mono text-lg font-black text-white">{distance.toFixed(1)} m</div>
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center justify-between gap-4 px-5 py-3">
+        <div>
+          <div className="text-xs font-black text-white">What the rider could see</div>
+          <div className="mt-1 text-[11px] text-slate-400">Conceptual visualisation — replace with field footage when available.</div>
+        </div>
+        <div className="shrink-0 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          {isPlaying ? "LIVE SIM" : "PAUSED"}
         </div>
       </div>
     </div>
