@@ -93,7 +93,7 @@ export default function TechnologyExplorer() {
   return (
     <main className="min-h-screen bg-slate-50 text-slate-950">
       <section className="relative overflow-hidden border-b border-slate-200 bg-[radial-gradient(circle_at_75%_10%,rgba(14,165,233,0.13),transparent_32%),linear-gradient(180deg,#ffffff_0%,#f1f5f9_100%)] pt-28">
-        <div className="mx-auto grid max-w-7xl gap-10 px-6 pb-14 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+        <div className="mx-auto grid max-w-7xl gap-10 px-6 pb-14 lg:grid-cols-[0.7fr_1.3fr] lg:items-center">
           <div>
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-sky-700">
               MCAS Technology Explorer · v0.1
@@ -117,7 +117,7 @@ export default function TechnologyExplorer() {
             </p>
           </div>
 
-          <div className="space-y-4">
+          <div className="grid gap-4 lg:grid-cols-[1.25fr_0.75fr]">
             <ScenarioView ttc={ttc} alert={alert} speed={speed} distance={distance} leadBottom={leadBottom} leadScale={leadScale} isPlaying={isPlaying} scenarioTime={scenarioTime} onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} />
             <FieldView ttc={ttc} alert={alert} speed={speed} distance={distance} isPlaying={isPlaying} />
           </div>
@@ -286,7 +286,7 @@ function FieldView({ ttc, alert, speed, distance, isPlaying }: any) {
 
   return (
     <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 shadow-xl">
-      <div className="relative h-56 bg-slate-900">
+      <div className="relative h-[460px] bg-slate-900">
         <div className="absolute inset-0 bg-[linear-gradient(180deg,#b8d7df_0%,#e8eee8_42%,#64748b_42%,#334155_100%)]" />
         <div className="absolute inset-x-0 bottom-0 h-[58%] bg-slate-700 [clip-path:polygon(28%_0,72%_0,100%_100%,0_100%)]" />
         <div className="absolute bottom-0 left-1/2 h-[58%] w-1 -translate-x-1/2 bg-[repeating-linear-gradient(to_bottom,transparent_0_24px,#f8fafc_24px_42px)] opacity-80" style={{ backgroundPositionY: roadShift }} />
