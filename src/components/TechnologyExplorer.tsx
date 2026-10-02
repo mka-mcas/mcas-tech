@@ -58,7 +58,7 @@ export default function TechnologyExplorer() {
               <a href="#experience" className="rounded-xl bg-slate-950 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-slate-300 transition hover:-translate-y-0.5 hover:bg-slate-800">
                 Experience it
               </a>
-              <Link href="/sem" className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+              <Link href="/research-explorer" className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
                 Explore the research
               </Link>
             </div>
