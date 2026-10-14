@@ -30,6 +30,12 @@ export default function Navigation() {
           <Link href="/sem" className="text-sky-400 hover:text-sky-300 transition-colors">
             SEM Explorer
           </Link>
+          <Link href="/paper-explorer" className="text-violet-300 hover:text-violet-200 transition-colors">
+            Paper Explorer
+          </Link>
+          <Link href="/simulator" className="text-cyan-300 hover:text-cyan-200 transition-colors">
+            MCAS Simulator
+          </Link>
           <Link href="/reader" className="text-slate-400 hover:text-white transition-colors">
             Life-long learning
           </Link>
@@ -102,6 +108,8 @@ export default function Navigation() {
           >
             SEM Explorer
           </Link>
+          <Link href="/paper-explorer" onClick={() => setIsMobileMenuOpen(false)} className="text-violet-300 hover:text-violet-200 transition-colors py-1">Paper Explorer</Link>
+          <Link href="/simulator" onClick={() => setIsMobileMenuOpen(false)} className="text-cyan-300 hover:text-cyan-200 transition-colors py-1">MCAS Simulator</Link>
           <Link 
             href="/reader" 
             onClick={() => setIsMobileMenuOpen(false)}
