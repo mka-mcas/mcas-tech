@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { ChevronRight, Info, Network, Route, SlidersHorizontal, Sun, Moon, X } from "lucide-react";
 import { constructs, covariance, fit, paths, sequentialIndirect, directUnsafeInterpretation, type Construct, type SemPath } from "@/data/sem-data";
 
-type Tab = "model" | "structural" | "measurement" | "journey";
+type Tab = "model" | "structural" | "measurement" | "journey" | "evidence";
 type IndicatorDetail = { id: string; label: string; loading: number; p: number | string; construct: string };
 type Detail = { kind: "path"; item: SemPath } | { kind: "construct"; item: Construct } | { kind: "indicator"; item: IndicatorDetail } | { kind: "covariance" } | { kind: "journey"; key: string } | null;
 
@@ -24,6 +24,7 @@ export default function InteractiveSEM(){
   const [detail,setDetail]=useState<Detail>(null);
   const [std,setStd]=useState(true);
   const [light,setLight]=useState(false);
+  const [showGuide,setShowGuide]=useState(false);
 
   return (
     <div className={light ? "sem-light min-h-screen bg-slate-50 text-slate-900" : "min-h-screen bg-[#090d16] text-slate-100"}>
@@ -69,10 +70,30 @@ export default function InteractiveSEM(){
       </header>
 
       <main className="mx-auto max-w-[1550px] px-5 py-6 md:px-8">
+        <div className="mb-5 rounded-2xl border border-sky-500/20 bg-sky-500/5 p-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-400/10 text-sky-300"><Info size={17}/></div>
+              <div><div className="text-sm font-semibold">New to SEM?</div><div className="text-xs text-slate-500">A quick guide to the method behind this explorer.</div></div>
+            </div>
+            <button onClick={()=>setShowGuide(!showGuide)} className="cursor-pointer rounded-full border border-sky-500/30 bg-sky-400/10 px-3 py-2 text-xs font-semibold text-sky-300 hover:bg-sky-400/15">{showGuide ? "Hide guide" : "Show SEM guide"}</button>
+          </div>
+          {showGuide && <div className="mt-4 grid gap-3 border-t border-sky-500/10 pt-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-slate-800 bg-slate-950/30 p-3"><div className="text-[10px] font-semibold uppercase tracking-wider text-sky-300">SEM</div><p className="mt-1 text-xs leading-5 text-slate-400"><b className="text-slate-200">Structural Equation Modeling</b> tests relationships among latent constructs and their observed indicators in one model.</p></div>
+            <div className="rounded-xl border border-slate-800 bg-slate-950/30 p-3"><div className="text-[10px] font-semibold uppercase tracking-wider text-sky-300">CB-SEM</div><p className="mt-1 text-xs leading-5 text-slate-400">This is <b className="text-slate-200">covariance-based SEM</b>, not PLS-SEM. The model is evaluated against the observed covariance structure and overall fit.</p></div>
+            <div className="rounded-xl border border-slate-800 bg-slate-950/30 p-3"><div className="text-[10px] font-semibold uppercase tracking-wider text-sky-300">MLR</div><p className="mt-1 text-xs leading-5 text-slate-400"><b className="text-slate-200">Maximum Likelihood Robust</b> is the estimator used for the final model, providing robust inference when normality assumptions are not ideal.</p></div>
+            <div className="rounded-xl border border-slate-800 bg-slate-950/30 p-3"><div className="text-[10px] font-semibold uppercase tracking-wider text-sky-300">Std. β</div><p className="mt-1 text-xs leading-5 text-slate-400">A standardized path coefficient shows the modelled direction and relative magnitude of an association. <b className="text-slate-200">It is not a causal effect.</b></p></div>
+            <div className="rounded-xl border border-slate-800 bg-slate-950/30 p-3"><div className="text-[10px] font-semibold uppercase tracking-wider text-sky-300">Latent variable</div><p className="mt-1 text-xs leading-5 text-slate-400">An ellipse represents a construct inferred from multiple observed indicators, shown as rectangles in the model diagram.</p></div>
+            <div className="rounded-xl border border-slate-800 bg-slate-950/30 p-3"><div className="text-[10px] font-semibold uppercase tracking-wider text-sky-300">p-value</div><p className="mt-1 text-xs leading-5 text-slate-400">Here, p-values assess evidence against a zero path in the fitted model. <b className="text-slate-200">p &lt; .05</b> is used as the displayed significance threshold.</p></div>
+            <div className="rounded-xl border border-slate-800 bg-slate-950/30 p-3"><div className="text-[10px] font-semibold uppercase tracking-wider text-sky-300">Model fit</div><p className="mt-1 text-xs leading-5 text-slate-400">CFI, TLI, RMSEA and SRMR describe how well the <b className="text-slate-200">model as a whole</b> reproduces the observed data.</p></div>
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3"><div className="text-[10px] font-semibold uppercase tracking-wider text-amber-300">Study boundary</div><p className="mt-1 text-xs leading-5 text-slate-400">This is a <b className="text-slate-200">cross-sectional</b> model. Statistical association, significance or good fit does not by itself establish causality.</p></div>
+          </div>}
+        </div>
+
         <InterpretiveSummary onOpen={(id)=>{ const p=paths.find(x=>x.id===id); if(p) setDetail({kind:"path",item:p}); }} />
 
         <div className="mb-5 flex flex-wrap items-center gap-2">
-          {([["model","Full model"],["structural","Structural"],["measurement","Measurement"],["journey","Model journey"]] as [Tab,string][]).map(([id,label])=>
+          {([["model","Full model"],["structural","Structural"],["measurement","Measurement"],["journey","Model journey"],["evidence","Evidence"]] as [Tab,string][]).map(([id,label])=>
             <button key={id} onClick={()=>setTab(id)} className={`rounded-full border px-4 py-2 text-xs font-semibold transition ${tab===id ? "border-sky-400/50 bg-sky-400/10 text-sky-300":"border-slate-800 bg-slate-900 text-slate-400 hover:text-white"}`}>{label}</button>
           )}
           <div className="ml-auto flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs">
@@ -82,7 +103,7 @@ export default function InteractiveSEM(){
           </div>
         </div>
 
-        {tab==="journey" ? <Journey onOpen={(key)=>setDetail({kind:"journey",key})}/> :
+        {tab==="journey" ? <Journey onOpen={(key)=>setDetail({kind:"journey",key})}/> : tab==="evidence" ? <EvidenceExplorer onOpen={(id)=>{ const p=paths.find(x=>x.id===id); if(p) setDetail({kind:"path",item:p}); }}/> :
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_390px]">
           <section className="overflow-hidden rounded-2xl border border-slate-800 bg-[#0b111c]">
             <div className="flex flex-col gap-3 border-b border-slate-800 px-5 py-4 md:flex-row md:items-center md:justify-between">
@@ -412,6 +433,73 @@ function ConstructDetail({c}:{c:Construct}){
 }
 
 function CovarianceDetail(){ return <div><div className="grid grid-cols-2 gap-2">{[["Std. covariance",covariance.standardized.toFixed(3)],["Estimate",covariance.estimate.toFixed(3)],["SE",covariance.se.toFixed(3)],["z",covariance.z.toFixed(3)],["p",covariance.p],["95% CI",`[${covariance.ci[0].toFixed(3)}, ${covariance.ci[1].toFixed(3)}]`]].map(([k,v])=><div key={k} className="rounded-xl border border-slate-800 bg-slate-950/50 p-3"><div className="text-[10px] uppercase tracking-wider text-slate-500">{k}</div><div className="mt-1 font-mono text-sm">{v}</div></div>)}</div><div className="mt-4 rounded-xl border border-violet-500/20 bg-violet-500/5 p-4"><div className="text-xs font-semibold text-violet-300">Why are these two indicators allowed to covary?</div><p className="mt-2 text-sm leading-6 text-slate-400">{covariance.note}</p></div></div> }
+
+function EvidenceExplorer({onOpen}:{onOpen:(id:string)=>void}){
+  const [selected,setSelected]=useState("prolong-unsafe");
+  const item=directUnsafeInterpretation.find(x=>x.id===selected) ?? directUnsafeInterpretation[0];
+  const path=paths.find(x=>x.id===item.id)!;
+  const sourceConstruct=({
+    "prolong-unsafe":"prolong",
+    "motivation-unsafe":"motivation",
+    "mental-unsafe":"mental",
+    "physical-unsafe":"physical",
+    "kurang-unsafe":"kurang",
+  } as Record<string,string>)[item.id];
+  const construct=constructs.find(x=>x.id===sourceConstruct)!;
+  const related=paths.filter(x=>x.from===sourceConstruct || x.to===sourceConstruct).filter(x=>x.id!==path.id).slice(0,4);
+  const significant=item.status==="significant";
+  return <section className="rounded-2xl border border-slate-800 bg-[#0b111c] p-6 md:p-8">
+    <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+      <div className="max-w-3xl">
+        <div className="flex items-center gap-2 text-sky-400"><Info size={16}/><span className="text-xs font-mono uppercase tracking-widest">Evidence explorer · v0.7</span></div>
+        <h2 className="mt-3 text-2xl font-semibold">Follow one result through the model.</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-400">Start with a direct association and trace the evidence around it: the structural coefficient, the measurement indicators, the surrounding model relationships, and the overall model fit.</p>
+      </div>
+      <div className="rounded-xl border border-sky-500/20 bg-sky-500/5 px-4 py-3 text-xs text-slate-400"><span className="font-semibold text-sky-300">Evidence chain</span><br/>Result → measurement → model context</div>
+    </div>
+
+    <div className="mt-6 flex flex-wrap gap-2">
+      {directUnsafeInterpretation.map(x=><button key={x.id} onClick={()=>setSelected(x.id)} className={`cursor-pointer rounded-full border px-3 py-2 text-xs font-semibold transition ${selected===x.id ? "border-sky-400/60 bg-sky-400/10 text-sky-300" : "border-slate-800 bg-slate-950/40 text-slate-400 hover:border-slate-600"}`}>
+        {x.label}
+      </button>)}
+    </div>
+
+    <div className="mt-6 grid gap-4 lg:grid-cols-[1.15fr_.85fr]">
+      <div className={`rounded-2xl border p-5 ${significant ? "border-sky-500/20 bg-sky-500/5" : "border-slate-800 bg-slate-950/30"}`}>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div><div className="text-[10px] uppercase tracking-[.18em] text-slate-500">01 · Structural evidence</div><h3 className="mt-2 text-xl font-semibold">{item.label} → Unsafe riding</h3></div>
+          <span className={`rounded-full px-2 py-1 text-[9px] font-semibold uppercase tracking-wider ${significant ? "bg-sky-400/10 text-sky-300" : "bg-slate-800 text-slate-400"}`}>{significant ? "Statistically significant" : "Not statistically significant"}</span>
+        </div>
+        <div className="mt-5 grid grid-cols-2 gap-3"><div className="rounded-xl border border-slate-800 bg-slate-950/30 p-4"><div className="text-[10px] uppercase tracking-wider text-slate-500">Std. β</div><div className="mt-1 font-mono text-2xl text-sky-300">{item.beta.toFixed(3)}</div></div><div className="rounded-xl border border-slate-800 bg-slate-950/30 p-4"><div className="text-[10px] uppercase tracking-wider text-slate-500">p-value</div><div className="mt-1 font-mono text-2xl text-slate-100">{pLabel(item.p)}</div></div></div>
+        <p className="mt-4 text-sm leading-6 text-slate-400">{item.message}</p>
+        <button onClick={()=>onOpen(item.id)} className="mt-4 cursor-pointer inline-flex items-center gap-2 text-xs font-semibold text-sky-300 hover:text-sky-200">Open full path detail <ChevronRight size={14}/></button>
+      </div>
+
+      <div className="rounded-2xl border border-slate-800 bg-slate-950/30 p-5">
+        <div className="text-[10px] uppercase tracking-[.18em] text-slate-500">02 · Measurement evidence</div>
+        <h3 className="mt-2 text-lg font-semibold">{construct.label}</h3>
+        <p className="mt-1 text-xs leading-5 text-slate-500">The structural result sits on top of a measured latent construct. These are the indicators represented in the locked measurement model.</p>
+        <div className="mt-4 space-y-2">{construct.indicators.map(i=><div key={i.id} className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950/30 px-3 py-2"><span className="text-xs text-slate-300">{i.label}</span><span className="font-mono text-xs text-sky-300">λ {i.loading.toFixed(3)}</span></div>)}</div>
+      </div>
+    </div>
+
+    <div className="mt-4 grid gap-4 lg:grid-cols-2">
+      <div className="rounded-2xl border border-slate-800 bg-slate-950/30 p-5">
+        <div className="text-[10px] uppercase tracking-[.18em] text-slate-500">03 · Structural context</div>
+        <h3 className="mt-2 text-lg font-semibold">Other relationships involving {construct.label}</h3>
+        <div className="mt-4 space-y-2">{related.map(x=><button key={x.id} onClick={()=>onOpen(x.id)} className="group flex w-full cursor-pointer items-center justify-between rounded-xl border border-slate-800 bg-slate-950/30 px-3 py-3 text-left hover:border-sky-500/30"><span className="text-xs text-slate-300">{({motivation:"Motivation",prolong:"Prolonged fatigue",kurang:"Low Energy",physical:"Physical fatigue",mental:"Mental fatigue",unsafe:"Unsafe riding"} as Record<string,string>)[x.from] ?? x.from} → {({motivation:"Motivation",prolong:"Prolonged fatigue",kurang:"Low Energy",physical:"Physical fatigue",mental:"Mental fatigue",unsafe:"Unsafe riding"} as Record<string,string>)[x.to] ?? x.to}</span><span className={`font-mono text-xs ${x.p<.05 ? "text-sky-300" : "text-slate-500"}`}>β {x.beta.toFixed(3)} · p {pLabel(x.p)}</span></button>)}</div>
+      </div>
+      <div className="rounded-2xl border border-slate-800 bg-slate-950/30 p-5">
+        <div className="text-[10px] uppercase tracking-[.18em] text-slate-500">04 · Model context</div>
+        <h3 className="mt-2 text-lg font-semibold">Does the overall model fit the data?</h3>
+        <div className="mt-4 grid grid-cols-2 gap-2">{[["CFI",fit.cfi.toFixed(3)],["TLI",fit.tli.toFixed(3)],["RMSEA",fit.rmsea.toFixed(3)],["SRMR",fit.srmr.toFixed(3)]].map(([k,v])=><div key={k} className="rounded-xl border border-slate-800 bg-slate-950/30 p-3"><div className="text-[10px] uppercase tracking-wider text-slate-500">{k}</div><div className="mt-1 font-mono text-lg text-slate-100">{v}</div></div>)}</div>
+        <p className="mt-4 text-xs leading-5 text-slate-500">Model fit describes the adequacy of the fitted SEM as a whole. It does not make an individual path causal or statistically significant.</p>
+      </div>
+    </div>
+
+    <div className="mt-5 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 text-xs leading-5 text-slate-400"><span className="font-semibold text-amber-300">Important:</span> this explorer connects evidence already encoded in the locked final model. It does not imply that strong measurement loadings prove the structural relationship, nor that overall model fit proves a causal mechanism.</div>
+  </section>
+}
 
 function Journey({onOpen}:{onOpen:(key:string)=>void}){
   const items=[
