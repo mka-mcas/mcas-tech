@@ -112,7 +112,30 @@ export async function POST(request: Request) {
     }
   }
 
-  const { website: _website, consent: _consent, ...answers } = parsed.data;
+  const answers = {
+    position: parsed.data.position,
+    grade: parsed.data.grade,
+    employment_status: parsed.data.employmentStatus,
+    service_years: parsed.data.serviceYears,
+    responsibilities: parsed.data.responsibilities,
+    current_projects: parsed.data.currentProjects,
+    expertise: parsed.data.expertise,
+    tools_methods: parsed.data.toolsMethods,
+    underused_skills: parsed.data.underusedSkills,
+    research_interests: parsed.data.researchInterests,
+    emerging_areas: parsed.data.emergingAreas,
+    research_gaps: parsed.data.researchGaps,
+    next_two_years: parsed.data.nextTwoYears,
+    project_ideas: parsed.data.projectIdeas,
+    development_goals: parsed.data.developmentGoals,
+    road_safety_contribution: parsed.data.roadSafetyContribution,
+    national_problem: parsed.data.nationalProblem,
+    collaboration: parsed.data.collaboration,
+    assignment_readiness: parsed.data.assignmentReadiness,
+    support_needed: parsed.data.supportNeeded,
+    preserve_practices: parsed.data.preservePractices,
+    positive_change: parsed.data.positiveChange,
+  };
   const { error } = await supabase.from("people_capability_submissions").insert(answers);
 
   if (error) {
