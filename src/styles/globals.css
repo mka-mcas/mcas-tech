@@ -1,8 +1,88 @@
 @import "katex/dist/katex.min.css";
 @import "tailwindcss";
 
-/* Custom background fallback for the research theme */
-body {
-  background-color: #090d16;
-  color: #f8fafc;
+:root {
+  color-scheme: light;
+  --page-bg: #f5f7fa;
+  --surface: #ffffff;
+  --surface-muted: #edf2f7;
+  --text-primary: #172033;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --border: #dbe3ec;
+  --nav-bg: rgba(255,255,255,.92);
+  --nav-link: #475569;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --page-bg: #070b12;
+  --surface: #0f172a;
+  --surface-muted: #111c2e;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border: #1e293b;
+  --nav-bg: rgba(0,0,0,.88);
+  --nav-link: #94a3b8;
+}
+
+html, body {
+  min-height: 100%;
+  background: var(--page-bg);
+  color: var(--text-primary);
+  transition: background-color .2s ease, color .2s ease;
+}
+
+.site-navigation {
+  background: var(--nav-bg);
+  border-bottom: 1px solid var(--border);
+}
+.brand-mark { color: var(--text-primary); }
+.nav-link { color: var(--nav-link); }
+.nav-link:hover { color: var(--text-primary); }
+.theme-toggle {
+  color: var(--text-primary);
+  background: var(--surface);
+  border-color: var(--border);
+}
+.theme-toggle:hover { background: var(--surface-muted); }
+.portal-button { background: #0ea5e9; color: #06121e; }
+.portal-button:hover { background: #38bdf8; }
+.mobile-navigation { border-top: 1px solid var(--border); }
+.mobile-navigation-footer { border-color: var(--border); }
+
+/* Light-mode translation for existing dark utility surfaces and typography.
+   Accent colours (sky, violet, cyan, emerald) are intentionally preserved. */
+html[data-theme="light"] main { color: var(--text-primary); }
+html[data-theme="light"] .text-white { color: #172033 !important; }
+html[data-theme="light"] .text-slate-200,
+html[data-theme="light"] .text-slate-300 { color: #334155 !important; }
+html[data-theme="light"] .text-slate-400 { color: #475569 !important; }
+html[data-theme="light"] .text-slate-500 { color: #64748b !important; }
+html[data-theme="light"] [class~="bg-black"],
+html[data-theme="light"] [class~="bg-black/40"],
+html[data-theme="light"] [class~="bg-black/80"],
+html[data-theme="light"] [class~="bg-slate-950"],
+html[data-theme="light"] [class~="bg-slate-950/20"],
+html[data-theme="light"] [class~="bg-slate-950/40"],
+html[data-theme="light"] [class~="bg-slate-900"],
+html[data-theme="light"] [class~="bg-slate-900/20"],
+html[data-theme="light"] [class~="bg-slate-900/40"],
+html[data-theme="light"] [class~="bg-slate-900/50"] {
+  background-color: var(--surface) !important;
+}
+html[data-theme="light"] [class~="border-slate-900"],
+html[data-theme="light"] [class~="border-slate-900/40"],
+html[data-theme="light"] [class~="border-slate-900/60"],
+html[data-theme="light"] [class~="border-slate-800"],
+html[data-theme="light"] [class~="border-slate-800/80"] {
+  border-color: var(--border) !important;
+}
+html[data-theme="light"] input,
+html[data-theme="light"] textarea,
+html[data-theme="light"] select {
+  color: #172033;
+  background-color: #ffffff;
+  border-color: #cbd5e1;
 }
