@@ -86,3 +86,9 @@ html[data-theme="light"] select {
   background-color: #ffffff;
   border-color: #cbd5e1;
 }
+
+html[data-theme="light"] [class~="bg-[#070b12]"] { background-color: #f5f7fa !important; }
+html[data-theme="light"] .text-zinc-400 { color: #475569 !important; }
+html[data-theme="light"] .text-zinc-500 { color: #64748b !important; }
+html[data-theme="light"] .text-slate-300 { color: #334155 !important; }
+html[data-theme="light"] .text-slate-400 { color: #475569 !important; }
