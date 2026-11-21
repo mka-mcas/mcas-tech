@@ -42,6 +42,9 @@ export default function Navigation() {
           <Link href="/resources/safe-riding-know-how" className="text-slate-400 hover:text-emerald-400 font-bold transition-colors">
             Safe Riding Know-How
           </Link>
+          <Link href="/people-survey" className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors">
+            Staff Capability Survey
+          </Link>
           
           {user ? (
             <button 
@@ -137,6 +140,13 @@ export default function Navigation() {
             className="text-emerald-400 font-bold py-1 border-l-2 border-emerald-500 pl-2"
           >
             Safe Riding Know-How
+          </Link>
+          <Link
+            href="/people-survey"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="text-emerald-400 font-semibold py-1"
+          >
+            Staff Capability Survey
           </Link>
           
           <div className="border-t border-slate-900/80 pt-4 pb-2">
