@@ -8,6 +8,7 @@ create table if not exists public.people_capability_submissions (
   created_at timestamptz not null default now(),
 
   position text not null check (char_length(position) between 2 and 120),
+  staff_category text not null check (staff_category in ('Research staff', 'Supporting staff')),
   grade text not null check (char_length(grade) between 1 and 40),
   employment_status text not null check (employment_status in ('Permanent', 'Contract')),
   service_years text not null check (service_years in ('Under 2 years', '2–5 years', '6–10 years', '11–15 years', 'More than 15 years')),
