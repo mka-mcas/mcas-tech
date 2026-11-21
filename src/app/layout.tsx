@@ -11,30 +11,17 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'MCAS Risk Intelligence — Motorcycle Fatality Data Malaysia',
     description: 'Interactive dashboard using official PDRM 2022 statistics to help Malaysian riders understand and reduce risks.',
-    images: [{ url: '/og-image.jpg' }], // Add an image later
+    images: [{ url: '/og-image.jpg' }],
     locale: 'en_MY',
     type: 'website',
   },
-  icons: {
-    icon: '/favicon.ico',
-  },
+  icons: { icon: '/favicon.ico' },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body 
-        style={{ 
-          margin: 0, 
-          fontFamily: 'sans-serif', 
-          backgroundColor: '#090d16', 
-          color: '#f8fafc' 
-        }}
-      >
+    <html lang="en" data-theme="light">
+      <body style={{ margin: 0, fontFamily: 'sans-serif' }}>
         <Navigation />
         <main>{children}</main>
       </body>
