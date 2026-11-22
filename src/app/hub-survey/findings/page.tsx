@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 
 type Findings = { total: number; expertise: { label: string; count: number }[]; interests: { label: string; count: number }[] };
 
@@ -9,7 +9,7 @@ export default function HubFindingsPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function unlock(event: React.FormEvent<HTMLFormElement>) {
+  async function unlock(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setLoading(true); setError("");
     try {
       const response = await fetch("/api/hub/findings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code }) });
