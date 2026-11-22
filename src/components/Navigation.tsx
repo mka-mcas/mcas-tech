@@ -41,12 +41,7 @@ export default function Navigation() {
           </Link>
           <Link href="/resources/safe-riding-know-how" className="text-slate-400 hover:text-emerald-400 font-bold transition-colors">
             Safe Riding Know-How
-          </Link>
-          <Link href="/people-survey" className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors">
-            Staff Capability Survey
-          </Link>
-          
-          {user ? (
+          </Link>{user ? (
             <button 
               onClick={() => signOut()} 
               className="bg-slate-900 border border-slate-800 text-slate-300 px-4 py-1.5 rounded-lg hover:text-white hover:border-slate-700 transition-all text-xs font-mono"
