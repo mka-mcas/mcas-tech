@@ -37,7 +37,7 @@ const submissionSchema = z.object({
 function getServerClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceKey || !process.env.PEOPLE_RATE_LIMIT_SALT) return null;
+  if (!url || !serviceKey || !process.env.HUB_RATE_LIMIT_SALT) return null;
 
   return createClient(url, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
@@ -46,7 +46,7 @@ function getServerClient() {
 
 function getClientFingerprint(request: Request) {
   const ip = request.headers.get("x-real-ip") ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const salt = process.env.PEOPLE_RATE_LIMIT_SALT;
+  const salt = process.env.HUB_RATE_LIMIT_SALT;
   if (!ip || !salt) return null;
   return createHash("sha256").update(`${salt}:${ip}`).digest("hex");
 }
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
   if (fingerprint) {
     const cutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString();
     const { count, error: countError } = await supabase
-      .from("people_submission_attempts")
+      .from("hub_submission_attempts")
       .select("id", { count: "exact", head: true })
       .eq("ip_hash", fingerprint)
       .gte("created_at", cutoff);
@@ -107,7 +107,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "A response has recently been submitted from this connection. Please contact the administrator if you need assistance." }, { status: 429 });
     }
 
-    const { error: attemptError } = await supabase.from("people_submission_attempts").insert({ ip_hash: fingerprint });
+    const { error: attemptError } = await supabase.from("hub_submission_attempts").insert({ ip_hash: fingerprint });
     if (attemptError) {
       return NextResponse.json({ error: "The survey is temporarily unavailable. Please try again later." }, { status: 503 });
     }
@@ -138,7 +138,7 @@ export async function POST(request: Request) {
     preserve_practices: parsed.data.preservePractices,
     positive_change: parsed.data.positiveChange,
   };
-  const { error } = await supabase.from("people_capability_submissions").insert(answers);
+  const { error } = await supabase.from("hub_capability_submissions").insert(answers);
 
   if (error) {
     return NextResponse.json({ error: "We could not save your response. Please try again or contact the survey administrator." }, { status: 500 });
@@ -146,7 +146,7 @@ export async function POST(request: Request) {
 
   // Old hashed rate-limit records are not useful after one day.
   await supabase
-    .from("people_submission_attempts")
+    .from("hub_submission_attempts")
     .delete()
     .lt("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
 
