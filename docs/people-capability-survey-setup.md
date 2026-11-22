@@ -18,7 +18,7 @@
 - `HUB_RATE_LIMIT_SALT` — long random server-only salt
 - `HUB_FINDINGS_ACCESS_CODE` — shared HUB Findings access phrase; server only, never prefix with `NEXT_PUBLIC_`
 
-The Findings access phrase is a shared gate, not individual authentication; it can be forwarded. The management dashboard remains separately protected by verified Supabase Auth identities and the three-address allowlist. The Findings API returns aggregate counts only and never returns raw submissions or free-text answers. Small-cell breakdowns are suppressed (minimum count 5).
+The Findings access phrase is a shared gate, not individual authentication; it can be forwarded. The management dashboard remains separately protected by verified Supabase Auth identities and the Pejabat Pengarah access allowlist. The Findings API returns aggregate counts only and never returns raw submissions or free-text answers. Small-cell breakdowns are suppressed (minimum count 5).
 
 ## Database
 1. Obtain MIROS ICT/security/privacy approval for the Supabase project and hosting location before collecting real responses.
@@ -26,7 +26,7 @@ The Findings access phrase is a shared gate, not individual authentication; it c
 3. Apply the SQL manually only after approval.
 4. Keep RLS enabled; deny anon/authenticated table access. Route handlers use the server-only service role.
 5. Configure secrets in Preview first and test with synthetic responses.
-6. Confirm that ordinary staff can see only aggregate Findings, and only the three allowlisted managers can access individual submissions.
+6. Confirm that ordinary staff can see only aggregate Findings, and that access to individual submissions is restricted to Pejabat Pengarah through the allowlist.
 7. Configure production only after review and approval.
 
 ## Privacy and operational safeguards
