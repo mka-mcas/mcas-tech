@@ -16,7 +16,7 @@ export async function GET(request: Request) {
   const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
 
   if (!token) {
-    return NextResponse.json({ error: "Please sign in with an authorised management account." }, { status: 401 });
+    return NextResponse.json({ error: "Please sign in with an authorised Pejabat Pengarah account." }, { status: 401 });
   }
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
   }
 
   if (!allowedEmails.includes(authData.user.email.toLowerCase())) {
-    return NextResponse.json({ error: "This account is not authorised to view HUB responses." }, { status: 403 });
+    return NextResponse.json({ error: "This account is not authorised for Pejabat Pengarah access to HUB responses." }, { status: 403 });
   }
 
   const adminClient = createClient(url, serviceKey, {
