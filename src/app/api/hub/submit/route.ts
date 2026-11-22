@@ -8,7 +8,6 @@ export const dynamic = "force-dynamic";
 
 const submissionSchema = z.object({
   position: z.string().trim().min(2).max(120),
-  staffCategory: z.enum(["Research staff", "Supporting staff"]),
   grade: z.string().trim().min(1).max(40),
   employmentStatus: z.enum(["Permanent", "Contract"]),
   serviceYears: z.enum(["Under 2 years", "2–5 years", "6–10 years", "11–15 years", "More than 15 years"]),
@@ -115,7 +114,6 @@ export async function POST(request: Request) {
 
   const answers = {
     position: parsed.data.position,
-    staff_category: parsed.data.staffCategory,
     grade: parsed.data.grade,
     employment_status: parsed.data.employmentStatus,
     service_years: parsed.data.serviceYears,
