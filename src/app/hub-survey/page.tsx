@@ -45,7 +45,6 @@ const researchOptions = [
 
 const initialForm = {
   position: "",
-  staffCategory: "",
   grade: "",
   employmentStatus: "",
   serviceYears: "",
@@ -281,14 +280,9 @@ export default function PeopleSurveyPage() {
           {step === 1 && (
             <Section number="01" title="Your professional profile" description="A little context helps us understand the experience and capabilities represented across the team.">
               <div>
-                <FieldLabel required>Current position / designation</FieldLabel>
-                <input required value={form.position} onChange={(event) => update("position", event.target.value)} maxLength={120} placeholder="e.g. Research Officer, Assistant Research Officer" className="w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-sky-500" />
-              </div>
-              <div>
-                <FieldLabel required>Staff category</FieldLabel>
-                <select required value={form.staffCategory} onChange={(event) => update("staffCategory", event.target.value)} className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-sky-500">
-                  <option value="">Select one</option><option>Research staff</option><option>Supporting staff</option>
-                </select>
+                <FieldLabel required>Current Position</FieldLabel>
+                <p className="mb-2 text-xs text-slate-500">Enter "Research Officer, Research Assistant, etc".</p>
+                <input required value={form.position} onChange={(event) => update("position", event.target.value)} maxLength={120} placeholder="e.g. Research Officer, Research Assistant" className="w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-sky-500" />
               </div>
               <div>
                 <FieldLabel required>Position grade</FieldLabel>
