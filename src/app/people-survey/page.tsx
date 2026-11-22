@@ -203,7 +203,7 @@ export default function PeopleSurveyPage() {
 
     setSubmitting(true);
     try {
-      const response = await fetch("/api/people/submit", {
+      const response = await fetch("/api/hub/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -227,7 +227,7 @@ export default function PeopleSurveyPage() {
           <p className="font-mono text-xs uppercase tracking-[0.25em] text-emerald-300">Response received</p>
           <h1 className="mt-3 text-3xl font-black tracking-tight">Thank you for contributing.</h1>
           <p className="mx-auto mt-4 max-w-lg text-sm leading-7 text-slate-300">
-            Your perspectives will help us understand the capabilities within the centre, identify new research opportunities and plan meaningful professional development.
+            Your perspectives will help HUB understand our collective capabilities, identify research opportunities and plan meaningful professional development.
           </p>
           <p className="mt-7 text-xs text-slate-500">You may now close this page.</p>
         </div>
@@ -239,16 +239,16 @@ export default function PeopleSurveyPage() {
     <main className="min-h-screen bg-[#070b12] px-4 pb-24 pt-28 text-slate-100 sm:px-6">
       <div className="mx-auto max-w-4xl">
         <header className="mb-10">
-          <p className="font-mono text-[11px] font-bold uppercase tracking-[0.28em] text-sky-400">MIROS · People & Research Intelligence</p>
+          <p className="font-mono text-[11px] font-bold uppercase tracking-[0.28em] text-sky-400">HUB CENTRE · CAPABILITY MAPPING</p>
           <h1 className="mt-3 text-3xl font-black leading-tight tracking-tight text-white sm:text-5xl">
-            Discovering our capabilities.<br />
-            <span className="text-sky-400">Shaping what comes next.</span>
+            Different strengths.<br />
+            <span className="text-sky-400">Shared purpose. Safer roads.</span>
           </h1>
           <p className="mt-5 max-w-3xl text-sm leading-7 text-slate-300 sm:text-base">
-            This exercise is an opportunity to share your professional strengths, interests, ideas and aspirations. We want to understand the expertise within our team, identify areas worth exploring and create opportunities for everyone to contribute to safer roads in Malaysia.
+            Different strengths. Shared purpose. Safer roads. This HUB capability-mapping exercise helps us understand the expertise, interests and aspirations within the Centre, identify opportunities for collaboration, and shape meaningful research and professional development.
           </p>
           <div className="mt-6 rounded-xl border border-sky-500/20 bg-sky-500/5 p-4 text-sm leading-6 text-slate-300">
-            <strong className="text-sky-300">Confidentiality notice.</strong> This form does not ask for your name, staff number, email address or unit. It does ask for your position/designation, grade, employment status and experience, so some responses may be recognisable from their details. Individual responses will be accessible only to the Head of Unit and the designated administrative officer, for capability mapping, project planning, research development and staff development. They are not intended for individual performance appraisal. Please do not include names or other personal identifiers in open-text answers.
+            <strong className="text-sky-300">Confidentiality notice.</strong> This form does not ask for your name, staff number, email address or unit. It does ask for your position/designation, grade, employment status and experience, so some responses may be recognisable from their details. Individual responses are accessible only to three authorised HUB managers for capability mapping, project planning, research development and staff development. They are not intended for individual performance appraisal. Aggregated findings may be shared with HUB staff; individual submissions will not be shown in the shared Findings area. Please do not include names, staff numbers, unit names or confidential project details in open-text answers.
           </div>
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
             <span>Estimated time: 8–10 minutes</span>
