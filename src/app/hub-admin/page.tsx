@@ -8,7 +8,6 @@ type Submission = {
   id: string;
   created_at: string;
   position: string;
-  staff_category: string;
   grade: string;
   employment_status: string;
   service_years: string;
@@ -96,7 +95,7 @@ export default function PeopleAdminPage() {
     const query = search.trim().toLowerCase();
     if (!query) return submissions;
     return submissions.filter((item) => [
-      item.position, item.staff_category, item.grade, item.employment_status, item.service_years,
+      item.position, item.grade, item.employment_status, item.service_years,
       item.responsibilities, item.current_projects, item.expertise.join(" "),
       item.tools_methods, item.underused_skills, item.research_interests.join(" "),
       item.emerging_areas, item.research_gaps, item.next_two_years, item.project_ideas,
@@ -188,7 +187,7 @@ export default function PeopleAdminPage() {
                 {filtered.map((item) => (
                   <button key={item.id} onClick={() => setSelected(item)} className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 text-left transition hover:border-sky-500/50 hover:bg-slate-950">
                     <div className="flex items-start justify-between gap-3">
-                      <div><p className="font-semibold text-white">{item.position}</p><p className="mt-1 text-xs text-slate-500">{item.staff_category} · Grade {item.grade} · {item.employment_status} · {item.service_years}</p></div>
+                      <div><p className="font-semibold text-white">{item.position}</p><p className="mt-1 text-xs text-slate-500">Grade {item.grade} · {item.employment_status} · {item.service_years}</p></div>
                       <span className="rounded-md border border-slate-700 px-2 py-1 font-mono text-[10px] text-slate-500">P-{item.id.slice(0, 6).toUpperCase()}</span>
                     </div>
                     <div className="mt-3 flex flex-wrap gap-1.5">{item.expertise.slice(0, 3).map((skill) => <span key={skill} className="rounded-full bg-sky-500/10 px-2.5 py-1 text-[10px] text-sky-200">{skill}</span>)}</div>
