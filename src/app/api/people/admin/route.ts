@@ -5,7 +5,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function getAdminEmails() {
-  return (process.env.PEOPLE_ADMIN_EMAILS ?? "")
+  return (process.env.HUB_ADMIN_EMAILS ?? "")
     .split(",")
     .map((email) => email.trim().toLowerCase())
     .filter(Boolean);
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const allowedEmails = getAdminEmails();
 
-  if (!url || !anonKey || !serviceKey || allowedEmails.length === 0) {
+  if (!url || !anonKey || !serviceKey || allowedEmails.length !== 3) {
     return NextResponse.json({ error: "The management dashboard has not been configured." }, { status: 503 });
   }
 
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
   }
 
   if (!allowedEmails.includes(authData.user.email.toLowerCase())) {
-    return NextResponse.json({ error: "This account is not authorised to view staff responses." }, { status: 403 });
+    return NextResponse.json({ error: "This account is not authorised to view HUB responses." }, { status: 403 });
   }
 
   const adminClient = createClient(url, serviceKey, {
@@ -46,7 +46,7 @@ export async function GET(request: Request) {
   });
 
   const { data, error } = await adminClient
-    .from("people_capability_submissions")
+    .from("hub_capability_submissions")
     .select("*")
     .order("created_at", { ascending: false })
     .limit(1000);
