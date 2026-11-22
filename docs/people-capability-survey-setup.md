@@ -3,7 +3,7 @@
 ## Routes
 - Staff survey: `/hub-survey` (direct link; no MCAS.tech login)
 - Shared aggregate findings: `/hub-survey/findings` (shared access code)
-- Management dashboard: `/hub-admin` (existing MCAS.tech sign-in; exactly three allowlisted manager emails)
+- Management dashboard: `/hub-admin` (existing MCAS.tech sign-in; one to three allowlisted manager emails during MVP (start with one; expand after testing))
 - Submit: `POST /api/hub/submit`
 - Management data: `GET /api/hub/admin`
 - Aggregate findings: `POST /api/hub/findings`
@@ -14,7 +14,7 @@
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY` — server only
-- `HUB_ADMIN_EMAILS` — exactly three comma-separated, verified Supabase Auth email addresses for the authorised managers
+- `HUB_ADMIN_EMAILS` — one to three comma-separated, verified Supabase Auth email addresses for the authorised managers
 - `HUB_RATE_LIMIT_SALT` — long random server-only salt
 - `HUB_FINDINGS_ACCESS_CODE` — shared HUB Findings access phrase; server only, never prefix with `NEXT_PUBLIC_`
 
