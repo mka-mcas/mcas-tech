@@ -119,7 +119,7 @@ export default function PeopleAdminPage() {
           <div>
             <p className="font-mono text-[11px] font-bold uppercase tracking-[0.25em] text-sky-400">HUB CENTRE · MANAGEMENT ONLY</p>
             <h1 className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">HUB Capability Management</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Restricted access to individual HUB capability submissions for authorised managers.</p>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Restricted access to individual HUB capability submissions for Pejabat Pengarah.</p>
           </div>
           <div className="flex gap-2">
             <button onClick={() => void loadResponses()} disabled={loading} className="rounded-xl border border-slate-700 px-4 py-2.5 text-xs font-semibold text-slate-300 hover:border-slate-500 hover:text-white disabled:opacity-50">{loading ? "Refreshing…" : "Refresh responses"}</button>
@@ -128,7 +128,7 @@ export default function PeopleAdminPage() {
         </header>
 
         <div className="mb-7 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 text-xs leading-6 text-amber-100/80">
-          Confidential HUB staff information. Access is restricted to the three manager accounts authorised by the server-side allowlist. Do not download, forward or reuse individual responses outside the approved capability-mapping and research-development purposes.
+          Confidential HUB staff information. Access is restricted to Pejabat Pengarah through the server-side access allowlist. Do not download, forward or reuse individual responses outside the approved capability-mapping and research-development purposes.
         </div>
 
         {loading && <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-10 text-center text-sm text-slate-400">Loading management workspace…</div>}
