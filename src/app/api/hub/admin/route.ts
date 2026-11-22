@@ -24,7 +24,7 @@ export async function GET(request: Request) {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const allowedEmails = getAdminEmails();
 
-  if (!url || !anonKey || !serviceKey || allowedEmails.length !== 3) {
+  if (!url || !anonKey || !serviceKey || allowedEmails.length < 1 || allowedEmails.length > 3) {
     return NextResponse.json({ error: "The management dashboard has not been configured." }, { status: 503 });
   }
 
