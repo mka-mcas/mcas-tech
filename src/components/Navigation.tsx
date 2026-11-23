@@ -136,13 +136,6 @@ export default function Navigation() {
           >
             Safe Riding Know-How
           </Link>
-          <Link
-            href="/people-survey"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="text-emerald-400 font-semibold py-1"
-          >
-            Staff Capability Survey
-          </Link>
           
           <div className="border-t border-slate-900/80 pt-4 pb-2">
             {user ? (
